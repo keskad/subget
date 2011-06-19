@@ -1,0 +1,5 @@
+subget - simple program featuring downloading subtitles from multiple servers.
+
+Easily extendable by plugins, supports multi-language.
+
+Requirements: GTK+, Python, X11, PyGTK, PyCURL, alang, alang-py
