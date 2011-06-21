@@ -5,6 +5,9 @@ Easily extendable by plugins, supports multi-language.
 Requirements: GTK+, Python, X11, PyGTK, PyCURL, alang, alang-py
 
 * Changelog:
+21.06.2011: 
+    + Added installation scripts with dependency support
+
 21.06.2011:
     + Added support for loading multiple video files
     + New plugin "napisy.info"
