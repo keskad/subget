@@ -1,6 +1,6 @@
 #!/usr/bin/python2.7
 #-*- coding: utf-8 -*-
-import getopt, sys, os, pycurl, re, glob, gtk, gobject
+import getopt, sys, os, re, glob, gtk, gobject
 import pygtk
 from threading import Thread
 
