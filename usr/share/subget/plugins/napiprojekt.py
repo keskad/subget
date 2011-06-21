@@ -1,7 +1,7 @@
 import httplib, urllib, time, os, hashlib
 
 ####
-PluginInfo = { 'Requirements' : { 'OS' : 'Unix', 'Packages:' : ( 'p7zip' ) } }
+PluginInfo = { 'Requirements' : { 'OS' : 'Unix', 'Authors': 'webnull', 'Packages:' : ( 'p7zip' ) } }
 language = "PL"
 
 apiUrl = "http://napiprojekt.pl/unit_napisy/dl.php"
@@ -56,7 +56,9 @@ def check_exists(File):
     subtitleZipped = urllib.urlopen(subtitleUrl).read(5)
 
     if len(subtitleZipped) > 0 and subtitleZipped != "NPc0":
-        return {'lang': language.lower(), 'site' : 'napiprojekt.pl', 'title' : os.path.basename(File)[:-3]+"txt", 'url' : subtitleUrl, 'data': {'file': File, 'lang': language}, 'domain': 'napiprojekt.pl', 'file': File}
+        Result = list()
+        Result.append({'lang': language.lower(), 'site' : 'napiprojekt.pl', 'title' : os.path.basename(File)[:-3]+"txt", 'url' : subtitleUrl, 'data': {'file': File, 'lang': language}, 'domain': 'napiprojekt.pl', 'file': File})
+        return Result
     else:
         return {'errInfo': "NOT_FOUND"}
 
@@ -115,7 +117,7 @@ def download_by_data(File, SavePath):
         # use 7zip to unpack subtitles
         os.system("/usr/bin/7z x -y -so -piBlm8NTigvru0Jr0 \""+File+".7z\" 2>/dev/null > \""+SavePath+"\"")
         os.remove(File+".7z")
-        return File+".7z"
+        return SavePath
     else:
         return {'errInfo': "NOT_FOUND"}
         

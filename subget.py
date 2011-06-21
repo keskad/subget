@@ -28,12 +28,30 @@ LANG=alang.loadLanguage('subget')
 
 ## ALANG
 
+# THREADING SUPPORT
+
 class SubtitleThread(Thread):
-    def __init__(self,Adress):
+    def __init__(self,Plugin,sObject):
         Thread.__init__(self) # initialize thread
+        self.Plugin = Plugin
+        self.sObject = sObject
+        self.status = "Idle"
 
     def run(self):
-        print "test"
+        self.sObject.GTKCheckForSubtitles(self.Plugin)
+        self.status = "Running"
+
+# EVAL THREADS
+class threadingCommand (Thread):
+    def __init__(self, objCommand, tmp="", tmp2=""):
+        Thread.__init__(self)
+
+        self.objCommand = objCommand
+        self.tmp = tmp
+        self.tmp2 = tmp2
+
+    def run(self):
+        exec(self.objCommand)
 
 def usage():
 	'Shows program usage and version, lists all options'
@@ -41,6 +59,7 @@ def usage():
 	print LANG[0]
 
 	print ""
+
 class SubGet:
         dialog=None
         subtitlesList=dict()
@@ -50,8 +69,8 @@ class SubGet:
 	    gtk.main_quit()
 	    return False
 
-	def __init__(self):
-	    global consoleMode, action, LANG
+        def main(self):
+            global consoleMode, action, LANG
 
             self.LANG = LANG
 
@@ -121,9 +140,16 @@ class SubGet:
         # UPDATE THE TREEVIEW LIST
         def TreeViewUpdate(self):
 	    #gobject.timeout_add(100, self.TreeViewUpdate)
+            subThreads = list()
 
             for Plugin in plugins:
-                gobject.timeout_add(2, self.GTKCheckForSubtitles, Plugin)
+                current = SubtitleThread(Plugin, self)
+                subThreads.append(current)
+                current.start()
+
+            for sThread in subThreads:
+                sThread.join()
+                
 
 
         def GTKCheckForSubtitles(self, Plugin):
@@ -132,12 +158,17 @@ class SubGet:
 
             if Results == None:
                 print "[plugin:"+Plugin+"] "+self.LANG[6]
-                return
+            else:
 
-            if Results[0].has_key("title"):
-                self.addSubtitlesRow(Results[0]['lang'], Results[0]['title'], Results[0]['domain'], Results[0]['data'], Plugin, Results[0]['file'])
-
-            print "[plugin:"+Plugin+"] "+self.LANG[7]+" - "+Results[0]['title']
+                for Result in Results:
+                    for Movie in Result:
+                        try:
+                            if Movie.has_key("title"):
+                                self.addSubtitlesRow(Movie['lang'], Movie['title'], Movie['domain'], Movie['data'], Plugin, Movie['file'])
+                                print "[plugin:"+Plugin+"] "+self.LANG[7]+" - "+Movie['title']
+                        except AttributeError:
+                             print "[plugin:"+Plugin+"] "+self.LANG[6]
+                
             
 
 
@@ -222,12 +253,10 @@ class SubGet:
             self.dialog.destroy()
             self.dialog = None
 
-
-        # GTK DIALOG WITH LIST OF AVAILABLE SUBTITLES
-	def graphicalMode(self,files):
-	    if len(files) == 1:
-                self.files = files
-                gobject.timeout_add(1, self.TreeViewUpdate)
+        def gtkMainScreen(self,files):
+            #if len(files) == 1:
+                #gobject.timeout_add(1, self.TreeViewUpdate)
+                
 
 	        # Create a new window
 		self.window = gtk.Window(gtk.WINDOW_TOPLEVEL)
@@ -300,36 +329,83 @@ class SubGet:
 		
 
 		self.window.show_all()
-                gtk.main()
 
-	    else:
-		print self.LANG[15]
+	    #else:
+            #    print self.LANG[15]
+
+
+
+        # GTK DIALOG WITH LIST OF AVAILABLE SUBTITLES
+	def graphicalMode(self,files):
+            self.files = files
+            subThreads = list()
+
+            # TREEVIEW UPDATE THREAD
+            GUIThread = threadingCommand("self.tmp.TreeViewUpdate()", self)
+            subThreads.append(GUIThread)
+            GUIThread.start()
+
+            # GTK RENDERING THREAD
+            Current = threadingCommand("self.tmp.gtkMainScreen(self.tmp2)", self, files) #self.gtkMainScreen(files)
+	    subThreads.append(Current)
+            Current.start()
+
+
+            for sThread in subThreads:
+                sThread.join()
+
+            gtk.main()
 
 	def shellMode(self, files):
 	    global plugins, action
 
-
 	    # just find all matching subtitles and print it to console
 	    if action == "list":
-		for File in files:
-                    aFileList = list()
-                    aFileList.append(File)
-
 		    for Plugin in plugins:
 		         exec("Results = plugins[\""+Plugin+"\"].language = language")
-		         exec("Results = plugins[\""+Plugin+"\"].download_list(aFileList)")
+		         exec("Results = plugins[\""+Plugin+"\"].download_list(files)")
 
-                         if Results != None:
-                             if Results[0].has_key('title'):
-                                 print Results[0]['domain']+"| "+Results[0]['lang']+" | "+Results[0]['title']
+                         if Results == None:
+                             continue
+
+                         for Result in Results:
+                             for Movie in Result:
+                                 try:
+                                     if Movie.has_key("title"):
+                                         print Movie['domain']+"|"+Movie['lang']+"|"+Movie['title']
+                                 except AttributeError:
+                                     continue
+
 
 	    elif action == "first-result":
+                Found = False
+                preferredData = False
+
 		for File in files:
 		    for Plugin in plugins:
 		         exec("Results = plugins[\""+Plugin+"\"].language = language")
-		         exec("Results = plugins[\""+Plugin+"\"].download_quick(files)")
-		         
-		    
+		         exec("Results = plugins[\""+Plugin+"\"].download_list({File})")
+
+                         if Results != None:
+                             if type(Results[0]).__name__ == "dict":
+                                 continue
+                             else:
+                                 if Results[0][0]["lang"] == language:
+                                     FileTXT = File+".txt"
+                                     exec("DLResults = plugins[\""+Plugin+"\"].download_by_data(Results[0][0]['data'], FileTXT)")
+                                     print LANG[19]+" "+str(DLResults)
+                                     Found = True
+                                     break
+                                 elif preferredData != None:
+                                     continue
+                                 else:
+                                     preferredData = Results[0][0]
+                 
+                if Found == False and preferredData == True:
+                     FileTXT = File+".("+str(preferredData['lang'])+").txt"
+                     exec("DLResults = plugins[\""+Plugin+"\"].download_by_data(prefferedData['data'], FileTXT)")
+                     print LANG[19]+" "+str(DLResults)+", "+LANG[20]
 
 if __name__ == "__main__":
-    SubGet()
+    SubgetMain = SubGet()
+    SubgetMain.main()

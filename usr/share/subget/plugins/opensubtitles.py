@@ -8,6 +8,8 @@ retries=0 # Retry the connection if failed
 maxRetries=8
 errInfo=""
 
+PluginInfo = { 'Requirements' : { 'OS' : 'Unix' }, 'Authors': 'webnull' }
+
 def download_list(files, language='', query=''):
     return
     global loginToken
@@ -24,6 +26,8 @@ def download_quick(files):
 
 def searchSubtitles(File, language, query):
     global loginToken
+
+    print "Got file name: "+File
 
     XMLData = """<?xml version="1.0"?>
 <methodCall>
