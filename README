@@ -5,6 +5,9 @@ Easily extendable by plugins, supports multi-language.
 Requirements: GTK+, Python, X11, PyGTK, alang, alang-py
 
 * Changelog:
+22.06.2011:
+    * Fixed connection timeouts in plugins
+
 21.06.2011: 
     + Added installation scripts with dependency support
 
