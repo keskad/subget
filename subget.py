@@ -6,7 +6,11 @@ from threading import Thread
 
 # default we will serve gui, but application will be also usable in shell, just need to use -c o --console parametr
 consoleMode=False
-pluginsDir="/usr/share/subget/plugins/"
+if os.name == "nt":
+    pluginsDir=os.path.expanduser("~")+"/subget/usr/share/subget/plugins/"
+else:
+    pluginsDir="/usr/share/subget/plugins/"
+
 plugins=dict()
 action="list"
 language="pl"
@@ -14,7 +18,11 @@ languages=['pl', 'en']
 
 ## ALANG
 
-incpath="/usr/share/alang/python/";
+if os.name == "nt":
+    incpath=os.path.expanduser("~")+"/alang/usr/share/alang/python/"
+else:
+    incpath="/usr/share/alang/python/";
+
 sys.path.insert( 0, incpath )
 import_string = "from alang import alang"
 
@@ -133,7 +141,11 @@ class SubGet:
 
             #print "Adding "+str(ID)+" - "+release_name
 
-            pixbuf = gtk.gdk.pixbuf_new_from_file('/usr/share/subget/icons/'+language+'.xpm') 
+            if os.name == "nt":
+                pixbuf = gtk.gdk.pixbuf_new_from_file(os.path.expanduser("~")+'/usr/share/subget/icons/'+language+'.xpm') 
+            else:
+                pixbuf = gtk.gdk.pixbuf_new_from_file('/usr/share/subget/icons/'+language+'.xpm')
+
             self.liststore.append([pixbuf, str(release_name), str(server), ID])
 
 
