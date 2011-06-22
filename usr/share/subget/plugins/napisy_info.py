@@ -84,10 +84,14 @@ def check_exists(File):
 def getListOfSubtitles(movieRealName, File):
     # http://napisy.info/plugin/SzukajNapisow.php?sid=subget&to=Sliders%2001x01
 
-    conn = httplib.HTTPConnection('napisy.info')
-    conn.request("GET", "/plugin/SzukajNapisow.php?sid=subget&to="+urllib.quote_plus(movieRealName))
-    response = conn.getresponse()
-    data = response.read()
+    try:
+        conn = httplib.HTTPConnection('napisy.info', 80, timeout=2)
+        conn.request("GET", "/plugin/SzukajNapisow.php?sid=subget&to="+urllib.quote_plus(movieRealName))
+        response = conn.getresponse()
+        data = response.read()
+    except Exception:
+        print "[plugin:napisy_info] Connection timed out"
+        return False
 
     dom = minidom.parseString(data)
 
@@ -115,10 +119,14 @@ def getListOfSubtitles(movieRealName, File):
 def getMovieName(parsedFileName):
     # http://napisy.info/plugin/SzukajTytulow.php?sid=subget&t=Sliders
 
-    conn = httplib.HTTPConnection('napisy.info')
-    conn.request("GET", "/plugin/SzukajTytulow.php?sid=subget&t="+urllib.quote_plus(parsedFileName))
-    response = conn.getresponse()
-    data = response.read()
+    try:
+       conn = httplib.HTTPConnection('napisy.info', 80, timeout=2)
+       conn.request("GET", "/plugin/SzukajTytulow.php?sid=subget&t="+urllib.quote_plus(parsedFileName))
+       response = conn.getresponse()
+       data = response.read()
+    except Exception:
+        print "[plugin:napisy_info] Connection timed out"
+        return False
 
     dom = minidom.parseString(data)
         

@@ -52,8 +52,16 @@ def check_exists(File):
        os.name = "Linux"
     
     # RECEIVE DATA
-    subtitleUrl = apiUrl+"?l="+language.upper()+"&f="+d+"&t="+f(d)+"&v=other&kolejka=false&nick=&pass=&napios="+os.name
-    subtitleZipped = urllib.urlopen(subtitleUrl).read(5)
+    subtitleUrl = "?l="+language.upper()+"&f="+d+"&t="+f(d)+"&v=other&kolejka=false&nick=&pass=&napios="+os.name
+
+    try:
+       conn = httplib.HTTPConnection('napiprojekt.pl', 80, timeout=2)
+       conn.request("GET", "/unit_napisy/dl.php"+subtitleUrl)
+       response = conn.getresponse()
+       subtitleZipped = response.read(5)
+    except Exception:
+       print "[plugin:napiprojekt] Connection timed out"
+       return False
 
     if len(subtitleZipped) > 0 and subtitleZipped != "NPc0":
         Result = list()
@@ -76,8 +84,16 @@ def get_subtitle(File):
           os.name = "Linux"
 
         # RECEIVE DATA
-        subtitleUrl = apiUrl+"?l="+language.upper()+"&f="+d+"&t="+f(d)+"&v=other&kolejka=false&nick=&pass=&napios="+os.name
-        subtitleZipped = urllib.urlopen(subtitleUrl).read()
+        subtitleUrl = "?l="+language.upper()+"&f="+d+"&t="+f(d)+"&v=other&kolejka=false&nick=&pass=&napios="+os.name
+
+        try:
+            conn = httplib.HTTPConnection('napiprojekt.pl', 80, timeout=2)
+            conn.request("GET", "/unit_napisy/dl.php"+subtitleUrl)
+            response = conn.getresponse()
+            subtitleZipped = response.read()
+        except Exception:
+            print "[plugin:napiprojekt] Connection timed out"
+            return False
 
     if len(subtitleZipped) > 0 and subtitleZipped != "NPc0": 
         Handler = open(File+".7z", "w")
@@ -106,8 +122,15 @@ def download_by_data(File, SavePath):
           os.name = "Linux"
 
         # RECEIVE DATA
-        subtitleUrl = apiUrl+"?l="+language.upper()+"&f="+d+"&t="+f(d)+"&v=other&kolejka=false&nick=&pass=&napios="+os.name
-        subtitleZipped = urllib.urlopen(subtitleUrl).read()
+        try:
+            subtitleUrl = "?l="+language.upper()+"&f="+d+"&t="+f(d)+"&v=other&kolejka=false&nick=&pass=&napios="+os.name
+            conn = httplib.HTTPConnection('napiprojekt.pl', 80, timeout=2)
+            conn.request("GET", "/unit_napisy/dl.php"+subtitleUrl)
+            response = conn.getresponse()
+            subtitleZipped = response.read()
+        except Exception:
+            print "[plugin:napiprojekt] Connection timed out"
+            return False
 
     if len(subtitleZipped) > 0 and subtitleZipped != "NPc0": 
         Handler = open(File+".7z", "w")
