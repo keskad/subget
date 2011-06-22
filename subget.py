@@ -261,6 +261,7 @@ class SubGet:
 	        # Create a new window
 		self.window = gtk.Window(gtk.WINDOW_TOPLEVEL)
 		self.window.set_title(self.LANG[10])
+                self.window.set_resizable(False)
 		self.window.set_size_request(600, 255)
 		self.window.connect("delete_event", self.delete_event)
 
@@ -268,7 +269,7 @@ class SubGet:
 
                 self.liststore = gtk.ListStore(gtk.gdk.Pixbuf, str, str, str)
                 self.treeview = gtk.TreeView(self.liststore)
-                self.treeview.set_size_request(600, 200)
+
 
                 # column list
                 self.tvcolumn = gtk.TreeViewColumn(self.LANG[12])
@@ -322,7 +323,14 @@ class SubGet:
                 self.CancelButton.connect('clicked', lambda b: gtk.mainquit())
                 self.fixed.put(self.CancelButton, 410, 210) # put on fixed
 
-                self.fixed.put(self.treeview, 0, 0)
+                # scrollbars
+                scrolled_window = gtk.ScrolledWindow()
+                scrolled_window.set_border_width(2)
+                scrolled_window.set_size_request(600, 200)
+                scrolled_window.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_ALWAYS)
+                scrolled_window.add_with_viewport(self.treeview)
+
+                self.fixed.put(scrolled_window, 0, 0)
 
                 self.window.add(self.fixed)
 		# create a TreeStore with one string column to use as the model
