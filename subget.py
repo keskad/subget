@@ -142,7 +142,7 @@ class SubGet:
             #print "Adding "+str(ID)+" - "+release_name
 
             if os.name == "nt":
-                pixbuf = gtk.gdk.pixbuf_new_from_file(os.path.expanduser("~")+'/usr/share/subget/icons/'+language+'.xpm') 
+                pixbuf = gtk.gdk.pixbuf_new_from_file(os.path.expanduser("~")+'/subget/usr/share/subget/icons/'+language+'.xpm') 
             else:
                 pixbuf = gtk.gdk.pixbuf_new_from_file('/usr/share/subget/icons/'+language+'.xpm')
 
@@ -353,28 +353,37 @@ class SubGet:
 	    #else:
             #    print self.LANG[15]
 
-
-
-        # GTK DIALOG WITH LIST OF AVAILABLE SUBTITLES
-	def graphicalMode(self,files):
+        def graphicalMode(self, files):
             self.files = files
-            subThreads = list()
+            # avoid windows bug (crash on start) with gtk.main() and threading (window rewriting bug)
+            if os.name == "nt":
+                self.gtkMainScreen(files)
+                self.TreeViewUpdate()
+                gtk.main()
+            else:
+                gobject.timeout_add(20, self.threadingGraphicalMode, files)
+                gtk.main()
 
+	def threadingGraphicalMode(self,files):
+            """ GTK dialog with list of available subtitles """
+
+            #subThreads = list()
             # TREEVIEW UPDATE THREAD
-            GUIThread = threadingCommand("self.tmp.TreeViewUpdate()", self)
-            subThreads.append(GUIThread)
-            GUIThread.start()
+            #GUIThread = threadingCommand("self.tmp.TreeViewUpdate()", self)
+            #subThreads.append(GUIThread)
+            #GUIThread.start()
 
             # GTK RENDERING THREAD
-            Current = threadingCommand("self.tmp.gtkMainScreen(self.tmp2)", self, files) #self.gtkMainScreen(files)
-	    subThreads.append(Current)
-            Current.start()
+            #Current = threadingCommand("self.tmp.gtkMainScreen(self.tmp2)", self, files) #self.gtkMainScreen(files)
+	    #subThreads.append(Current)
+            #Current.start()
 
 
-            for sThread in subThreads:
-                sThread.join()
+            #for sThread in subThreads:
+            #    sThread.join()
 
-            gtk.main()
+            self.gtkMainScreen(files)
+            self.TreeViewUpdate()
 
 	def shellMode(self, files):
 	    global plugins, action

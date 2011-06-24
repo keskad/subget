@@ -5,6 +5,10 @@ Easily extendable by plugins, supports multi-language.
 Requirements: GTK+, Python, X11, PyGTK, alang, alang-py
 
 * Changelog:
+24.06.2011:
+    * Fixed crash of GTK on Windows
+    * Napiprojekt plugin now correctly read video file
+
 22.06.2011:
     + Added windows support
 
