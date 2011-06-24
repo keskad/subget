@@ -6,6 +6,12 @@ Requirements: GTK+, Python, X11, PyGTK, alang, alang-py
 
 * Changelog:
 24.06.2011:
+    + Better performance at program startup startup on Linux (all Unix) and Windows operating systems
+    + Menu bar
+    + Adding files from menu
+    + Window icon
+
+24.06.2011:
     * Fixed crash of GTK on Windows
     * Napiprojekt plugin now correctly read video file
 

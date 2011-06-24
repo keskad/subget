@@ -187,12 +187,14 @@ class SubGet:
 
         # FLAG DISPLAYING
         def cell_pixbuf_func(self, celllayout, cell, model, iter):
+            """ Flag rendering """
             cell.set_property('pixbuf', model.get_value(iter, 0))
 
 
 
         # SUBTITLES DOWNLOAD DIALOGS
         def GTKDownloadSubtitles(self):
+            """ Dialog with file name chooser to save subtitles to """
             #print "TEST: CLICKED, LETS GO DOWNLOAD!"
 
             entry1,entry2 = self.treeview.get_selection().get_selected()
@@ -224,6 +226,8 @@ class SubGet:
                     print "[GTK:DownloadSubtitles] subtitle_ID="+str(SelectID)+" "+self.LANG[9]
 
         def GTKDownloadDialog(self, SelectID, filename):
+             """Download progress dialog, downloading and saving subtitles to file"""
+
              w = gtk.Window(gtk.WINDOW_TOPLEVEL)
              w.set_resizable(False)
              w.set_title(self.LANG[10])
@@ -256,16 +260,45 @@ class SubGet:
              w.destroy()
 
         def update_progress_bar(self):
+            """ Progressbar updater, called asynchronously """
             self.pbar.pulse()
             return gtk.TRUE
 
 
         # DESTROY THE DIALOG
         def destroyDialog(self):
+            """ Destroys all dialogs and popups """
             self.dialog.destroy()
             self.dialog = None
 
+        def gtkSelectVideo(self, arg):
+            """ Selecting multiple videos to search for subtitles """
+            chooser = gtk.FileChooserDialog(title=self.LANG[21],action=gtk.FILE_CHOOSER_ACTION_OPEN,buttons=(gtk.STOCK_CANCEL,gtk.RESPONSE_CANCEL,gtk.STOCK_OPEN,gtk.RESPONSE_OK))
+            chooser.set_select_multiple(True)
+            response = chooser.run()
+
+            if response == gtk.RESPONSE_OK:
+                fileNames = chooser.get_filenames()
+                chooser.destroy()
+
+                for fileName in fileNames:
+                    if not os.path.isfile(fileName) or not os.access(fileName, os.R_OK):
+                        continue
+
+                    self.files = {fileName}
+                    self.TreeViewUpdate()
+            else:
+                chooser.destroy()
+
+        def gtkPluginMenu(self, arg):
+            print "Sorry, this function is not implemented yet"
+
+        def gtkAboutMenu(self, arg):
+            print "Sorry, this function is not implemented yet"
+                
+
         def gtkMainScreen(self,files):
+                """ Main GTK screen of the application """
             #if len(files) == 1:
                 #gobject.timeout_add(1, self.TreeViewUpdate)
                 
@@ -274,9 +307,55 @@ class SubGet:
 		self.window = gtk.Window(gtk.WINDOW_TOPLEVEL)
 		self.window.set_title(self.LANG[10])
                 self.window.set_resizable(False)
-		self.window.set_size_request(600, 255)
+		self.window.set_size_request(600, 275)
 		self.window.connect("delete_event", self.delete_event)
 
+                if os.name == "nt":
+                    self.window.set_icon_from_file(os.path.expanduser("~")+"/subget/usr/share/subget/icons/Subget-logo.png")
+                else:
+                    self.window.set_icon_from_file("/usr/share/subget/icons/Subget-logo.png")
+
+                ############# Menu #############
+                mb = gtk.MenuBar()
+
+                # Shortcuts
+                agr = gtk.AccelGroup()
+                self.window.add_accel_group(agr)
+
+                # "File" menu
+                fileMenu = gtk.Menu()
+                fileMenuItem = gtk.MenuItem(self.LANG[22])
+                fileMenuItem.set_submenu(fileMenu)
+                mb.append(fileMenuItem)
+
+                # "Tools" menu
+                toolsMenu = gtk.Menu()
+                toolsMenuItem = gtk.MenuItem(self.LANG[23])
+                toolsMenuItem.set_submenu(toolsMenu)
+                mb.append(toolsMenuItem)
+
+                # "Plugins list"
+                pluginMenu = gtk.ImageMenuItem("Wtyczki", agr) # gtk.STOCK_CDROM
+                key, mod = gtk.accelerator_parse("<Control>P")
+                pluginMenu.add_accelerator("activate", agr, key,mod, gtk.ACCEL_VISIBLE)
+                pluginMenu.connect("activate", self.gtkPluginMenu)
+                toolsMenu.append(pluginMenu)
+
+                # Adding files to query
+                openMenu = gtk.ImageMenuItem(gtk.STOCK_ADD, agr)
+                key, mod = gtk.accelerator_parse("<Control>O")
+                openMenu.add_accelerator("activate", agr, key,mod, gtk.ACCEL_VISIBLE)
+                openMenu.connect("activate", self.gtkSelectVideo)
+                fileMenu.append(openMenu)
+
+                # Exit position in menu
+                exit = gtk.ImageMenuItem(gtk.STOCK_QUIT, agr)
+                key, mod = gtk.accelerator_parse("<Control>Q")
+                exit.add_accelerator("activate", agr, key, mod, gtk.ACCEL_VISIBLE)
+                exit.connect("activate", gtk.main_quit)
+                fileMenu.append(exit)
+
+                ############# End of Menu #############
                 self.fixed = gtk.Fixed()
 
                 self.liststore = gtk.ListStore(gtk.gdk.Pixbuf, str, str, str)
@@ -325,7 +404,7 @@ class SubGet:
 	        image.set_from_stock("gtk-go-down", gtk.ICON_SIZE_BUTTON)
                 self.DownloadButton.set_image(image)
                 self.DownloadButton.set_size_request(80, 40)
-                self.fixed.put(self.DownloadButton, 510, 210) # put on fixed
+                self.fixed.put(self.DownloadButton, 510, 230) # put on fixed
 
                 self.DownloadButton.connect('clicked', lambda b: self.GTKDownloadSubtitles())
 
@@ -333,7 +412,7 @@ class SubGet:
                 self.CancelButton = gtk.Button(stock=gtk.STOCK_CLOSE)
                 self.CancelButton.set_size_request(90, 40)
                 self.CancelButton.connect('clicked', lambda b: gtk.mainquit())
-                self.fixed.put(self.CancelButton, 410, 210) # put on fixed
+                self.fixed.put(self.CancelButton, 410, 230) # put on fixed
 
                 # scrollbars
                 scrolled_window = gtk.ScrolledWindow()
@@ -342,7 +421,9 @@ class SubGet:
                 scrolled_window.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_ALWAYS)
                 scrolled_window.add_with_viewport(self.treeview)
 
-                self.fixed.put(scrolled_window, 0, 0)
+                self.fixed.put(mb, 0, 0)
+                self.fixed.put(scrolled_window, 0, 20)
+                
 
                 self.window.add(self.fixed)
 		# create a TreeStore with one string column to use as the model
@@ -354,38 +435,14 @@ class SubGet:
             #    print self.LANG[15]
 
         def graphicalMode(self, files):
+            """ Detects operating system and load GTK GUI """
             self.files = files
-            # avoid windows bug (crash on start) with gtk.main() and threading (window rewriting bug)
-            if os.name == "nt":
-                self.gtkMainScreen(files)
-                self.TreeViewUpdate()
-                gtk.main()
-            else:
-                gobject.timeout_add(20, self.threadingGraphicalMode, files)
-                gtk.main()
-
-	def threadingGraphicalMode(self,files):
-            """ GTK dialog with list of available subtitles """
-
-            #subThreads = list()
-            # TREEVIEW UPDATE THREAD
-            #GUIThread = threadingCommand("self.tmp.TreeViewUpdate()", self)
-            #subThreads.append(GUIThread)
-            #GUIThread.start()
-
-            # GTK RENDERING THREAD
-            #Current = threadingCommand("self.tmp.gtkMainScreen(self.tmp2)", self, files) #self.gtkMainScreen(files)
-	    #subThreads.append(Current)
-            #Current.start()
-
-
-            #for sThread in subThreads:
-            #    sThread.join()
-
             self.gtkMainScreen(files)
-            self.TreeViewUpdate()
+            gobject.timeout_add(50, self.TreeViewUpdate)
+            gtk.main()
 
 	def shellMode(self, files):
+            """ Works in shell mode, searching, downloading etc..."""
 	    global plugins, action
 
 	    # just find all matching subtitles and print it to console
