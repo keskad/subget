@@ -5,6 +5,9 @@ Easily extendable by plugins, supports multi-language.
 Requirements: GTK+, Python, X11, PyGTK, alang, alang-py
 
 * Changelog:
+25.06.2011:
+    * Moved gtk.Fixed and gtk.MenuBar to gtk.Vbox
+
 24.06.2011:
     + Better performance at program startup startup on Linux (all Unix) and Windows operating systems
     + Menu bar

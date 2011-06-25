@@ -404,7 +404,7 @@ class SubGet:
 	        image.set_from_stock("gtk-go-down", gtk.ICON_SIZE_BUTTON)
                 self.DownloadButton.set_image(image)
                 self.DownloadButton.set_size_request(80, 40)
-                self.fixed.put(self.DownloadButton, 510, 230) # put on fixed
+                self.fixed.put(self.DownloadButton, 510, 205) # put on fixed
 
                 self.DownloadButton.connect('clicked', lambda b: self.GTKDownloadSubtitles())
 
@@ -412,20 +412,24 @@ class SubGet:
                 self.CancelButton = gtk.Button(stock=gtk.STOCK_CLOSE)
                 self.CancelButton.set_size_request(90, 40)
                 self.CancelButton.connect('clicked', lambda b: gtk.mainquit())
-                self.fixed.put(self.CancelButton, 410, 230) # put on fixed
+                self.fixed.put(self.CancelButton, 410, 205) # put on fixed
 
                 # scrollbars
                 scrolled_window = gtk.ScrolledWindow()
-                scrolled_window.set_border_width(2)
+                scrolled_window.set_border_width(0)
                 scrolled_window.set_size_request(600, 200)
                 scrolled_window.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_ALWAYS)
                 scrolled_window.add_with_viewport(self.treeview)
 
-                self.fixed.put(mb, 0, 0)
-                self.fixed.put(scrolled_window, 0, 20)
+                self.fixed.put(scrolled_window, 0, 0)
+                self.fixed.set_border_width(0)
                 
+                vbox = gtk.VBox(False, 0)
+                vbox.set_border_width(0)
+                vbox.pack_start(mb, False, False, 0)
+                vbox.pack_start(self.fixed, False, False, 0)
 
-                self.window.add(self.fixed)
+                self.window.add(vbox)
 		# create a TreeStore with one string column to use as the model
 		
 
