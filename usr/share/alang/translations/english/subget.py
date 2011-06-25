@@ -2,7 +2,7 @@
 
 class alangINC():
 	def return_array(a):
-		MyLang = range(24)
+		MyLang = range(33)
 		MyLang[0] = "subget for GNU/Linux. Simple Subtitle Downloader for shell and GUI.\nUsage: subget [long GNU option] [option] first-file, second-file, ...\n\n --help                : this message\n --console, -c         : show results in console, not in graphical user interface\n --language, -l        : specify preffered language\n --quick, -q           : grab first result and download"
 
                 MyLang[1] = "Try --help for usage"
@@ -27,5 +27,15 @@ class alangINC():
                 MyLang[20] = "but not in your preferred language"
                 MyLang[21] = "Please select video files"
                 MyLang[22] = "File"
-                MyLang[23] = "Tools"
+                MyLang[32] = "Tools"
+                MyLang[23] = "About Subget"
+                MyLang[24] = "Small, multiplatform and portable Subtitles downloader \nwritten in Python and GTK.\nWorks on most Unix systems, based on Linux kernel and on Windows NT.\nThis program is a free software licensed on GNU General Public License v3."
+                MyLang[25] = "Team"
+                MyLang[26] = "Programming"
+                MyLang[27] = "Testing"
+                MyLang[28] = "Special thanks"
+                MyLang[29] = "License"
+                MyLang[30] = "This program was published on Free and Open Software license.\n\nConditions:\n - You have right to share this program in original or modified form\n - You are free to run this program in any purpose\n - You are free to view and modify the source code in any purpose\n - You have right to translate this program to any language you want\n - You must leave a note about original author when modifying or sharing this software\n - The program must remain on the same license when editing or sharing\n\nProgram license: GNU General Public License 3 (GNU GPLv3)"
+                MyLang[31] = "Translating"
+                MyLang[32] = "Tools"
 		return MyLang
