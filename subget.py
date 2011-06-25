@@ -1,6 +1,6 @@
 #!/usr/bin/python2.7
 #-*- coding: utf-8 -*-
-import getopt, sys, os, re, glob, gtk, gobject
+import getopt, sys, os, re, glob, gtk, gobject, pango
 import pygtk
 from threading import Thread
 
@@ -81,6 +81,11 @@ class SubGet:
             global consoleMode, action, LANG
 
             self.LANG = LANG
+
+            if os.name == "nt":
+                self.subgetOSPath = os.path.expanduser("~")+"/subget"
+            else:
+                self.subgetOSPath = ""
 
 	    try:
 		opts, args = getopt.getopt(sys.argv[1:], "hcql:", ["help", "console", "quick", "language="])
@@ -218,10 +223,10 @@ class SubGet:
 
                     if response == gtk.RESPONSE_OK:
                         fileName = chooser.get_filename()
+                        chooser.destroy()
                         self.GTKDownloadDialog(SelectID, fileName)
-                    
-
-                    chooser.destroy()
+                    else:
+                        chooser.destroy()
                 else:
                     print "[GTK:DownloadSubtitles] subtitle_ID="+str(SelectID)+" "+self.LANG[9]
 
@@ -294,8 +299,73 @@ class SubGet:
             print "Sorry, this function is not implemented yet"
 
         def gtkAboutMenu(self, arg):
+            """ Shows about dialog """
+
+            about = gtk.Window(gtk.WINDOW_TOPLEVEL)
+            about.set_title("Informacje o programie")
+            about.set_resizable(False)
+            about.set_size_request(600,550)
+
+            # container
+            fixed = gtk.Fixed()
+            
+            # logo
+            logo = gtk.Image()
+            logo.set_from_file(self.subgetOSPath+"/usr/share/subget/icons/Subget-logo.png")
+            fixed.put(logo, 12, 20)
+
+            # title
+            title = gtk.Label(self.LANG[23])
+            title.modify_font(pango.FontDescription("sans 18"))
+            fixed.put(title, 150, 20)
+
+            # description title
+            description = gtk.Label(self.LANG[24])
+            description.modify_font(pango.FontDescription("sans 8"))
+            fixed.put(description, 150, 60)
+
+            # TABS
+            notebook = gtk.Notebook()
+            notebook.set_tab_pos(gtk.POS_TOP)
+            notebook.show_tabs = True
+            notebook.set_size_request(580, 370)
+            notebook.set_border_width(0) 
+            self.gtkAddTab(notebook, self.LANG[25], self.LANG[26]+":\n WebNuLL <http://webnull.kablownia.org>\n\n"+self.LANG[27]+":\n Tiritto <http://dawid-niedzwiedzki.pl>\n WebNuLL <http://webnull.kablownia.org>\n\n"+self.LANG[28]+":\n iluzion <http://dobreprogramy.pl/iluzion>\n famfamfam <http://famfamfam.com>")
+
+            self.gtkAddTab(notebook, self.LANG[29], self.LANG[30])
+
+            self.gtkAddTab(notebook, self.LANG[31], "English:\n WebNuLL <http://webnull.kablownia.org>\n\nPolish:\n WebNuLL <http://webnull.kablownia.org>")
+
+            fixed.put(notebook, 12, 160)
+
+           
+
+            # add container show all
+            about.add(fixed)
+            about.show_all()
+
+        def gtkAddTab(self, notebook, label, text):
+            authorsFrame = gtk.Frame("")
+            authorsFrame.set_border_width(0) 
+            authorsFrame.set_size_request(100, 75)
+            authorsFrame.set_shadow_type(gtk.SHADOW_ETCHED_OUT)
+
+            authorsFrameContent = gtk.Label(text)
+            authorsFrameContent.set_alignment (0, 0)
+
+            # Scrollbars
+            scrolled_window = gtk.ScrolledWindow()
+            scrolled_window.set_border_width(0)
+            scrolled_window.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_ALWAYS)
+            scrolled_window.add_with_viewport(authorsFrameContent)
+
+            authorsFrame.add(scrolled_window)
+
+            authorsLabel = gtk.Label(label)
+            notebook.prepend_page(authorsFrame, authorsLabel)
+
+        def gtkSearchMenu(self, arg):
             print "Sorry, this function is not implemented yet"
-                
 
         def gtkMainScreen(self,files):
                 """ Main GTK screen of the application """
@@ -309,14 +379,11 @@ class SubGet:
                 self.window.set_resizable(False)
 		self.window.set_size_request(600, 275)
 		self.window.connect("delete_event", self.delete_event)
-
-                if os.name == "nt":
-                    self.window.set_icon_from_file(os.path.expanduser("~")+"/subget/usr/share/subget/icons/Subget-logo.png")
-                else:
-                    self.window.set_icon_from_file("/usr/share/subget/icons/Subget-logo.png")
+                self.window.set_icon_from_file(self.subgetOSPath+"/usr/share/subget/icons/Subget-logo.png")
 
                 ############# Menu #############
                 mb = gtk.MenuBar()
+                icon_theme = gtk.icon_theme_get_default()
 
                 # Shortcuts
                 agr = gtk.AccelGroup()
@@ -330,7 +397,7 @@ class SubGet:
 
                 # "Tools" menu
                 toolsMenu = gtk.Menu()
-                toolsMenuItem = gtk.MenuItem(self.LANG[23])
+                toolsMenuItem = gtk.MenuItem(self.LANG[32])
                 toolsMenuItem.set_submenu(toolsMenu)
                 mb.append(toolsMenuItem)
 
@@ -339,7 +406,36 @@ class SubGet:
                 key, mod = gtk.accelerator_parse("<Control>P")
                 pluginMenu.add_accelerator("activate", agr, key,mod, gtk.ACCEL_VISIBLE)
                 pluginMenu.connect("activate", self.gtkPluginMenu)
+
+                try:
+                    if os.name == "nt":
+                        image = gtk.Image()
+                        image.set_from_file(os.path.expanduser("~")+"/subget/usr/share/subget/icons/plugin.png")
+                    else:
+                        image = gtk.Image()
+                        image.set_from_file("/usr/share/subget/icons/plugin.png")
+
+                    pluginMenu.set_image(image)
+                except gobject.GError, exc:
+                    True
+
                 toolsMenu.append(pluginMenu)
+
+                # "About"
+                infoMenu = gtk.ImageMenuItem("Informacje", agr) # gtk.STOCK_CDROM
+                key, mod = gtk.accelerator_parse("<Control>I")
+                infoMenu.add_accelerator("activate", agr, key,mod, gtk.ACCEL_VISIBLE)
+                infoMenu.connect("activate", self.gtkAboutMenu)
+
+                try:
+                    pixbuf = icon_theme.load_icon("dialog-information", 16, 0)
+                    image = gtk.Image()
+                    image.set_from_pixbuf(pixbuf)
+                    infoMenu.set_image(image)
+                except gobject.GError, exc:
+                    True
+
+                toolsMenu.append(infoMenu)
 
                 # Adding files to query
                 openMenu = gtk.ImageMenuItem(gtk.STOCK_ADD, agr)
@@ -347,6 +443,13 @@ class SubGet:
                 openMenu.add_accelerator("activate", agr, key,mod, gtk.ACCEL_VISIBLE)
                 openMenu.connect("activate", self.gtkSelectVideo)
                 fileMenu.append(openMenu)
+
+                # Search
+                find = gtk.ImageMenuItem(gtk.STOCK_FIND, agr)
+                key, mod = gtk.accelerator_parse("<Control>F")
+                find.add_accelerator("activate", agr, key, mod, gtk.ACCEL_VISIBLE)
+                find.connect("activate", self.gtkSearchMenu)
+                fileMenu.append(find)
 
                 # Exit position in menu
                 exit = gtk.ImageMenuItem(gtk.STOCK_QUIT, agr)

@@ -6,6 +6,12 @@ Requirements: GTK+, Python, X11, PyGTK, alang, alang-py
 
 * Changelog:
 25.06.2011:
+    * Downloading subtitles is now a little faster
+
+25.06.2011:
+    + Added "About informations"
+
+25.06.2011:
     * Moved gtk.Fixed and gtk.MenuBar to gtk.Vbox
 
 24.06.2011:
