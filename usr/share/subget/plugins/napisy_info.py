@@ -3,9 +3,16 @@ import httplib, urllib, time, os, hashlib, re, zipfile
 from xml.dom import minidom
 
 ####
-PluginInfo = { 'Requirements' : { 'OS' : 'Unix' }, 'Authors': 'webnull' }
+PluginInfo = { 'Requirements' : { 'OS' : 'All' }, 'Authors': 'webnull', 'API': 1 }
 
 LANGLIST = {'polski': 'pl', 'angielski': 'en'}
+
+subgetObject = ""
+
+def loadSubgetObject(x):
+    global subgetObject
+
+    subgetObject = x
 
 def download_list(files, query=''):
     results = list()

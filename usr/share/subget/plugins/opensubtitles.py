@@ -7,8 +7,13 @@ loginToken=""
 retries=0 # Retry the connection if failed
 maxRetries=8
 errInfo=""
+subgetObject=""
 
 PluginInfo = { 'Requirements' : { 'OS' : 'Unix' }, 'Authors': 'webnull' }
+
+def loadSubgetObject(x):
+    global subgetObject
+    subgetObject = x
 
 def download_list(files, language='', query=''):
     return

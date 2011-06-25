@@ -130,7 +130,9 @@ class SubGet:
 		    exec("import "+Plugin)
 		    exec("global "+Plugin)
 		    exec("plugins[\""+Plugin+"\"] = "+Plugin)
-		except ImportError:
+		    exec("plugins[\""+Plugin+"\"].loadSubgetObject(self)")
+		except Exception as errno:
+		    exec("plugins[\""+Plugin+"\"] = str(errno)")
 		    print self.LANG[5]+" "+Plugin
 
 
@@ -170,6 +172,11 @@ class SubGet:
 
 
         def GTKCheckForSubtitles(self, Plugin):
+            exec("State = plugins[\""+Plugin+"\"]")
+
+            if type(State).__name__ != "module":
+                return
+
             exec("Results = plugins[\""+Plugin+"\"].language = language")
 	    exec("Results = plugins[\""+Plugin+"\"].download_list(self.files)")
 
@@ -233,36 +240,39 @@ class SubGet:
         def GTKDownloadDialog(self, SelectID, filename):
              """Download progress dialog, downloading and saving subtitles to file"""
 
-             w = gtk.Window(gtk.WINDOW_TOPLEVEL)
-             w.set_resizable(False)
-             w.set_title(self.LANG[10])
-             w.set_border_width(0)
-             w.set_size_request(300, 70)
-
-             fixed = gtk.Fixed()
-
-             # progress bar
-             self.pbar = gtk.ProgressBar()
-             self.pbar.set_size_request(180, 15)
-             self.pbar.set_pulse_step(0.01)
-             self.pbar.pulse()
-             w.timeout_handler_id = gtk.timeout_add(20, self.update_progress_bar)
-             self.pbar.show()
-
-             # label
-             label = gtk.Label(self.LANG[11])
-             fixed.put(label, 50,5)
-             fixed.put(self.pbar, 50,30)
-
-             w.add(fixed)
-             w.show_all()
-
              Plugin = self.subtitlesList[SelectID]['extension']
+             exec("State = plugins[\""+Plugin+"\"]")
 
-             exec("Results = plugins[\""+Plugin+"\"].language = language")
-             exec("Results = plugins[\""+Plugin+"\"].download_by_data(self.subtitlesList[SelectID]['data'], filename)")
+             if type(State).__name__ == "module":
 
-             w.destroy()
+                 w = gtk.Window(gtk.WINDOW_TOPLEVEL)
+                 w.set_resizable(False)
+                 w.set_title(self.LANG[10])
+                 w.set_border_width(0)
+                 w.set_size_request(300, 70)
+
+                 fixed = gtk.Fixed()
+
+                 # progress bar
+                 self.pbar = gtk.ProgressBar()
+                 self.pbar.set_size_request(180, 15)
+                 self.pbar.set_pulse_step(0.01)
+                 self.pbar.pulse()
+                 w.timeout_handler_id = gtk.timeout_add(20, self.update_progress_bar)
+                 self.pbar.show()
+
+                 # label
+                 label = gtk.Label(self.LANG[11])
+                 fixed.put(label, 50,5)
+                 fixed.put(self.pbar, 50,30)
+
+                 w.add(fixed)
+                 w.show_all()
+
+                 exec("Results = plugins[\""+Plugin+"\"].language = language")
+                 exec("Results = plugins[\""+Plugin+"\"].download_by_data(self.subtitlesList[SelectID]['data'], filename)")
+
+                 w.destroy()
 
         def update_progress_bar(self):
             """ Progressbar updater, called asynchronously """
@@ -296,15 +306,121 @@ class SubGet:
                 chooser.destroy()
 
         def gtkPluginMenu(self, arg):
-            print "Sorry, this function is not implemented yet"
+            """ GTK Widget with list of plugins """
+	    window = gtk.Window(gtk.WINDOW_TOPLEVEL)
+            window.set_title(self.LANG[37])
+            window.set_resizable(False)
+            window.set_size_request(500, 290)
+            window.set_icon_from_file(self.subgetOSPath+"/usr/share/subget/icons/plugin.png")
+            fixed = gtk.Fixed()
+
+            liststore = gtk.ListStore(gtk.gdk.Pixbuf, str, str, str, str)
+            treeview = gtk.TreeView(liststore)
+
+
+            # column list
+            tvcolumn = gtk.TreeViewColumn(self.LANG[38])
+            tvcolumn1 = gtk.TreeViewColumn(self.LANG[33])
+            tvcolumn2 = gtk.TreeViewColumn(self.LANG[34])
+            tvcolumn3 = gtk.TreeViewColumn(self.LANG[35])
+
+            treeview.append_column(tvcolumn)
+            treeview.append_column(tvcolumn1)
+            treeview.append_column(tvcolumn2)
+            treeview.append_column(tvcolumn3)
+
+            cellpb = gtk.CellRendererPixbuf()
+            cell = gtk.CellRendererText()
+            cell1 = gtk.CellRendererText()
+            cell2 = gtk.CellRendererText()
+            cell3 = gtk.CellRendererText()
+
+            # add the cells to the columns - 2 in the first
+            tvcolumn.pack_start(cellpb, False)
+            tvcolumn.set_cell_data_func(cellpb, self.cell_pixbuf_func)
+            tvcolumn.pack_start(cell, True)
+            tvcolumn1.pack_start(cell1, True)
+            tvcolumn2.pack_start(cell2, True)
+            tvcolumn3.pack_start(cell3, True)
+            tvcolumn.set_attributes(cell, text=1)
+            tvcolumn1.set_attributes(cell1, text=2)
+            tvcolumn2.set_attributes(cell2, text=3)
+            tvcolumn3.set_attributes(cell3, text=4)
+
+            for Plugin in plugins:
+                try:
+                    API = plugins[Plugin].PluginInfo['API']
+                except Exception:
+                    API = "?"
+
+                try:
+                    Author = plugins[Plugin].PluginInfo['Authors']
+                except Exception:
+                    Author = self.LANG[36]
+
+                try:
+                    OS = plugins[Plugin].PluginInfo['Requirements']['OS']
+
+                    if OS == "All":
+                        OS = "Unix, Linux, Windows"
+                except Exception:
+                    OS = self.LANG[36]
+
+                try:
+                    Packages = plugins[Plugin].PluginInfo['Requirements']['Packages']
+
+                    if len(Packages) > 0:
+                        i=0
+                        for Package in Packages:
+                            if i == 0:
+                                Packages_c = Packages_c + Package
+                            else:
+                                Packages_c = Packages_c + Package + ", "
+                            i=i+1
+
+                except Exception:
+                    Packages = self.LANG[36]
+
+                if type(plugins[Plugin]).__name__ == "module":
+                    pixbuf = gtk.gdk.pixbuf_new_from_file(self.subgetOSPath+'/usr/share/subget/icons/plugin.png') 
+                    liststore.append([pixbuf, Plugin, OS, str(Author), str(API)])
+                else:
+                    pixbuf = gtk.gdk.pixbuf_new_from_file(self.subgetOSPath+'/usr/share/subget/icons/error.png') 
+                    liststore.append([pixbuf, Plugin, OS, str(Author), str(API)])
+
+            # make treeview searchable
+            treeview.set_search_column(1)
+
+            # Allow sorting on the column
+            tvcolumn.set_sort_column_id(1)
+            tvcolumn1.set_sort_column_id(1)
+            tvcolumn2.set_sort_column_id(2)
+            tvcolumn3.set_sort_column_id(3)
+
+            scrolled_window = gtk.ScrolledWindow()
+            scrolled_window.set_border_width(0)
+            scrolled_window.set_size_request(500, 230)
+            scrolled_window.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_ALWAYS)
+            scrolled_window.add_with_viewport(treeview)
+
+            # Cancel button
+            CancelButton = gtk.Button(stock=gtk.STOCK_CLOSE)
+            CancelButton.set_size_request(90, 40)
+            CancelButton.connect('clicked', lambda b: window.destroy())
+            fixed.put(CancelButton, 400, 240) # put on fixed
+
+            fixed.put(scrolled_window, 0, 0)
+            window.add(fixed)
+            window.show_all()
 
         def gtkAboutMenu(self, arg):
             """ Shows about dialog """
 
             about = gtk.Window(gtk.WINDOW_TOPLEVEL)
-            about.set_title("Informacje o programie")
+            about.set_title(self.LANG[23])
             about.set_resizable(False)
             about.set_size_request(600,550)
+            about.set_icon_from_file(self.subgetOSPath+"/usr/share/subget/icons/Subget-logo.png")
 
             # container
             fixed = gtk.Fixed()
@@ -402,7 +518,7 @@ class SubGet:
                 mb.append(toolsMenuItem)
 
                 # "Plugins list"
-                pluginMenu = gtk.ImageMenuItem("Wtyczki", agr) # gtk.STOCK_CDROM
+                pluginMenu = gtk.ImageMenuItem(self.LANG[37], agr)
                 key, mod = gtk.accelerator_parse("<Control>P")
                 pluginMenu.add_accelerator("activate", agr, key,mod, gtk.ACCEL_VISIBLE)
                 pluginMenu.connect("activate", self.gtkPluginMenu)
@@ -422,7 +538,7 @@ class SubGet:
                 toolsMenu.append(pluginMenu)
 
                 # "About"
-                infoMenu = gtk.ImageMenuItem("Informacje", agr) # gtk.STOCK_CDROM
+                infoMenu = gtk.ImageMenuItem(self.LANG[23], agr) # gtk.STOCK_CDROM
                 key, mod = gtk.accelerator_parse("<Control>I")
                 infoMenu.add_accelerator("activate", agr, key,mod, gtk.ACCEL_VISIBLE)
                 infoMenu.connect("activate", self.gtkAboutMenu)
@@ -555,6 +671,11 @@ class SubGet:
 	    # just find all matching subtitles and print it to console
 	    if action == "list":
 		    for Plugin in plugins:
+                         exec("State = plugins[\""+Plugin+"\"]")
+
+                         if type(State).__name__ != "module":
+                             continue
+
 		         exec("Results = plugins[\""+Plugin+"\"].language = language")
 		         exec("Results = plugins[\""+Plugin+"\"].download_list(files)")
 
@@ -576,6 +697,11 @@ class SubGet:
 
 		for File in files:
 		    for Plugin in plugins:
+                         exec("State = plugins[\""+Plugin+"\"]")
+
+                         if type(State).__name__ != "module":
+                             continue
+
 		         exec("Results = plugins[\""+Plugin+"\"].language = language")
 		         exec("Results = plugins[\""+Plugin+"\"].download_list({File})")
 

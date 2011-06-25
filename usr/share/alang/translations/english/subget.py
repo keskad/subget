@@ -2,7 +2,7 @@
 
 class alangINC():
 	def return_array(a):
-		MyLang = range(33)
+		MyLang = range(39)
 		MyLang[0] = "subget for GNU/Linux. Simple Subtitle Downloader for shell and GUI.\nUsage: subget [long GNU option] [option] first-file, second-file, ...\n\n --help                : this message\n --console, -c         : show results in console, not in graphical user interface\n --language, -l        : specify preffered language\n --quick, -q           : grab first result and download"
 
                 MyLang[1] = "Try --help for usage"
@@ -38,4 +38,10 @@ class alangINC():
                 MyLang[30] = "This program was published on Free and Open Software license.\n\nConditions:\n - You have right to share this program in original or modified form\n - You are free to run this program in any purpose\n - You are free to view and modify the source code in any purpose\n - You have right to translate this program to any language you want\n - You must leave a note about original author when modifying or sharing this software\n - The program must remain on the same license when editing or sharing\n\nProgram license: GNU General Public License 3 (GNU GPLv3)"
                 MyLang[31] = "Translating"
                 MyLang[32] = "Tools"
+                MyLang[33] = "Operating system"
+                MyLang[34] = "Authors"
+                MyLang[35] = "API interface version"
+                MyLang[36] = "Unknown"
+                MyLang[37] = "Plugins"
+                MyLang[38] = "Plugin"
 		return MyLang

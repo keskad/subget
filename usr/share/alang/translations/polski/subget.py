@@ -2,7 +2,7 @@
 
 class alangINC():
 	def return_array(a):
-		MyLang = range(33)
+		MyLang = range(39)
 		MyLang[0] = "subget dla GNU/Linux. Prosty program do pobierania napisów z interfejsem tekstowym oraz graficznym.\nUżycie: subget [long GNU option] [option] pierwszy-plik, drugi-plik, ...\n\n --help                : ta wiadomość\n --console, -c         : pokazuje wyniki w konsoli zamiast w graficznym okienku\n --language, -l        : wybierz preferowany język\n --quick, -q           : wybierz pierwszy znaleziony wynik"
 
                 MyLang[1] = "Spróbuj użyć --help aby wyświetlić możliwe opcje"
@@ -37,4 +37,10 @@ class alangINC():
                 MyLang[30] = "Ten program został udostępniony na licencji Wolnego Oprogramowania.\n\nWarunki:\n - Możesz dowolnie rozprowadzać program w postaci oryginalnej bądź zmodyfikowanej\n - Możesz uruchamiać to oprogramowanie w dowolnym celu niezależnie od sytuacji\n - Masz prawo do wglądu w kod źródłowy programu oraz jego modyfikację w dowolnym celu\n - Masz prawo do tłumaczenia programu na dowolny język\n - Masz obowiązek zachować wzmiankę o oryginalnym autorze\n - Rozpowszechniać program można tylko i wyłącznie zachowując warunki oryginalnej licencji\n\nLicencja programu: GNU General Public License 3 (GNU GPLv3)"
                 MyLang[31] = "Tłumaczenie"
                 MyLang[32] = "Narzędzia"
+                MyLang[33] = "System operacyjny"
+                MyLang[34] = "Zasługi"
+                MyLang[35] = "Wersja interfejsu API"
+                MyLang[36] = "Nieznane"
+                MyLang[37] = "Wtyczki"
+                MyLang[38] = "Wtyczka"
 		return MyLang

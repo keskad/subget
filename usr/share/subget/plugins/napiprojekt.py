@@ -1,13 +1,19 @@
 import httplib, urllib, time, os, hashlib
 
 ####
-PluginInfo = { 'Requirements' : { 'OS' : 'Unix', 'Authors': 'webnull', 'Packages:' : ( 'p7zip' ) } }
+PluginInfo = { 'Requirements' : { 'OS' : 'All', 'Authors': 'webnull', 'Packages:' : ( 'p7zip' ), 'API': 1 } }
 language = "PL"
 
 apiUrl = "http://napiprojekt.pl/unit_napisy/dl.php"
 retries=0 # Retry the connection if failed
 maxRetries=8
 errInfo=""
+subgetObject=""
+
+def loadSubgetObject(x):
+    global subgetObject
+
+    subgetObject = x
 
 # thanks to gim,krzynio,dosiu,hash 2oo8 for this function
 def f(z):
@@ -44,6 +50,9 @@ def download_quick(files, query=''):
 
 
 def check_exists(File):
+    global subgetObject
+    print "TEST:"
+    print subgetObject.subgetOSPath
     global language
 
     d = hashlib.md5(open(File).read(10485760)).hexdigest()
@@ -75,7 +84,6 @@ def get_subtitle(File):
     global language
 
     if File[0:4] == "http":
-        print "FOUND URL"
         subtitleZipped = urllib.urlopen(File).read()
     else:
         d = hashlib.md5(open(File).read(10485760)).hexdigest()
@@ -101,7 +109,11 @@ def get_subtitle(File):
         Handler.close()
 
         # use 7zip to unpack subtitles
-        os.system("/usr/bin/7z x -y -so -piBlm8NTigvru0Jr0 \""+File+".7z\" 2>/dev/null > \""+File+".txt\"")
+        if os.name == "nt":
+            os.system("/usr/bin/7z x -y -so -piBlm8NTigvru0Jr0 \""+File+".7z\" 2>/dev/null > \""+File+".txt\"")
+        else:
+            os.system(x.subgetOSPath+"/7za.exe x -y -so -piBlm8NTigvru0Jr0 \""+File+".7z\" > \""+File+".txt\"")
+
         os.remove(File+".7z")
         return File+".7z"
     else:
@@ -111,7 +123,6 @@ def download_by_data(File, SavePath):
     language = File['lang']
 
     if File['file'][0:4] == "http":
-        print "FOUND URL"
         subtitleZipped = urllib.urlopen(File).read()
     else:
         File = File['file']
@@ -138,7 +149,11 @@ def download_by_data(File, SavePath):
         Handler.close()
 
         # use 7zip to unpack subtitles
-        os.system("/usr/bin/7z x -y -so -piBlm8NTigvru0Jr0 \""+File+".7z\" 2>/dev/null > \""+SavePath+"\"")
+        if os.name == "nt":
+            os.system("/usr/bin/7z x -y -so -piBlm8NTigvru0Jr0 \""+File+".7z\" 2>/dev/null > \""+File+".txt\"")
+        else:
+            os.system(x.subgetOSPath+"/7za.exe x -y -so -piBlm8NTigvru0Jr0 \""+File+".7z\" > \""+File+".txt\"")
+
         os.remove(File+".7z")
         return SavePath
     else:
