@@ -1,5 +1,5 @@
-import pycurl, httplib, urllib, StringIO, re, time, struct, os
-from xml.dom import minidom
+import httplib, urllib, StringIO, re, time, struct, os
+from xml.dom import minaidom
 
 apiUrl = "http://api.opensubtitles.org/xml-rpc"
 userAgent = "OS Test User Agent"

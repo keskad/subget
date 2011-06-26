@@ -1,7 +1,7 @@
 import httplib, urllib, time, os, hashlib
 
 ####
-PluginInfo = { 'Requirements' : { 'OS' : 'All', 'Authors': 'webnull', 'Packages:' : ( 'p7zip' ), 'API': 1 } }
+PluginInfo = { 'Requirements' : { 'OS' : 'All', 'Packages:' : ( 'p7zip' )}, 'API': 1, 'Authors': 'webnull'  }
 language = "PL"
 
 apiUrl = "http://napiprojekt.pl/unit_napisy/dl.php"
@@ -51,8 +51,6 @@ def download_quick(files, query=''):
 
 def check_exists(File):
     global subgetObject
-    print "TEST:"
-    print subgetObject.subgetOSPath
     global language
 
     d = hashlib.md5(open(File).read(10485760)).hexdigest()
