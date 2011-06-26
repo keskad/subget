@@ -5,6 +5,9 @@ Easily extendable by plugins, supports multi-language.
 Requirements: GTK+, Python, X11, PyGTK, alang, alang-py
 
 * Changelog:
+26.06.2011:
+    * Fixed napiprojekt plugin, now works on Windows
+
 25.06.2011:
     + Added "plugin list" dialog
     + Dialog "About Subget" added
