@@ -1,5 +1,5 @@
 #!/usr/bin/python2
-import httplib, urllib, time, os, hashlib, re, zipfile
+import httplib, urllib, time, os, hashlib, re, zipfile, time
 from xml.dom import minidom
 
 ####
@@ -167,9 +167,14 @@ def get_subtitle(File):
 
 def download_by_data(File, SavePath):
     subtitleContent = urllib.urlopen(File['url']).read()
-    TMPName = "/tmp/"+os.path.basename(File['file'])
 
-    Handler = open(TMPName, "w")
+    if os.name == "nt": # WINDOWS "THE PROBLEMATIC OS"
+        TMPName = os.path.expanduser("~").replace("\\\\", "/")+"/"+os.path.basename(File['file'])+".tmp"
+        print "[plugin:napisy_info][debug:windows] TMPName = "+TMPName
+    else: # UNIX, Linux, *BSD
+        TMPName = "/tmp/"+os.path.basename(File['file'])
+
+    Handler = open(TMPName, "wb")
     Handler.write(subtitleContent)
     Handler.close()
 
@@ -177,9 +182,10 @@ def download_by_data(File, SavePath):
     ListOfNames = z.namelist()
 
     if len(ListOfNames) > 0:
-        Handler = open(SavePath, "w")
+        Handler = open(SavePath, "wb")
         Handler.write(z.read(ListOfNames[0]))
         Handler.close()
+        z.close()
         os.remove(TMPName)
 
     return SavePath
