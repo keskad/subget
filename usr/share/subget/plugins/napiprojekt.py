@@ -1,4 +1,4 @@
-import httplib, urllib, time, os, hashlib
+import httplib, urllib, time, os, hashlib, subprocess
 
 ####
 PluginInfo = { 'Requirements' : { 'OS' : 'All', 'Packages:' : ( 'p7zip' )}, 'API': 1, 'Authors': 'webnull'  }
@@ -42,18 +42,12 @@ def download_list(files, query=''):
     return results
 
 
-# download first best subtitle
-def download_quick(files, query=''):
-    results = list()
-    for File in files:
-        results.append(get_subtitle(File))
-
 
 def check_exists(File):
     global subgetObject
     global language
 
-    d = hashlib.md5(open(File).read(10485760)).hexdigest()
+    d = hashlib.md5(open(File, "rb").read(10485760)).hexdigest()
 
     if os.name == "posix":
        os.name = "Linux"
@@ -80,11 +74,12 @@ def check_exists(File):
 
 def get_subtitle(File):
     global language
+    global subgetObject
 
     if File[0:4] == "http":
         subtitleZipped = urllib.urlopen(File).read()
     else:
-        d = hashlib.md5(open(File).read(10485760)).hexdigest()
+        d = hashlib.md5(open(File, "rb").read(10485760, "rb")).hexdigest()
 
         if os.name == "posix":
           os.name = "Linux"
@@ -102,15 +97,16 @@ def get_subtitle(File):
             return False
 
     if len(subtitleZipped) > 0 and subtitleZipped != "NPc0": 
-        Handler = open(File+".7z", "w")
+        Handler = open(File+".7z", "wb")
         Handler.write(subtitleZipped)
         Handler.close()
 
         # use 7zip to unpack subtitles
         if os.name == "nt":
-            os.system("/usr/bin/7z x -y -so -piBlm8NTigvru0Jr0 \""+File+".7z\" 2>/dev/null > \""+File+".txt\"")
+            #os.system(x.subgetOSPath+"/7za.exe x -y -so -piBlm8NTigvru0Jr0 \""+File+".7z\" > \""+File+".txt\"")
+            subprocess.call("\""+subgetObject.subgetOSPath.replace("/", "\\")+"/7za.exe\" x -y -so -piBlm8NTigvru0Jr0 \""+File+".7z\" > \""+File+".txt\"", shell=True, bufsize=1)
         else:
-            os.system(x.subgetOSPath+"/7za.exe x -y -so -piBlm8NTigvru0Jr0 \""+File+".7z\" > \""+File+".txt\"")
+            os.system("/usr/bin/7z x -y -so -piBlm8NTigvru0Jr0 \""+File+".7z\" 2>/dev/null > \""+File+".txt\"")
 
         os.remove(File+".7z")
         return File+".7z"
@@ -125,7 +121,7 @@ def download_by_data(File, SavePath):
     else:
         File = File['file']
 
-        d = hashlib.md5(open(File).read(10485760)).hexdigest()
+        d = hashlib.md5(open(File, "rb").read(10485760)).hexdigest()
 
         if os.name == "posix":
           os.name = "Linux"
@@ -142,15 +138,15 @@ def download_by_data(File, SavePath):
             return False
 
     if len(subtitleZipped) > 0 and subtitleZipped != "NPc0": 
-        Handler = open(File+".7z", "w")
+        Handler = open(File+".7z", "wb")
         Handler.write(subtitleZipped)
         Handler.close()
 
         # use 7zip to unpack subtitles
         if os.name == "nt":
-            os.system("/usr/bin/7z x -y -so -piBlm8NTigvru0Jr0 \""+File+".7z\" 2>/dev/null > \""+File+".txt\"")
+            subprocess.call("\""+subgetObject.subgetOSPath.replace("/", "\\")+"/7za.exe\" x -y -so -piBlm8NTigvru0Jr0 \""+File+".7z\" > \""+File+".txt\"", shell=True, bufsize=1)
         else:
-            os.system(x.subgetOSPath+"/7za.exe x -y -so -piBlm8NTigvru0Jr0 \""+File+".7z\" > \""+File+".txt\"")
+            os.system("/usr/bin/7z x -y -so -piBlm8NTigvru0Jr0 \""+File+".7z\" 2>/dev/null > \""+File+".txt\"")
 
         os.remove(File+".7z")
         return SavePath

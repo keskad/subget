@@ -23,12 +23,6 @@ def download_list(files, query=''):
     return results
 
 
-# download first best subtitle
-def download_quick(files, query=''):
-    results = list()
-    for File in files:
-        results.append(get_subtitle(File))
-
 # fixes episode or season number for TV series eg. 1x3 => 01x03
 def addZero(number):
     if len(number) == 1:
@@ -40,7 +34,7 @@ def addZero(number):
 def getSearchKeywords(File):
     OriginalFileName = File
     File = File.replace(".", " ").replace("[", " ").replace("]", " ").replace("-", " ").replace("_", " ")
-    SearchTV1 = re.findall("([A-Za-z0-9]+)(.?)S([0-9]+)E([0-9]+)(.*)", File)
+    SearchTV1 = re.findall("([A-Za-z0-9- ]+)(.?)S([0-9]+)E([0-9]+)(.*)", File)
 
     # if its in TV series format eg. S01E02
     if len(SearchTV1) > 0:
@@ -170,7 +164,6 @@ def download_by_data(File, SavePath):
 
     if os.name == "nt": # WINDOWS "THE PROBLEMATIC OS"
         TMPName = os.path.expanduser("~").replace("\\\\", "/")+"/"+os.path.basename(File['file'])+".tmp"
-        print "[plugin:napisy_info][debug:windows] TMPName = "+TMPName
     else: # UNIX, Linux, *BSD
         TMPName = "/tmp/"+os.path.basename(File['file'])
 
