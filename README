@@ -6,6 +6,9 @@ Requirements: GTK+, Python, X11, PyGTK, alang, alang-py
 
 * Changelog:
 28.06.2011:
+    + Added "domain" information to napisy24 and napisy_info plugins
+
+28.06.2011:
     * Fixed napisy24.pl plugin
     + Added support for napisy.org archive (napisy24.pl server)
 

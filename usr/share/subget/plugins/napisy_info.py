@@ -3,7 +3,7 @@ import httplib, urllib, time, os, hashlib, re, zipfile, time
 from xml.dom import minidom
 
 ####
-PluginInfo = { 'Requirements' : { 'OS' : 'All' }, 'Authors': 'webnull', 'API': 1 }
+PluginInfo = { 'Requirements' : { 'OS' : 'All' }, 'Authors': 'webnull', 'API': 1, 'domain': 'napisy.info' }
 
 LANGLIST = {'polski': 'pl', 'angielski': 'en'}
 
@@ -158,6 +158,9 @@ def get_subtitle(File):
                 return {'errInfo': "NOT_FOUND"}
         else:
             return {'errInfo': "NOT_FOUND"}
+
+def search_by_keywords(Keywords):
+    return check_exists(Keywords)
 
 def download_by_data(File, SavePath):
     subtitleContent = urllib.urlopen(File['url']).read()

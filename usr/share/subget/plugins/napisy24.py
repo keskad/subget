@@ -1,7 +1,7 @@
 import httplib, urllib, time, os, hashlib, subprocess, re, zipfile
 
 ####
-PluginInfo = { 'Requirements' : { 'OS' : 'All'}, 'API': 1, 'Authors': 'webnull'  }
+PluginInfo = { 'Requirements' : { 'OS' : 'All'}, 'API': 1, 'Authors': 'webnull', 'domain': 'napisy24.pl'  }
 language = "PL"
 
 retries=0 # Retry the connection if failed
