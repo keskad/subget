@@ -147,11 +147,13 @@ class SubGet:
             self.subtitlesList[ID] = {'language': language, 'name': release_name, 'server': server, 'data': download_data, 'extension': extension, 'file': File}
 
             #print "Adding "+str(ID)+" - "+release_name
+            pixbuf_path = self.subgetOSPath+'/usr/share/subget/icons/'+language+'.xpm'
 
-            if os.name == "nt":
-                pixbuf = gtk.gdk.pixbuf_new_from_file(os.path.expanduser("~")+'/subget/usr/share/subget/icons/'+language+'.xpm') 
-            else:
-                pixbuf = gtk.gdk.pixbuf_new_from_file('/usr/share/subget/icons/'+language+'.xpm')
+            if not os.path.isfile(pixbuf_path):
+                pixbuf_path = self.subgetOSPath+'/usr/share/subget/icons/unknown.xpm'
+                print "[addSubtitlesRow] "+language+".xpm icon does not exists, using unknown.xpm"
+
+            pixbuf = gtk.gdk.pixbuf_new_from_file(pixbuf_path)
 
             self.liststore.append([pixbuf, str(release_name), str(server), ID])
 
@@ -481,7 +483,124 @@ class SubGet:
             notebook.prepend_page(authorsFrame, authorsLabel)
 
         def gtkSearchMenu(self, arg):
-            print "Sorry, this function is not implemented yet"
+            self.sm = gtk.Window(gtk.WINDOW_TOPLEVEL)
+            self.sm.set_title(self.LANG[39])
+            self.sm.set_size_request(350, 180)
+            self.sm.set_resizable(False)
+            self.sm.set_icon_from_file(self.subgetOSPath+"/usr/share/subget/icons/Subget-logo.png")
+
+            self.sm.fixed = gtk.Fixed()
+
+            # informations
+            self.sm.label = gtk.Label(self.LANG[40])
+
+            # text query
+            self.sm.entry = gtk.Entry()
+            self.sm.entry.set_max_length(50)
+            self.sm.entry.set_size_request(190, 26)
+            self.sm.entry.show()
+
+            # combo box with plugin selection
+            self.sm.cb = gtk.combo_box_new_text()
+            self.sm.cb.append_text(self.LANG[41])
+            self.sm.plugins = dict()
+
+            for Plugin in plugins:
+                if type(plugins[Plugin]).__name__ != "module":
+                    continue
+
+                # does plugin inform about its domain?
+                if plugins[Plugin].PluginInfo.has_key('domain'):
+                    pluginDomain = plugins[Plugin].PluginInfo['domain']
+                    self.sm.plugins[pluginDomain] = Plugin
+                    self.sm.cb.append_text(pluginDomain)
+                else:
+                    self.sm.plugins[Plugin] = Plugin
+                    self.sm.cb.append_text(Plugin)
+
+            # Set "All plugins" as default active
+            self.sm.cb.set_active(0)
+
+
+            # search button
+            self.sm.searchButton = gtk.Button(self.LANG[39])
+            self.sm.searchButton.set_size_request(80, 35)
+
+            image = gtk.Image() # image for button
+            image.set_from_stock(gtk.STOCK_FIND, 8)
+            self.sm.searchButton.set_image(image)
+            self.sm.searchButton.connect('clicked', self.gtkDoSearch)
+
+            # cancel button
+            self.sm.cancelButton = gtk.Button(self.LANG[42])
+            self.sm.cancelButton.set_size_request(80, 35)
+            self.sm.cancelButton.connect('clicked', lambda b: self.sm.destroy())
+
+            image = gtk.Image() # image for button
+            image.set_from_stock(gtk.STOCK_CLOSE, 8)
+            self.sm.cancelButton.set_image(image)
+
+            # list clearing check box
+            self.sm.clearCB = gtk.CheckButton(self.LANG[43])
+
+            self.sm.fixed.put(self.sm.label, 10, 8)
+            self.sm.fixed.put(self.sm.entry, 10, 60)
+            self.sm.fixed.put(self.sm.cb, 210, 59)
+            self.sm.fixed.put(self.sm.clearCB, 20, 90)
+            self.sm.fixed.put(self.sm.searchButton, 250, 128)
+            self.sm.fixed.put(self.sm.cancelButton, 165, 128)
+
+            self.sm.add(self.sm.fixed)
+            self.sm.show_all()
+
+        def gtkDoSearch(self, arg):
+            query = self.sm.entry.get_text()
+            self.sm.destroy()
+
+            if query == "" or query == None:
+                return
+
+            if self.sm.clearCB.get_active():
+                self.liststore.clear()
+
+            plugin = self.sm.cb.get_active_text()
+
+            # search in all plugins
+            if plugin == self.LANG[41]:
+                for Plugin in plugins:
+                    try:
+                        plugins[Plugin].language = language
+                        Results = plugins[Plugin].search_by_keywords(query) # query the plugin for results
+
+                        if Results == None:
+                            return
+
+                        for Subtitles in Results:
+                            if str(type(Subtitles).__name__) == "str":
+                                continue
+
+                            self.addSubtitlesRow(Subtitles['lang'], Subtitles['title'], Subtitles['domain'], Subtitles['data'], Plugin, Subtitles['file'])
+
+                    except AttributeError:
+                       True # Plugin does not support searching by keywords
+            else:
+                try:
+                    plugins[self.sm.plugins[plugin]].language = language
+                    Results = plugins[self.sm.plugins[plugin]].search_by_keywords(query) # query the plugin for results
+
+                    if Results == None:
+                        return
+
+                    for Result in Results:
+                        if str(type(Result).__name__) == "str":
+                            continue
+
+                        self.addSubtitlesRow(Result['lang'], Result['title'], Result['domain'], Result['data'], plugin, Result['file'])
+
+                except AttributeError as errno:
+                    print "[plugin:"+self.sm.plugins[plugin]+"] "+self.LANG[45]
+                    True # Plugin does not support searching by keywords
+            
 
         def gtkMainScreen(self,files):
                 """ Main GTK screen of the application """

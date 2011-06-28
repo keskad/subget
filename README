@@ -6,6 +6,10 @@ Requirements: GTK+, Python, X11, PyGTK, alang, alang-py
 
 * Changelog:
 28.06.2011:
+    * Fixed napisy24.pl (not showing HTML code in subtitles name)
+    + File->Search now working, but not all plugins supports this feature
+
+28.06.2011:
     + Added "domain" information to napisy24 and napisy_info plugins
 
 28.06.2011:

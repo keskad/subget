@@ -1,7 +1,7 @@
 import httplib, urllib, time, os, hashlib, subprocess
 
 ####
-PluginInfo = { 'Requirements' : { 'OS' : 'All', 'Packages:' : ( 'p7zip' )}, 'API': 1, 'Authors': 'webnull'  }
+PluginInfo = { 'Requirements' : { 'OS' : 'All', 'Packages:' : ( 'p7zip' )}, 'API': 1, 'Authors': 'webnull', 'domain': 'napiprojekt.pl'  }
 language = "PL"
 
 apiUrl = "http://napiprojekt.pl/unit_napisy/dl.php"

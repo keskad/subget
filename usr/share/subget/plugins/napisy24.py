@@ -138,9 +138,13 @@ def getListOfSubtitles(movieRealName, File):
 
     # napisy.org archive support
     Archives = dataCutedOff.split("href=\"/download/archiwum/")
-    print "Napisy.org !"
+    i = 0
 
     for Archive in Archives:
+        i = i + 1
+        if i == 1:
+            continue
+
         End = Archive.split("png\" width=\"17\" height=\"17\" alt=\"")
         
         if len(End) > 5:
@@ -149,7 +153,7 @@ def getListOfSubtitles(movieRealName, File):
         Number = re.findall("([0-9]+)/\"\>", End[0])
         ID = Number[0]
     
-        Name = re.findall("<td( | class=\"dark\")>(.*)<\/td>", End[0])
+        Name = re.findall("<td( | class=\"dark\")>([A-Za.-z _-]+)<\/td>", End[0])
         Name = Name[0][1]
         Language = re.findall("<img src=\"\/images\/ico_flag_([A-Za-z]+)_", End[0])
         Language = Language[0]
