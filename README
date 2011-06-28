@@ -5,6 +5,14 @@ Easily extendable by plugins, supports multi-language.
 Requirements: GTK+, Python, X11, PyGTK, alang, alang-py
 
 * Changelog:
+28.06.2011:
+    * Fixed napisy24.pl plugin
+    + Added support for napisy.org archive (napisy24.pl server)
+
+27.06.2011:
+    + Added support for napisy24.pl
+    * Cleaned up plugins code
+
 26.06.2011:
     * Fixed napisy_info plugin, now works on Windows
 
