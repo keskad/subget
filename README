@@ -6,6 +6,9 @@ Requirements: GTK+, Python, X11, PyGTK, alang, alang-py
 
 * Changelog:
 28.06.2011:
+    + Allsubs.org support
+
+28.06.2011:
     + "Clear list" function is now available in "File" menu
 
 28.06.2011:
