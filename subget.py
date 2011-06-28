@@ -1,6 +1,6 @@
 #!/usr/bin/python2.7
 #-*- coding: utf-8 -*-
-import getopt, sys, os, re, glob, gtk, gobject, pango
+import getopt, sys, os, re, glob, gtk, gobject, pango, time
 import pygtk
 from threading import Thread
 
@@ -527,7 +527,7 @@ class SubGet:
             self.sm.searchButton.set_size_request(80, 35)
 
             image = gtk.Image() # image for button
-            image.set_from_stock(gtk.STOCK_FIND, 8)
+            image.set_from_stock(gtk.STOCK_FIND, 4)
             self.sm.searchButton.set_image(image)
             self.sm.searchButton.connect('clicked', self.gtkDoSearch)
 
@@ -537,7 +537,7 @@ class SubGet:
             self.sm.cancelButton.connect('clicked', lambda b: self.sm.destroy())
 
             image = gtk.Image() # image for button
-            image.set_from_stock(gtk.STOCK_CLOSE, 8)
+            image.set_from_stock(gtk.STOCK_CLOSE, 4)
             self.sm.cancelButton.set_image(image)
 
             # list clearing check box
@@ -556,6 +556,7 @@ class SubGet:
         def gtkDoSearch(self, arg):
             query = self.sm.entry.get_text()
             self.sm.destroy()
+            time.sleep(0.1)
 
             if query == "" or query == None:
                 return
@@ -671,6 +672,20 @@ class SubGet:
                     True
 
                 toolsMenu.append(infoMenu)
+
+                # "Clear"
+                clearMenu = gtk.ImageMenuItem(self.LANG[44])
+                clearMenu.connect("activate", lambda b: self.liststore.clear())
+
+                try:
+                    image = gtk.Image()
+                    image.set_from_stock(gtk.STOCK_CLEAR, 2)
+                    clearMenu.set_image(image)
+                except gobject.GError, exc:
+                    True
+
+
+                toolsMenu.append(clearMenu)
 
                 # Adding files to query
                 openMenu = gtk.ImageMenuItem(gtk.STOCK_ADD, agr)
