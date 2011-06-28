@@ -13,6 +13,8 @@ subgetObject=""
 # http://napisy24.pl/search.php?str=QUERY - searching
 # http://napisy24.pl/download/ID/ - downloading (ZIP format)
 
+def removeNonAscii(s): return "".join(filter(lambda x: ord(x)<128, s))
+
 def loadSubgetObject(x):
     global subgetObject
 
@@ -70,29 +72,95 @@ def getListOfSubtitles(movieRealName, File):
         return False
 
     nodes = list()
-    numberOfResults = re.findall("\<a href=\"\/\"\>napisy24.pl\<\/a\> \> Znaleziono ([0-9]+) film", data)
+    data = data.replace("\t", " ").replace("\n", "")
+    dataAreaStart = data.find("<div id=\"mainLevel\">")
+    dataAreaStop = data.find("alt=\"Uaktualnione\"")
+    data = removeNonAscii(data)
+    dataCutedOff = data[dataAreaStart:dataAreaStop]
 
-    if numberOfResults == None:
-        return {'errInfo': "NOT_FOUND"}
+    currentCount = re.findall("<a href=\"/\">napisy24.pl</a> > Znaleziono ([0-9]+) film", dataCutedOff)
 
-    if int(numberOfResults[0]) == 0:
-        return {'errInfo': "NOT_FOUND"}
+    print currentCount
+    print urllib.quote_plus(movieRealName)
+    if int(currentCount[0]) > 0:
 
-    #results = re.findall("\<tr\>(.?)\<a href=\"\/download\/([0-9]+)\/\"\>\<strong\>(.*)\<\/strong\>\<\/a\>(.?)\<td \>(.*)\<br \/\>\<em\>(.?)Czas trwania: \<strong\>([0-9:]+)\</strong\>\<br \/\>(.?)FPS: \<strong\>([0-9.]+)\<\/strong\>\<br \/\>(.?)Rozmiar pliku: \<strong\>([0-9]+)\<\/strong\>", data)
+        Items = dataCutedOff.split("<a href=\"javascript:void(0);\" onclick=\"javascript:showInfo('")
 
-    resultsID = re.findall("\<a href\=\"\/download\/([0-9]+)\/\"\>\<strong\>(.*)\<\/strong\>\<\/a\>", data)
-    resultsTime = re.findall("Czas trwania: \<strong\>([0-9:]+)\</strong\>", data)
-    resultsFPS = re.findall("FPS: \<strong\>([0-9.]+)\<\/strong\>", data)
-    resultsSize = re.findall("Rozmiar pliku: \<strong\>([0-9]+)\<\/strong\>", data)
-    #<img src="/images/ico_flag_pl_2.png" width="17" height="17" alt="Polski"
-    resultsLanguage = re.findall("\<img src=\"\/images\/ico_flag_([a-zA-Z]+)_([0-9+).png\" width=\"([0-9]+)\" height=\"([0-9]+)\" alt=\"([A-Za-z0-9]+)\"", data)
+        for Item in Items:
+            ID = re.findall("<a href=\"/download/([0-9]+)/\">", Item)
+        
+            if len(ID) > 0:
+                End = Item.split("<a href=\"/napis/"+ID[0]+"/\"")
+                ItemData = End[0]
+                
+                resultsTime = re.findall("Czas trwania: \<strong\>([0-9:]+)\</strong\>", ItemData)
+                resultsFPS = re.findall("FPS: \<strong\>([0-9.]+)\<\/strong\>", ItemData)
+                resultsSize = re.findall("Rozmiar pliku: \<strong\>([0-9]+)\<\/strong\>", ItemData)
+                resultsLanguage = re.findall("\<img src=\"\/images\/ico_flag_([a-zA-Z]+)_([0-9+).png\" width=\"([0-9]+)\" height=\"([0-9]+)\" alt=\"([A-Za-z0-9]+)\"", ItemData)
+                Name = re.findall("<a href=\"/download/([0-9]+)/\">\<strong\>(.*)\<\/strong\>\<\/a\>", ItemData)
 
-    for Subtitle in range(int(numberOfResults[0])):
-        nodes.append({'lang': str(resultsLanguage[Subtitle][0]).lower(), 'site' : 'napisy24.pl', 'title' : str(resultsID[Subtitle][1]), 'url' : 'http://napisy24.pl/download/'+str(resultsID[Subtitle][0])+'/', 'fps': str(resultsFPS[Subtitle][0]), 'size': str(resultsSize[Subtitle][0]), 'time': str(resultsTime[Subtitle][0]), 'data': {'file': File, 'headers': response.getheaders(), 'id': str(resultsID[Subtitle][0]), 'search_string': urllib.quote_plus(movieRealName), 'lang': str(resultsLanguage[Subtitle][0]).lower()}, 'domain': 'napisy24.pl', 'file': File})
+                if len(Name) == 1:
+                    if len(Name[0]) != 2:
+                        continue
+        
+                    Name = Name[0][1]
 
+                if len(resultsLanguage) == 1:
+                    if len(resultsLanguage[0]) > 0:
+                        resultsLanguage = resultsLanguage[0][0]
+                    else:
+                        resultsLanguage = "unknown"
+                else:
+                    resultsLanguage = "unknown"
+                
+                if len(resultsSize) == 1:
+                    resultsSize = resultsSize[0]
+                else:
+                    resultsSize = 0
+    
+                if len(resultsFPS) == 1:
+                    resultsFPS = resultsFPS[0]
+                else:
+                    resultsFPS = 0
+    
+                if len(resultsTime) == 1:
+                    resultsTime = resultsTime[0]
+                else:
+                    resultsTime = 0
+
+                nodes.append({'lang': str(resultsLanguage).lower(), 'site' : 'napisy24.pl', 'title' : str(Name), 'url' : 'http://napisy24.pl/download/'+str(ID[0])+'/', 'fps': resultsFPS, 'size': str(resultsSize), 'time': resultsTime, 'data': {'file': File, 'headers': response.getheaders(), 'id': str(ID[0]), 'type': 'napisy24.pl', 'search_string': urllib.quote_plus(movieRealName), 'lang': str(resultsLanguage).lower()}, 'domain': 'napisy24.pl', 'file': File})
+
+
+    archiveCount = re.findall("<a href=\"http://napisy.org\">Napisy.org</a> > Znaleziono ([0-9]+) film", dataCutedOff)
+
+    if int(archiveCount[0]) == 0:
+        return nodes
+
+    # napisy.org archive support
+    Archives = dataCutedOff.split("href=\"/download/archiwum/")
+    print "Napisy.org !"
+
+    for Archive in Archives:
+        End = Archive.split("png\" width=\"17\" height=\"17\" alt=\"")
+        
+        if len(End) > 5:
+           continue
+        
+        Number = re.findall("([0-9]+)/\"\>", End[0])
+        ID = Number[0]
+    
+        Name = re.findall("<td( | class=\"dark\")>(.*)<\/td>", End[0])
+        Name = Name[0][1]
+        Language = re.findall("<img src=\"\/images\/ico_flag_([A-Za-z]+)_", End[0])
+        Language = Language[0]
+
+        nodes.append({'lang': str(Language).lower(), 'site' : 'napisy.org', 'title' : str(Name), 'url' : 'http://napisy24.pl/download/archiwum/'+str(ID)+'/', 'data': {'file': File, 'headers': response.getheaders(), 'id': str(ID), 'type': 'napisy.org', 'search_string': urllib.quote_plus(movieRealName), 'lang': str(Language).lower()}, 'domain': 'napisy.org', 'file': File})
+
+            
     return nodes
 
-    
+def search_by_keywords(Keywords):
+    return check_exists(Keywords)
 
 def check_exists(File):
     global subgetObject
@@ -109,8 +177,6 @@ def check_exists(File):
 
     else:
         return {'errInfo': "NOT_FOUND"}
-        #Result = list()
-        #Result.append({'lang': language.lower(), 'site' : 'napisy24.pl', 'title' : os.path.basename(File)[:-3]+"txt", 'url' : subtitleUrl, 'data': {'file': File, 'lang': language}, 'domain': 'napiprojekt.pl', 'file': File})
 
 
 def download_by_data(File, SavePath):
@@ -131,7 +197,12 @@ def download_by_data(File, SavePath):
 
     try:
         conn = httplib.HTTPConnection('napisy24.pl', 80, Headers, timeout=2)
-        conn.request("GET", "/download/"+File['id']+"/")
+
+        if File['type'] == 'napisy.org':
+            conn.request("GET", "/download/archiwum/"+File['id']+"/")
+        else:
+            conn.request("GET", "/download/"+File['id']+"/")
+
         response = conn.getresponse()
         data = response.read()
     except Exception:
@@ -158,7 +229,3 @@ def download_by_data(File, SavePath):
         os.remove(TMPName)
 
         return SavePath
-  #  else:
-    #    return {'errInfo': "NOT_FOUND"}
-        
-
