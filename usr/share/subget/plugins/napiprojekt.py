@@ -5,9 +5,6 @@ PluginInfo = { 'Requirements' : { 'OS' : 'All', 'Packages:' : ( 'p7zip' )}, 'API
 language = "PL"
 
 apiUrl = "http://napiprojekt.pl/unit_napisy/dl.php"
-retries=0 # Retry the connection if failed
-maxRetries=8
-errInfo=""
 subgetObject=""
 
 def loadSubgetObject(x):
@@ -103,7 +100,6 @@ def get_subtitle(File):
 
         # use 7zip to unpack subtitles
         if os.name == "nt":
-            #os.system(x.subgetOSPath+"/7za.exe x -y -so -piBlm8NTigvru0Jr0 \""+File+".7z\" > \""+File+".txt\"")
             subprocess.call("\""+subgetObject.subgetOSPath.replace("/", "\\")+"/7za.exe\" x -y -so -piBlm8NTigvru0Jr0 \""+File+".7z\" > \""+File+".txt\"", shell=True, bufsize=1)
         else:
             os.system("/usr/bin/7z x -y -so -piBlm8NTigvru0Jr0 \""+File+".7z\" 2>/dev/null > \""+File+".txt\"")
