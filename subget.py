@@ -8,6 +8,8 @@ from threading import Thread
 consoleMode=False
 if os.name == "nt":
     pluginsDir=os.path.expanduser("~")+"/subget/usr/share/subget/plugins/"
+elif os.path.exists("usr/share/subget/plugins/"):
+    pluginsDir="usr/share/subget/plugins/"
 else:
     pluginsDir="/usr/share/subget/plugins/"
 
@@ -20,6 +22,8 @@ languages=['pl', 'en']
 
 if os.name == "nt":
     incpath=os.path.expanduser("~")+"/alang/usr/share/alang/python/"
+elif os.path.isfile("usr/share/alang/python/alang.py"):
+    incpath="usr/share/alang/python/";
 else:
     incpath="/usr/share/alang/python/";
 
@@ -84,6 +88,9 @@ class SubGet:
 
             if os.name == "nt":
                 self.subgetOSPath = os.path.expanduser("~")+"/subget"
+            elif os.path.exists("usr/share/subget"):
+                print "[debug] Developer mode"
+                self.subgetOSPath = "."
             else:
                 self.subgetOSPath = ""
 
@@ -644,13 +651,8 @@ class SubGet:
                 pluginMenu.connect("activate", self.gtkPluginMenu)
 
                 try:
-                    if os.name == "nt":
-                        image = gtk.Image()
-                        image.set_from_file(os.path.expanduser("~")+"/subget/usr/share/subget/icons/plugin.png")
-                    else:
-                        image = gtk.Image()
-                        image.set_from_file("/usr/share/subget/icons/plugin.png")
-
+                    image = gtk.Image()
+                    image.set_from_file(self.subgetOSPath+"/usr/share/subget/icons/plugin.png")
                     pluginMenu.set_image(image)
                 except gobject.GError, exc:
                     True

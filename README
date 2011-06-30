@@ -5,6 +5,9 @@ Easily extendable by plugins, supports multi-language.
 Requirements: GTK+, Python, X11, PyGTK, alang, alang-py
 
 * Changelog:
+30.06.2011:
+    + Support for including files (plugins, alang) from local directory (os independent)
+
 28.06.2011:
     + Allsubs.org support
 
