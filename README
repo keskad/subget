@@ -5,6 +5,14 @@ Easily extendable by plugins, supports multi-language.
 Requirements: GTK+, Python, X11, PyGTK, alang, alang-py
 
 * Changelog:
+12.07.2011:
+    + Added partialy Windows build scripts
+    + Support for alang-py version 1.1
+    + Integration with Windows Registry
+    * Fixed multi-platform code
+    + Added icons in PNG and ICO formats
+    + Added version informations
+
 30.06.2011:
     + Support for including files (plugins, alang) from local directory (os independent)
 

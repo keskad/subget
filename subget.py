@@ -5,13 +5,30 @@ import pygtk
 from threading import Thread
 
 # default we will serve gui, but application will be also usable in shell, just need to use -c o --console parametr
-consoleMode=False
+
+winSubget = ""
+
 if os.name == "nt":
-    pluginsDir=os.path.expanduser("~")+"/subget/usr/share/subget/plugins/"
-elif os.path.exists("usr/share/subget/plugins/"):
+    import _winreg
+
+    try:
+        key = _winreg.OpenKey(_winreg.HKEY_CURRENT_USER, 'Software\\Subget\\', 0, _winreg.KEY_READ)
+        (value, valuetype) = _winreg.QueryValueEx(key, 'Directory')
+
+        pluginsDir = str(value)+"/usr/share/subget/plugins/" # WHERE IS SUBGET PLACED?
+        winSubget = str(value)
+
+    except WindowsError:
+        print "Cannot find registry key HKEY_CURRENT_USER\Software\Subget\Directory, exiting."
+        sys.exit(2)
+
+consoleMode=False
+
+if os.path.exists("usr/share/subget/plugins/"):
     pluginsDir="usr/share/subget/plugins/"
 else:
     pluginsDir="/usr/share/subget/plugins/"
+
 
 plugins=dict()
 action="list"
@@ -21,21 +38,21 @@ languages=['pl', 'en']
 ## ALANG
 
 if os.name == "nt":
-    incpath=os.path.expanduser("~")+"/alang/usr/share/alang/python/"
+    incpath=winSubget+"/usr/share/alang/python/"
 elif os.path.isfile("usr/share/alang/python/alang.py"):
     incpath="usr/share/alang/python/";
 else:
     incpath="/usr/share/alang/python/";
 
 sys.path.insert( 0, incpath )
-import_string = "from alang import alang"
 
 try:
-       	exec import_string
+       	from alang import alang
 except ImportError, e:
         print("Error " + str(e.args))
 
 alang=alang()
+alang.setPathPrefix(winSubget)
 LANG=alang.loadLanguage('subget')
 
 ## ALANG
@@ -87,7 +104,7 @@ class SubGet:
             self.LANG = LANG
 
             if os.name == "nt":
-                self.subgetOSPath = os.path.expanduser("~")+"/subget"
+                self.subgetOSPath = winSubget+"/"
             elif os.path.exists("usr/share/subget"):
                 print "[debug] Developer mode"
                 self.subgetOSPath = "."
@@ -95,11 +112,11 @@ class SubGet:
                 self.subgetOSPath = ""
 
 	    try:
-		opts, args = getopt.getopt(sys.argv[1:], "hcql:", ["help", "console", "quick", "language="])
+		    opts, args = getopt.getopt(sys.argv[1:], "hcql:", ["help", "console", "quick", "language="])
 	    except getopt.GetoptError, err:
-		print self.LANG[2]+": "+str(err)+", "+self.LANG[1]+"\n\n"
-		usage()
-		sys.exit(2)
+		    print self.LANG[2]+": "+str(err)+", "+self.LANG[1]+"\n\n"
+		    sage()
+		    sys.exit(2)
 
 	    for o, a in opts:
 		 if o in ('-h', '--help'):
@@ -113,9 +130,9 @@ class SubGet:
 	    self.doPluginsLoad(args)
 
 	    if consoleMode == True:
-		self.shellMode(args)
+		    self.shellMode(args)
 	    else:
-		self.graphicalMode(args)
+		    self.graphicalMode(args)
 
 
 	def doPluginsLoad(self, args):
