@@ -6,6 +6,13 @@ Requirements: GTK+, Python, X11, PyGTK, alang, alang-py
 
 * Changelog:
 12.07.2011:
+    + Added sleep before shutting down the machine (for safety of file in filesystem to be sure its correctly transferred)
+    + Commented Windows build script code (bash)
+
+12.07.2011:
+    * Moved icon.ico to windows/ directory
+
+12.07.2011:
     + Added partialy Windows build scripts
     + Support for alang-py version 1.1
     + Integration with Windows Registry

@@ -1,15 +1,22 @@
 #!/bin/sh
-rm /home/webnull/Praca/python/subget/setup.exe
-rm /home/webnull/Praca/python/subget/setup.exe
-/usr/lib/virtualbox/VirtualBox --startvm "Subget on windows" &
+subget_git="/home/webnull/Praca/python/subget"
+vm_name="Subget on windows"
+
+rm "$subget_git/setup.exe" # delete setup.exe file
+rm "$subget_git/setup.exe" # make sure its deleted
+
+# start virtual machine - but be sure to add build script to startup
+/usr/lib/virtualbox/VirtualBox --startvm "$vm_name" &
 
 while [ True ]
 do
 	sleep 1
 
-	if [ -f /home/webnull/Praca/python/subget/setup.exe ]
+        # check if operation is done (check for setup.exe file)
+	if [ -f "$subget_git/setup.exe" ]
 	then
-		/usr/lib/virtualbox/VBoxManage controlvm "Subget on windows" acpipowerbutton
+		sleep 5
+		/usr/lib/virtualbox/VBoxManage controlvm "$vm_name" acpipowerbutton # poweroff machine using ACPI power button
 		break
 	fi
 done
