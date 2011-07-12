@@ -15,7 +15,6 @@ if os.name == "nt":
         key = _winreg.OpenKey(_winreg.HKEY_CURRENT_USER, 'Software\\Subget\\', 0, _winreg.KEY_READ)
         (value, valuetype) = _winreg.QueryValueEx(key, 'Directory')
 
-        pluginsDir = str(value)+"/usr/share/subget/plugins/" # WHERE IS SUBGET PLACED?
         winSubget = str(value)
 
     except WindowsError:
@@ -24,7 +23,9 @@ if os.name == "nt":
 
 consoleMode=False
 
-if os.path.exists("usr/share/subget/plugins/"):
+if os.path.exists(winSubget+"/usr/share/subget/plugins/"):
+    pluginsDir = winSubget+"/usr/share/subget/plugins/"
+elif os.path.exists("usr/share/subget/plugins/"):
     pluginsDir="usr/share/subget/plugins/"
 else:
     pluginsDir="/usr/share/subget/plugins/"
@@ -137,6 +138,7 @@ class SubGet:
 
 	def doPluginsLoad(self, args):
 	    global pluginsDir, plugins
+            debugErrors = ""
 
 	    if not os.path.exists(pluginsDir):
 		print self.LANG[3]+" "+pluginsDir+" "+self.LANG[4]
@@ -228,6 +230,11 @@ class SubGet:
             """ Flag rendering """
             cell.set_property('pixbuf', model.get_value(iter, 0))
 
+        def gtkDebugDialog(self,message):
+            self.dialog = gtk.MessageDialog(parent = None,flags = gtk.DIALOG_DESTROY_WITH_PARENT,type = gtk.MESSAGE_INFO,buttons = gtk.BUTTONS_OK,message_format = message)
+            self.dialog.set_title("Debug informations")
+            self.dialog.connect('response', lambda dialog, response: self.destroyDialog())
+            self.dialog.show()
 
 
         # SUBTITLES DOWNLOAD DIALOGS
