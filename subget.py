@@ -333,7 +333,10 @@ class SubGet:
                     if not os.path.isfile(fileName) or not os.access(fileName, os.R_OK):
                         continue
 
-                    self.files = {fileName}
+                    self.files = list()
+                    self.files.append(fileName)
+                    #self.files = {fileName} # works on Python 2.7 only
+                    print self.files
                     self.TreeViewUpdate()
             else:
                 chooser.destroy()
