@@ -1,4 +1,4 @@
-#!/usr/bin/python2.7
+#!/usr/bin/python
 #-*- coding: utf-8 -*-
 import getopt, sys, os, re, glob, gtk, gobject, pango, time
 import pygtk
