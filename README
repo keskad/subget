@@ -5,19 +5,19 @@ Easily extendable by plugins, supports multi-language.
 Requirements: GTK+, Python, X11, PyGTK, alang, alang-py
 
 * Changelog:
-12.07.2011:
+12.07.2011 (v.0.6):
     + Added more windows build scripts
     + Windows context menu integration
     * Fixed selecting plugins directory path
 
-12.07.2011:
+12.07.2011 (v.0.5.2):
     + Added sleep before shutting down the machine (for safety of file in filesystem to be sure its correctly transferred)
     + Commented Windows build script code (bash)
 
-12.07.2011:
+12.07.2011 (v.0.5.1):
     * Moved icon.ico to windows/ directory
 
-12.07.2011:
+12.07.2011 (v.0.5):
     + Added partialy Windows build scripts
     + Support for alang-py version 1.1
     + Integration with Windows Registry
@@ -25,72 +25,72 @@ Requirements: GTK+, Python, X11, PyGTK, alang, alang-py
     + Added icons in PNG and ICO formats
     + Added version informations
 
-30.06.2011:
+30.06.2011 (v.0.4.3):
     + Support for including files (plugins, alang) from local directory (os independent)
 
-28.06.2011:
+28.06.2011 (v.0.4.2):
     + Allsubs.org support
 
-28.06.2011:
+28.06.2011 (v.0.4.1.2):
     + "Clear list" function is now available in "File" menu
 
-28.06.2011:
+28.06.2011 (v.0.4.1.1):
     * Fixed napisy24.pl (not showing HTML code in subtitles name)
     + File->Search now working, but not all plugins supports this feature
 
-28.06.2011:
+28.06.2011 (v.0.4.1):
     + Added "domain" information to napisy24 and napisy_info plugins
 
-28.06.2011:
+28.06.2011 (v.0.4):
     * Fixed napisy24.pl plugin
     + Added support for napisy.org archive (napisy24.pl server)
 
-27.06.2011:
+27.06.2011 (v.0.3.5):
     + Added support for napisy24.pl
     * Cleaned up plugins code
 
-26.06.2011:
-    * Fixed napisy_info plugin, now works on Windows
+26.06.2011 (v.0.3.4.1):
+    * Fixed napisy_info plugin, now works on Windows, second fix
 
-26.06.2011:
+26.06.2011 (v.0.3.4):
     * Fixed napiprojekt plugin, now works on Windows
 
-25.06.2011:
+25.06.2011 (v.0.3.3)
     + Added "plugin list" dialog
     + Dialog "About Subget" added
 
-25.06.2011:
+25.06.2011 (v.0.3.2):
     * Downloading subtitles is now a little faster
 
-25.06.2011:
+25.06.2011 (v.0.3.1):
     + Added "About informations"
 
-25.06.2011:
+25.06.2011 (v.0.3):
     * Moved gtk.Fixed and gtk.MenuBar to gtk.Vbox
 
-24.06.2011:
+24.06.2011 (v.0.2.9):
     + Better performance at program startup startup on Linux (all Unix) and Windows operating systems
     + Menu bar
     + Adding files from menu
     + Window icon
 
-24.06.2011:
+24.06.2011 (v.0.2.8):
     * Fixed crash of GTK on Windows
     * Napiprojekt plugin now correctly read video file
 
-22.06.2011:
+22.06.2011 (v.0.2.3):
     + Added windows support
 
-22.06.2011:
+22.06.2011 (v.0.2.2):
     + Added scrollbars to Subtitles list
 
-22.06.2011:
+22.06.2011 (v.0.2.1):
     * Fixed connection timeouts in plugins
 
-21.06.2011: 
+21.06.2011 (v.0.2): 
     + Added installation scripts with dependency support
 
-21.06.2011:
+21.06.2011 (v.0.1):
     + Added support for loading multiple video files
     + New plugin "napisy.info"
     + Console searching and downloading (-c, -q) now works fine
