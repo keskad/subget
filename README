@@ -5,6 +5,9 @@ Easily extendable by plugins, supports multi-language.
 Requirements: GTK+, Python 2.6/2.7, X11, PyGTK, alang, alang-py
 
 * Changelog:
+31.07.2011 (v.0.6.3):
+    * Fixed finding installation directory on Windows
+
 30.07.2011 (v.0.6.2):
     * Changed python version from /usr/bin/python2.7 to /usr/bin/python
 

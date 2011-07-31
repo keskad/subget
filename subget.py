@@ -9,17 +9,7 @@ from threading import Thread
 winSubget = ""
 
 if os.name == "nt":
-    import _winreg
-
-    try:
-        key = _winreg.OpenKey(_winreg.HKEY_CURRENT_USER, 'Software\\Subget\\', 0, _winreg.KEY_READ)
-        (value, valuetype) = _winreg.QueryValueEx(key, 'Directory')
-
-        winSubget = str(value)
-
-    except WindowsError:
-        print "Cannot find registry key HKEY_CURRENT_USER\Software\Subget\Directory, exiting."
-        sys.exit(2)
+    winSubget = str(os.path.dirname(sys.path[0])) 
 
 consoleMode=False
 
