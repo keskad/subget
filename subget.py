@@ -3,6 +3,7 @@
 import getopt, sys, os, re, glob, gtk, gobject, pango, time
 import pygtk
 from threading import Thread
+from distutils.sysconfig import get_python_lib
 
 # default we will serve gui, but application will be also usable in shell, just need to use -c o --console parametr
 
@@ -38,7 +39,7 @@ else:
 sys.path.insert( 0, incpath )
 
 try:
-       	from alang import alang
+           from alang import alang
 except ImportError, e:
         print("Error " + str(e.args))
 
@@ -74,87 +75,85 @@ class threadingCommand (Thread):
         exec(self.objCommand)
 
 def usage():
-	'Shows program usage and version, lists all options'
+    'Shows program usage and version, lists all options'
 
-	print LANG[0]
+    print LANG[0]
 
-	print ""
+    print ""
+
+def exechelper(command):
+    exec(command)
+
 
 class SubGet:
-        dialog=None
-        subtitlesList=dict()
+    dialog=None
+    subtitlesList=dict()
+
+    def doPluginsLoad(self, args):
+        global pluginsDir, plugins
+        debugErrors = ""
+
+        pluginsDir = get_python_lib()+"/subgetlib/"
+        file_list = glob.glob(pluginsDir+"*.py")
+
+        for Plugin in file_list:
+            Plugin = os.path.basename(Plugin)[:-3] # cut directory and .py
+
+            # skip the index
+            if Plugin == "__init__":
+                continue
+
+            # load the plugin
+            try:
+                exec("import subgetlib."+Plugin)
+                exec("plugins[\""+Plugin+"\"] = subgetlib."+Plugin)
+                plugins[Plugin].loadSubgetObject(self)
+            except Exception as errno:
+                plugins[Plugin] = str(errno)
+                print self.LANG[5]+" "+Plugin+" ("+str(errno)+")"
 
         # close the window and quit
-	def delete_event(self, widget, event, data=None):
-	    gtk.main_quit()
-	    return False
+    def delete_event(self, widget, event, data=None):
+        gtk.main_quit()
+        return False
 
-        def main(self):
-            global consoleMode, action, LANG
+    def main(self):
+        global consoleMode, action, LANG
 
-            self.LANG = LANG
+        self.LANG = LANG
 
-            if os.name == "nt":
-                self.subgetOSPath = winSubget+"/"
-            elif os.path.exists("usr/share/subget"):
-                print "[debug] Developer mode"
-                self.subgetOSPath = "."
-            else:
-                self.subgetOSPath = ""
+        if os.name == "nt":
+            self.subgetOSPath = winSubget+"/"
+        elif os.path.exists("usr/share/subget"):
+            print "[debug] Developer mode"
+            self.subgetOSPath = "."
+        else:
+            self.subgetOSPath = ""
 
-	    try:
-		    opts, args = getopt.getopt(sys.argv[1:], "hcql:", ["help", "console", "quick", "language="])
-	    except getopt.GetoptError, err:
-		    print self.LANG[2]+": "+str(err)+", "+self.LANG[1]+"\n\n"
-		    sage()
-		    sys.exit(2)
+        try:
+            opts, args = getopt.getopt(sys.argv[1:], "hcql:", ["help", "console", "quick", "language="])
+        except getopt.GetoptError, err:
+            print self.LANG[2]+": "+str(err)+", "+self.LANG[1]+"\n\n"
+            usage()
+            sys.exit(2)
 
-	    for o, a in opts:
-		 if o in ('-h', '--help'):
-		     usage()
-		     exit(2)
-		 if o in ('-c', '--console'):
-		     consoleMode=True
-		 if o in ('-q', '--quick'):
-		     action="first-result"
+        for o, a in opts:
+            if o in ('-h', '--help'):
+                 usage()
+                 exit(2)
+            if o in ('-c', '--console'):
+                consoleMode=True
+            if o in ('-q', '--quick'):
+                action="first-result"
 
-	    self.doPluginsLoad(args)
+        self.doPluginsLoad(args)
 
-	    if consoleMode == True:
-		    self.shellMode(args)
-	    else:
-		    self.graphicalMode(args)
+        if consoleMode == True:
+            self.shellMode(args)
+        else:
+            self.graphicalMode(args)
 
-
-	def doPluginsLoad(self, args):
-	    global pluginsDir, plugins
-            debugErrors = ""
-
-	    if not os.path.exists(pluginsDir):
-		print self.LANG[3]+" "+pluginsDir+" "+self.LANG[4]
-		exit(0)
-
-	    sys.path.append(pluginsDir)
-
-	    file_list = glob.glob(pluginsDir+"*.py")
-
-	    for Plugin in file_list:
-		Plugin = os.path.basename(Plugin)[:-3] # cut directory and .py
-
-		# load the plugin
-		try:
-		    exec("import "+Plugin)
-		    exec("global "+Plugin)
-		    exec("plugins[\""+Plugin+"\"] = "+Plugin)
-		    exec("plugins[\""+Plugin+"\"].loadSubgetObject(self)")
-		except Exception as errno:
-		    exec("plugins[\""+Plugin+"\"] = str(errno)")
-		    print self.LANG[5]+" "+Plugin
-
-
-
-
-        def addSubtitlesRow(self, language, release_name, server, download_data, extension, File):
+    def addSubtitlesRow(self, language, release_name, server, download_data, extension, File):
             if len(self.subtitlesList) == 0:
                 ID = 0
             else:
@@ -175,8 +174,8 @@ class SubGet:
 
 
         # UPDATE THE TREEVIEW LIST
-        def TreeViewUpdate(self):
-	    #gobject.timeout_add(100, self.TreeViewUpdate)
+    def TreeViewUpdate(self):
+        #gobject.timeout_add(100, self.TreeViewUpdate)
             subThreads = list()
 
             for Plugin in plugins:
@@ -189,19 +188,18 @@ class SubGet:
                 
 
 
-        def GTKCheckForSubtitles(self, Plugin):
-            exec("State = plugins[\""+Plugin+"\"]")
+    def GTKCheckForSubtitles(self, Plugin):
+            State = plugins[Plugin]
 
             if type(State).__name__ != "module":
                 return
 
-            exec("Results = plugins[\""+Plugin+"\"].language = language")
-	    exec("Results = plugins[\""+Plugin+"\"].download_list(self.files)")
+            Results = plugins[Plugin].language = language
+            Results = plugins[Plugin].download_list(self.files)
 
             if Results == None:
                 print "[plugin:"+Plugin+"] "+self.LANG[6]
             else:
-
                 for Result in Results:
                     for Movie in Result:
                         try:
@@ -216,11 +214,11 @@ class SubGet:
 
 
         # FLAG DISPLAYING
-        def cell_pixbuf_func(self, celllayout, cell, model, iter):
+    def cell_pixbuf_func(self, celllayout, cell, model, iter):
             """ Flag rendering """
             cell.set_property('pixbuf', model.get_value(iter, 0))
 
-        def gtkDebugDialog(self,message):
+    def gtkDebugDialog(self,message):
             self.dialog = gtk.MessageDialog(parent = None,flags = gtk.DIALOG_DESTROY_WITH_PARENT,type = gtk.MESSAGE_INFO,buttons = gtk.BUTTONS_OK,message_format = message)
             self.dialog.set_title("Debug informations")
             self.dialog.connect('response', lambda dialog, response: self.destroyDialog())
@@ -228,19 +226,19 @@ class SubGet:
 
 
         # SUBTITLES DOWNLOAD DIALOGS
-        def GTKDownloadSubtitles(self):
+    def GTKDownloadSubtitles(self):
             """ Dialog with file name chooser to save subtitles to """
             #print "TEST: CLICKED, LETS GO DOWNLOAD!"
 
-            entry1,entry2 = self.treeview.get_selection().get_selected()
+            entry1,entry2 = self.treeview.get_selection().get_selected()    
 
             if entry2 == None:
                 if self.dialog != None:
                     return
                 else:
-		    self.dialog = gtk.MessageDialog(parent = None,flags = gtk.DIALOG_DESTROY_WITH_PARENT,type = gtk.MESSAGE_INFO,buttons = gtk.BUTTONS_OK,message_format = self.LANG[18])
-		    self.dialog.set_title(self.LANG[17])
-		    self.dialog.connect('response', lambda dialog, response: self.destroyDialog())
+                    self.dialog = gtk.MessageDialog(parent = None,flags = gtk.DIALOG_DESTROY_WITH_PARENT,type = gtk.MESSAGE_INFO,buttons = gtk.BUTTONS_OK,message_format = self.LANG[18])
+                    self.dialog.set_title(self.LANG[17])
+                    self.dialog.connect('response', lambda dialog, response: self.destroyDialog())
                     self.dialog.show()
             else:
                 SelectID = int(entry1.get_value(entry2, 3))
@@ -260,11 +258,11 @@ class SubGet:
                 else:
                     print "[GTK:DownloadSubtitles] subtitle_ID="+str(SelectID)+" "+self.LANG[9]
 
-        def GTKDownloadDialog(self, SelectID, filename):
+    def GTKDownloadDialog(self, SelectID, filename):
              """Download progress dialog, downloading and saving subtitles to file"""
 
              Plugin = self.subtitlesList[SelectID]['extension']
-             exec("State = plugins[\""+Plugin+"\"]")
+             State = plugins[Plugin]
 
              if type(State).__name__ == "module":
 
@@ -292,24 +290,24 @@ class SubGet:
                  w.add(fixed)
                  w.show_all()
 
-                 exec("Results = plugins[\""+Plugin+"\"].language = language")
-                 exec("Results = plugins[\""+Plugin+"\"].download_by_data(self.subtitlesList[SelectID]['data'], filename)")
+                 Results = plugins[Plugin].language = language
+                 Results = plugins[Plugin].download_by_data(self.subtitlesList[SelectID]['data'], filename)
 
                  w.destroy()
 
-        def update_progress_bar(self):
+    def update_progress_bar(self):
             """ Progressbar updater, called asynchronously """
             self.pbar.pulse()
             return gtk.TRUE
 
 
         # DESTROY THE DIALOG
-        def destroyDialog(self):
+    def destroyDialog(self):
             """ Destroys all dialogs and popups """
             self.dialog.destroy()
             self.dialog = None
 
-        def gtkSelectVideo(self, arg):
+    def gtkSelectVideo(self, arg):
             """ Selecting multiple videos to search for subtitles """
             chooser = gtk.FileChooserDialog(title=self.LANG[21],action=gtk.FILE_CHOOSER_ACTION_OPEN,buttons=(gtk.STOCK_CANCEL,gtk.RESPONSE_CANCEL,gtk.STOCK_OPEN,gtk.RESPONSE_OK))
             chooser.set_select_multiple(True)
@@ -331,9 +329,9 @@ class SubGet:
             else:
                 chooser.destroy()
 
-        def gtkPluginMenu(self, arg):
+    def gtkPluginMenu(self, arg):
             """ GTK Widget with list of plugins """
-	    window = gtk.Window(gtk.WINDOW_TOPLEVEL)
+            window = gtk.Window(gtk.WINDOW_TOPLEVEL)
             window.set_title(self.LANG[37])
             window.set_resizable(False)
             window.set_size_request(500, 290)
@@ -439,7 +437,7 @@ class SubGet:
             window.add(fixed)
             window.show_all()
 
-        def gtkAboutMenu(self, arg):
+    def gtkAboutMenu(self, arg):
             """ Shows about dialog """
 
             about = gtk.Window(gtk.WINDOW_TOPLEVEL)
@@ -486,7 +484,7 @@ class SubGet:
             about.add(fixed)
             about.show_all()
 
-        def gtkAddTab(self, notebook, label, text):
+    def gtkAddTab(self, notebook, label, text):
             authorsFrame = gtk.Frame("")
             authorsFrame.set_border_width(0) 
             authorsFrame.set_size_request(100, 75)
@@ -506,7 +504,7 @@ class SubGet:
             authorsLabel = gtk.Label(label)
             notebook.prepend_page(authorsFrame, authorsLabel)
 
-        def gtkSearchMenu(self, arg):
+    def gtkSearchMenu(self, arg):
             self.sm = gtk.Window(gtk.WINDOW_TOPLEVEL)
             self.sm.set_title(self.LANG[39])
             self.sm.set_size_request(350, 180)
@@ -577,7 +575,7 @@ class SubGet:
             self.sm.add(self.sm.fixed)
             self.sm.show_all()
 
-        def gtkDoSearch(self, arg):
+    def gtkDoSearch(self, arg):
             query = self.sm.entry.get_text()
             self.sm.destroy()
             time.sleep(0.1)
@@ -627,18 +625,18 @@ class SubGet:
                     True # Plugin does not support searching by keywords
             
 
-        def gtkMainScreen(self,files):
+    def gtkMainScreen(self,files):
                 """ Main GTK screen of the application """
-            #if len(files) == 1:
+                #if len(files) == 1:
                 #gobject.timeout_add(1, self.TreeViewUpdate)
                 
 
-	        # Create a new window
-		self.window = gtk.Window(gtk.WINDOW_TOPLEVEL)
-		self.window.set_title(self.LANG[10])
+                # Create a new window
+                self.window = gtk.Window(gtk.WINDOW_TOPLEVEL)
+                self.window.set_title(self.LANG[10])
                 self.window.set_resizable(False)
-		self.window.set_size_request(600, 275)
-		self.window.connect("delete_event", self.delete_event)
+                self.window.set_size_request(600, 275)
+                self.window.connect("delete_event", self.delete_event)
                 self.window.set_icon_from_file(self.subgetOSPath+"/usr/share/subget/icons/Subget-logo.png")
 
                 ############# Menu #############
@@ -773,7 +771,7 @@ class SubGet:
                 self.DownloadButton = gtk.Button(stock=gtk.STOCK_GO_DOWN)
                 self.DownloadButton.set_label(self.LANG[16])
                 image = gtk.Image()
-	        image.set_from_stock("gtk-go-down", gtk.ICON_SIZE_BUTTON)
+                image.set_from_stock("gtk-go-down", gtk.ICON_SIZE_BUTTON)
                 self.DownloadButton.set_image(image)
                 self.DownloadButton.set_size_request(80, 40)
                 self.fixed.put(self.DownloadButton, 510, 205) # put on fixed
@@ -802,81 +800,84 @@ class SubGet:
                 vbox.pack_start(self.fixed, False, False, 0)
 
                 self.window.add(vbox)
-		# create a TreeStore with one string column to use as the model
-		
+        # create a TreeStore with one string column to use as the model
+        
 
-		self.window.show_all()
+                self.window.show_all()
 
-	    #else:
+        #else:
             #    print self.LANG[15]
 
-        def graphicalMode(self, files):
+    def graphicalMode(self, files):
             """ Detects operating system and load GTK GUI """
             self.files = files
             self.gtkMainScreen(files)
             gobject.timeout_add(50, self.TreeViewUpdate)
             gtk.main()
 
-	def shellMode(self, files):
-            """ Works in shell mode, searching, downloading etc..."""
-	    global plugins, action
+    def shellMode(self, files):
+        """ Works in shell mode, searching, downloading etc..."""
+        global plugins, action
 
-	    # just find all matching subtitles and print it to console
-	    if action == "list":
-		    for Plugin in plugins:
-                         exec("State = plugins[\""+Plugin+"\"]")
+        # just find all matching subtitles and print it to console
+        if action == "list":
+            for Plugin in plugins:
+                State = plugins[Plugin]
 
-                         if type(State).__name__ != "module":
-                             continue
+                if type(State).__name__ != "module":
+                    continue
 
-		         exec("Results = plugins[\""+Plugin+"\"].language = language")
-		         exec("Results = plugins[\""+Plugin+"\"].download_list(files)")
+                Results = plugins[Plugin].language = language
+                Results = plugins[Plugin].download_list(files)
 
-                         if Results == None:
-                             continue
+                if Results == None:
+                    continue
 
-                         for Result in Results:
-                             for Movie in Result:
-                                 try:
-                                     if Movie.has_key("title"):
-                                         print Movie['domain']+"|"+Movie['lang']+"|"+Movie['title']
-                                 except AttributeError:
-                                     continue
+                for Result in Results:
+                    for Movie in Result:
+                        try:
+                            if Movie.has_key("title"):
+                                print Movie['domain']+"|"+Movie['lang']+"|"+Movie['title']
+                        except AttributeError:
+                            continue
 
 
-	    elif action == "first-result":
+        elif action == "first-result":
                 Found = False
                 preferredData = False
 
-		for File in files:
-		    for Plugin in plugins:
-                         exec("State = plugins[\""+Plugin+"\"]")
+        for File in files:
+            for Plugin in plugins:
+                exec("State = plugins[\""+Plugin+"\"]")
 
-                         if type(State).__name__ != "module":
-                             continue
+                if type(State).__name__ != "module":
+                    continue
 
-		         exec("Results = plugins[\""+Plugin+"\"].language = language")
-		         exec("Results = plugins[\""+Plugin+"\"].download_list({File})")
+                fileToList = list()
+                fileToList.append(File)
 
-                         if Results != None:
-                             if type(Results[0]).__name__ == "dict":
-                                 continue
-                             else:
-                                 if Results[0][0]["lang"] == language:
-                                     FileTXT = File+".txt"
-                                     exec("DLResults = plugins[\""+Plugin+"\"].download_by_data(Results[0][0]['data'], FileTXT)")
-                                     print LANG[19]+" "+str(DLResults)
-                                     Found = True
-                                     break
-                                 elif preferredData != None:
-                                     continue
-                                 else:
-                                     preferredData = Results[0][0]
+                Results = plugins[Plugin].language = language
+                Results = plugins[Plugin].download_list(fileToList)
+
+                if Results != None:
+                    if type(Results[0]).__name__ == "dict":
+                        continue
+                    else:
+                        if Results[0][0]["lang"] == language:
+                            FileTXT = File+".txt"
+                            exec("DLResults = plugins[\""+Plugin+"\"].download_by_data(Results[0][0]['data'], FileTXT)")
+                            print LANG[19]+" "+str(DLResults)
+                            Found = True
+                            break
+                        elif preferredData != None:
+                            continue
+                        else:
+                            preferredData = Results[0][0]
                  
-                if Found == False and preferredData == True:
-                     FileTXT = File+".("+str(preferredData['lang'])+").txt"
-                     exec("DLResults = plugins[\""+Plugin+"\"].download_by_data(prefferedData['data'], FileTXT)")
-                     print LANG[19]+" "+str(DLResults)+", "+LANG[20]
+        if Found == False and preferredData == True:
+            FileTXT = File+".("+str(preferredData['lang'])+").txt"
+            exec("DLResults = plugins[\""+Plugin+"\"].download_by_data(prefferedData['data'], FileTXT)")
+            print LANG[19]+" "+str(DLResults)+", "+LANG[20]
 
 if __name__ == "__main__":
     SubgetMain = SubGet()

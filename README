@@ -6,6 +6,9 @@ Requirements: GTK+, Python 2.6/2.7, X11, PyGTK, alang, alang-py
 
 * Changelog:
 31.07.2011 (v.0.6.3):
+    + Better informations about plugin crash available in console
+    + Plugins are now Python modules
+    * Replaced tabs with spaces in code
     * Fixed finding installation directory on Windows
 
 30.07.2011 (v.0.6.2):
