@@ -80,8 +80,6 @@ def getListOfSubtitles(movieRealName, File):
 
     currentCount = re.findall("<a href=\"/\">napisy24.pl</a> > Znaleziono ([0-9]+) film", dataCutedOff)
 
-    print currentCount
-    print urllib.quote_plus(movieRealName)
     if int(currentCount[0]) > 0:
 
         Items = dataCutedOff.split("<a href=\"javascript:void(0);\" onclick=\"javascript:showInfo('")

@@ -324,7 +324,7 @@ class SubGet:
                     self.files = list()
                     self.files.append(fileName)
                     #self.files = {fileName} # works on Python 2.7 only
-                    print self.files
+                    #print self.files
                     self.TreeViewUpdate()
             else:
                 chooser.destroy()
@@ -626,187 +626,228 @@ class SubGet:
             
 
     def gtkMainScreen(self,files):
-                """ Main GTK screen of the application """
-                #if len(files) == 1:
-                #gobject.timeout_add(1, self.TreeViewUpdate)
-                
+        """ Main GTK screen of the application """
+        #if len(files) == 1:
+        #gobject.timeout_add(1, self.TreeViewUpdate)
+        
+        
+        # Create a new window
+        self.window = gtk.Window(gtk.WINDOW_TOPLEVEL)
+        self.window.set_title(self.LANG[10])
+        self.window.set_resizable(False)
+        self.window.set_size_request(600, 275)
+        self.window.connect("delete_event", self.delete_event)
+        self.window.set_icon_from_file(self.subgetOSPath+"/usr/share/subget/icons/Subget-logo.png")
 
-                # Create a new window
-                self.window = gtk.Window(gtk.WINDOW_TOPLEVEL)
-                self.window.set_title(self.LANG[10])
-                self.window.set_resizable(False)
-                self.window.set_size_request(600, 275)
-                self.window.connect("delete_event", self.delete_event)
-                self.window.set_icon_from_file(self.subgetOSPath+"/usr/share/subget/icons/Subget-logo.png")
+        # DRAG & DROP SUPPORT
+        TARGET_STRING = 82
+        TARGET_IMAGE = 83
 
-                ############# Menu #############
-                mb = gtk.MenuBar()
-                icon_theme = gtk.icon_theme_get_default()
+        self.window.drag_dest_set(0, [], 0)
+        self.window.connect("drag_motion", self.motion_cb)
+        self.window.connect("drag_drop", self.drop_cb)
+        self.window.connect("drag_data_received", self.drag_data_received)
 
-                # Shortcuts
-                agr = gtk.AccelGroup()
-                self.window.add_accel_group(agr)
+        ############# Menu #############
+        mb = gtk.MenuBar()
+        icon_theme = gtk.icon_theme_get_default()
 
-                # "File" menu
-                fileMenu = gtk.Menu()
-                fileMenuItem = gtk.MenuItem(self.LANG[22])
-                fileMenuItem.set_submenu(fileMenu)
-                mb.append(fileMenuItem)
+        # Shortcuts
+        agr = gtk.AccelGroup()
+        self.window.add_accel_group(agr)
 
-                # "Tools" menu
-                toolsMenu = gtk.Menu()
-                toolsMenuItem = gtk.MenuItem(self.LANG[32])
-                toolsMenuItem.set_submenu(toolsMenu)
-                mb.append(toolsMenuItem)
+        # "File" menu
+        fileMenu = gtk.Menu()
+        fileMenuItem = gtk.MenuItem(self.LANG[22])
+        fileMenuItem.set_submenu(fileMenu)
+        mb.append(fileMenuItem)
 
-                # "Plugins list"
-                pluginMenu = gtk.ImageMenuItem(self.LANG[37], agr)
-                key, mod = gtk.accelerator_parse("<Control>P")
-                pluginMenu.add_accelerator("activate", agr, key,mod, gtk.ACCEL_VISIBLE)
-                pluginMenu.connect("activate", self.gtkPluginMenu)
+        # "Tools" menu
+        toolsMenu = gtk.Menu()
+        toolsMenuItem = gtk.MenuItem(self.LANG[32])
+        toolsMenuItem.set_submenu(toolsMenu)
+        mb.append(toolsMenuItem)
 
-                try:
-                    image = gtk.Image()
-                    image.set_from_file(self.subgetOSPath+"/usr/share/subget/icons/plugin.png")
-                    pluginMenu.set_image(image)
-                except gobject.GError, exc:
-                    True
+        # "Plugins list"
+        pluginMenu = gtk.ImageMenuItem(self.LANG[37], agr)
+        key, mod = gtk.accelerator_parse("<Control>P")
+        pluginMenu.add_accelerator("activate", agr, key,mod, gtk.ACCEL_VISIBLE)
+        pluginMenu.connect("activate", self.gtkPluginMenu)
 
-                toolsMenu.append(pluginMenu)
+        try:
+            image = gtk.Image()
+            image.set_from_file(self.subgetOSPath+"/usr/share/subget/icons/plugin.png")
+            pluginMenu.set_image(image)
+        except gobject.GError, exc:
+            True
 
-                # "About"
-                infoMenu = gtk.ImageMenuItem(self.LANG[23], agr) # gtk.STOCK_CDROM
-                key, mod = gtk.accelerator_parse("<Control>I")
-                infoMenu.add_accelerator("activate", agr, key,mod, gtk.ACCEL_VISIBLE)
-                infoMenu.connect("activate", self.gtkAboutMenu)
+        toolsMenu.append(pluginMenu)
 
-                try:
-                    pixbuf = icon_theme.load_icon("dialog-information", 16, 0)
-                    image = gtk.Image()
-                    image.set_from_pixbuf(pixbuf)
-                    infoMenu.set_image(image)
-                except gobject.GError, exc:
-                    True
+        # "About"
+        infoMenu = gtk.ImageMenuItem(self.LANG[23], agr) # gtk.STOCK_CDROM
+        key, mod = gtk.accelerator_parse("<Control>I")
+        infoMenu.add_accelerator("activate", agr, key,mod, gtk.ACCEL_VISIBLE)
+        infoMenu.connect("activate", self.gtkAboutMenu)
 
-                toolsMenu.append(infoMenu)
+        try:
+            pixbuf = icon_theme.load_icon("dialog-information", 16, 0)
+            image = gtk.Image()
+            image.set_from_pixbuf(pixbuf)
+            infoMenu.set_image(image)
+        except gobject.GError, exc:
+            True
 
-                # "Clear"
-                clearMenu = gtk.ImageMenuItem(self.LANG[44])
-                clearMenu.connect("activate", lambda b: self.liststore.clear())
+        toolsMenu.append(infoMenu)
 
-                try:
-                    image = gtk.Image()
-                    image.set_from_stock(gtk.STOCK_CLEAR, 2)
-                    clearMenu.set_image(image)
-                except gobject.GError, exc:
-                    True
+        # "Clear"
+        clearMenu = gtk.ImageMenuItem(self.LANG[44])
+        clearMenu.connect("activate", lambda b: self.liststore.clear())
 
-
-                toolsMenu.append(clearMenu)
-
-                # Adding files to query
-                openMenu = gtk.ImageMenuItem(gtk.STOCK_ADD, agr)
-                key, mod = gtk.accelerator_parse("<Control>O")
-                openMenu.add_accelerator("activate", agr, key,mod, gtk.ACCEL_VISIBLE)
-                openMenu.connect("activate", self.gtkSelectVideo)
-                fileMenu.append(openMenu)
-
-                # Search
-                find = gtk.ImageMenuItem(gtk.STOCK_FIND, agr)
-                key, mod = gtk.accelerator_parse("<Control>F")
-                find.add_accelerator("activate", agr, key, mod, gtk.ACCEL_VISIBLE)
-                find.connect("activate", self.gtkSearchMenu)
-                fileMenu.append(find)
-
-                # Exit position in menu
-                exit = gtk.ImageMenuItem(gtk.STOCK_QUIT, agr)
-                key, mod = gtk.accelerator_parse("<Control>Q")
-                exit.add_accelerator("activate", agr, key, mod, gtk.ACCEL_VISIBLE)
-                exit.connect("activate", gtk.main_quit)
-                fileMenu.append(exit)
-
-                ############# End of Menu #############
-                self.fixed = gtk.Fixed()
-
-                self.liststore = gtk.ListStore(gtk.gdk.Pixbuf, str, str, str)
-                self.treeview = gtk.TreeView(self.liststore)
+        try:
+            image = gtk.Image()
+            image.set_from_stock(gtk.STOCK_CLEAR, 2)
+            clearMenu.set_image(image)
+        except gobject.GError, exc:
+            True
 
 
-                # column list
-                self.tvcolumn = gtk.TreeViewColumn(self.LANG[12])
-                self.tvcolumn1 = gtk.TreeViewColumn(self.LANG[13])
-                self.tvcolumn2 = gtk.TreeViewColumn(self.LANG[14])
+        toolsMenu.append(clearMenu)
 
-                self.treeview.append_column(self.tvcolumn)
-                self.treeview.append_column(self.tvcolumn1)
-                self.treeview.append_column(self.tvcolumn2)
+        # Adding files to query
+        openMenu = gtk.ImageMenuItem(gtk.STOCK_ADD, agr)
+        key, mod = gtk.accelerator_parse("<Control>O")
+        openMenu.add_accelerator("activate", agr, key,mod, gtk.ACCEL_VISIBLE)
+        openMenu.connect("activate", self.gtkSelectVideo)
+        fileMenu.append(openMenu)
 
+        # Search
+        find = gtk.ImageMenuItem(gtk.STOCK_FIND, agr)
+        key, mod = gtk.accelerator_parse("<Control>F")
+        find.add_accelerator("activate", agr, key, mod, gtk.ACCEL_VISIBLE)
+        find.connect("activate", self.gtkSearchMenu)
+        fileMenu.append(find)
 
-                self.cellpb = gtk.CellRendererPixbuf()
-                #self.cellpb.set_property('pixbuf', pixbuf)
+        # Exit position in menu
+        exit = gtk.ImageMenuItem(gtk.STOCK_QUIT, agr)
+        key, mod = gtk.accelerator_parse("<Control>Q")
+        exit.add_accelerator("activate", agr, key, mod, gtk.ACCEL_VISIBLE)
+        exit.connect("activate", gtk.main_quit)
+        fileMenu.append(exit)
 
-                self.cell = gtk.CellRendererText()
-                self.cell1 = gtk.CellRendererText()
-                self.cell2 = gtk.CellRendererText()
+        ############# End of Menu #############
+        self.fixed = gtk.Fixed()
 
-                # add the cells to the columns - 2 in the first
-                self.tvcolumn.pack_start(self.cellpb, False)
-
-                self.tvcolumn.set_cell_data_func(self.cellpb, self.cell_pixbuf_func)
-                #self.tvcolumn.pack_start(self.cell, True)
-                self.tvcolumn1.pack_start(self.cell1, True)
-                self.tvcolumn2.pack_start(self.cell2, True)
-                self.tvcolumn1.set_attributes(self.cell1, text=1)
-                self.tvcolumn2.set_attributes(self.cell2, text=2)
-
-                # make treeview searchable
-                self.treeview.set_search_column(1)
-
-                # Allow sorting on the column
-                self.tvcolumn1.set_sort_column_id(1)
-                self.tvcolumn2.set_sort_column_id(2)
+        self.liststore = gtk.ListStore(gtk.gdk.Pixbuf, str, str, str)
+        self.treeview = gtk.TreeView(self.liststore)
 
 
-                # Create buttons
-                self.DownloadButton = gtk.Button(stock=gtk.STOCK_GO_DOWN)
-                self.DownloadButton.set_label(self.LANG[16])
-                image = gtk.Image()
-                image.set_from_stock("gtk-go-down", gtk.ICON_SIZE_BUTTON)
-                self.DownloadButton.set_image(image)
-                self.DownloadButton.set_size_request(80, 40)
-                self.fixed.put(self.DownloadButton, 510, 205) # put on fixed
+        # column list
+        self.tvcolumn = gtk.TreeViewColumn(self.LANG[12])
+        self.tvcolumn1 = gtk.TreeViewColumn(self.LANG[13])
+        self.tvcolumn2 = gtk.TreeViewColumn(self.LANG[14])
 
-                self.DownloadButton.connect('clicked', lambda b: self.GTKDownloadSubtitles())
+        self.treeview.append_column(self.tvcolumn)
+        self.treeview.append_column(self.tvcolumn1)
+        self.treeview.append_column(self.tvcolumn2)
 
-                # Cancel button
-                self.CancelButton = gtk.Button(stock=gtk.STOCK_CLOSE)
-                self.CancelButton.set_size_request(90, 40)
-                self.CancelButton.connect('clicked', lambda b: gtk.mainquit())
-                self.fixed.put(self.CancelButton, 410, 205) # put on fixed
 
-                # scrollbars
-                scrolled_window = gtk.ScrolledWindow()
-                scrolled_window.set_border_width(0)
-                scrolled_window.set_size_request(600, 200)
-                scrolled_window.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_ALWAYS)
-                scrolled_window.add_with_viewport(self.treeview)
+        self.cellpb = gtk.CellRendererPixbuf()
+        #self.cellpb.set_property('pixbuf', pixbuf)
 
-                self.fixed.put(scrolled_window, 0, 0)
-                self.fixed.set_border_width(0)
-                
-                vbox = gtk.VBox(False, 0)
-                vbox.set_border_width(0)
-                vbox.pack_start(mb, False, False, 0)
-                vbox.pack_start(self.fixed, False, False, 0)
+        self.cell = gtk.CellRendererText()
+        self.cell1 = gtk.CellRendererText()
+        self.cell2 = gtk.CellRendererText()
 
-                self.window.add(vbox)
+        # add the cells to the columns - 2 in the first
+        self.tvcolumn.pack_start(self.cellpb, False)
+
+        self.tvcolumn.set_cell_data_func(self.cellpb, self.cell_pixbuf_func)
+        #self.tvcolumn.pack_start(self.cell, True)
+        self.tvcolumn1.pack_start(self.cell1, True)
+        self.tvcolumn2.pack_start(self.cell2, True)
+        self.tvcolumn1.set_attributes(self.cell1, text=1)
+        self.tvcolumn2.set_attributes(self.cell2, text=2)
+
+        # make treeview searchable
+        self.treeview.set_search_column(1)
+
+        # Allow sorting on the column
+        self.tvcolumn1.set_sort_column_id(1)
+        self.tvcolumn2.set_sort_column_id(2)
+
+
+        # Create buttons
+        self.DownloadButton = gtk.Button(stock=gtk.STOCK_GO_DOWN)
+        self.DownloadButton.set_label(self.LANG[16])
+        image = gtk.Image()
+        image.set_from_stock("gtk-go-down", gtk.ICON_SIZE_BUTTON)
+        self.DownloadButton.set_image(image)
+        self.DownloadButton.set_size_request(80, 40)
+        self.fixed.put(self.DownloadButton, 510, 205) # put on fixed
+
+        self.DownloadButton.connect('clicked', lambda b: self.GTKDownloadSubtitles())
+
+        # Cancel button
+        self.CancelButton = gtk.Button(stock=gtk.STOCK_CLOSE)
+        self.CancelButton.set_size_request(90, 40)
+        self.CancelButton.connect('clicked', lambda b: gtk.mainquit())
+        self.fixed.put(self.CancelButton, 410, 205) # put on fixed
+
+        # scrollbars
+        scrolled_window = gtk.ScrolledWindow()
+        scrolled_window.set_border_width(0)
+        scrolled_window.set_size_request(600, 200)
+        scrolled_window.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_ALWAYS)
+        scrolled_window.add_with_viewport(self.treeview)
+
+        self.fixed.put(scrolled_window, 0, 0)
+        self.fixed.set_border_width(0)
+        
+        vbox = gtk.VBox(False, 0)
+        vbox.set_border_width(0)
+        vbox.pack_start(mb, False, False, 0)
+        vbox.pack_start(self.fixed, False, False, 0)
+
+        self.window.add(vbox)
         # create a TreeStore with one string column to use as the model
         
 
-                self.window.show_all()
+        self.window.show_all()
 
         #else:
             #    print self.LANG[15]
+
+    ##### DRAG & DROP SUPPORT #####
+    def motion_cb(self, wid, context, x, y, time):
+        context.drag_status(gtk.gdk.ACTION_COPY, time)
+        return True
+    
+    def drop_cb(self, wid, context, x, y, time):
+        if context.targets:
+            wid.drag_get_data(context, context.targets[0], time)
+            return True
+        return False
+
+    
+    def drag_data_received(self, img, context, x, y, data, info, time):
+        """ Receive dropped data, parse and call plugins """
+
+        if data.format == 8:
+            Files = data.data.replace('\r', '').split("\n")
+            self.files = list()
+
+            for File in Files:
+                File = File.replace("file://", "")
+
+                if os.path.isfile(File):
+                    self.files.append(File)
+
+            context.finish(True, False, time)
+            self.TreeViewUpdate()
+                
+        
+
+    ##### END OF DRAG & DROP SUPPORT #####
 
     def graphicalMode(self, files):
             """ Detects operating system and load GTK GUI """

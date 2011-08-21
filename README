@@ -5,6 +5,9 @@ Easily extendable by plugins, supports multi-language.
 Requirements: GTK+, Python 2.6/2.7, X11, PyGTK, alang, alang-py
 
 * Changelog:
+21.07.2011 (v.0.7):
+    + Drag and drop support (tested on Linux with Dolphin and Thunar)
+
 31.07.2011 (v.0.6.3):
     + Better informations about plugin crash available in console
     + Plugins are now Python modules
