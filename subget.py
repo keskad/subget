@@ -5,7 +5,12 @@ import pygtk
 from threading import Thread
 from distutils.sysconfig import get_python_lib
 
-# default we will serve gui, but application will be also usable in shell, just need to use -c o --console parametr
+if sys.version_info[0] >= 3:
+    import configparser
+else:
+    import ConfigParser as configparser
+
+# default we will serve gui, but application will be also usable in shell, just need to use -c or --console parametr
 
 winSubget = ""
 
@@ -78,7 +83,6 @@ def usage():
     'Shows program usage and version, lists all options'
 
     print LANG[0]
-
     print ""
 
 def exechelper(command):
@@ -88,6 +92,7 @@ def exechelper(command):
 class SubGet:
     dialog=None
     subtitlesList=dict()
+    Config = dict()
 
     def doPluginsLoad(self, args):
         global pluginsDir, plugins
@@ -112,10 +117,45 @@ class SubGet:
                 plugins[Plugin] = str(errno)
                 print self.LANG[5]+" "+Plugin+" ("+str(errno)+")"
 
-        # close the window and quit
+    # close the window and quit
     def delete_event(self, widget, event, data=None):
         gtk.main_quit()
         return False
+
+    def sendCriticAlert(self, Message):
+        """ Send critical error message before exiting when in X11 session """
+
+        if os.path.isfile("/usr/bin/kdialog"):
+            os.system("/usr/bin/kdialog --error \""+Message+"\"")
+        elif os.path.isfile("/usr/bin/zenity"):
+            os.system("/usr/bin/zenity --info --text=\""+Message+"\"")
+        elif os.path.isfile("/usr/bin/xmessage"):
+            os.system("/usr/bin/xmessage -nearmouse \""+Message+"\"")
+
+
+
+    def loadConfig(self):
+        configPath = os.path.expanduser("~/.subget/config")
+        
+        if os.path.isfile(configPath):
+            Parser = configparser.ConfigParser()
+            try:
+                Parser.read(configPath)
+            except Exception as e:
+                print("Error parsing configuration file from "+configPath+", error: "+str(e))
+                self.sendCriticAlert("Subget: Error parsing configuration file from "+configPath+", error: "+str(e))
+                sys.exit(os.EX_CONFIG)
+
+            # all configuration sections
+            Sections = Parser.sections()
+
+            for Section in Sections:
+                Options = Parser.options(Section)
+                self.Config[Section] = dict()
+
+                # and configuration variables inside of sections
+                for Option in Options:
+                    self.Config[Section][Option] = Parser.get(Section, Option)
 
     def main(self):
         global consoleMode, action, LANG
@@ -145,6 +185,8 @@ class SubGet:
                 consoleMode=True
             if o in ('-q', '--quick'):
                 action="first-result"
+
+        self.loadConfig()
 
         self.doPluginsLoad(args)
 
@@ -623,7 +665,10 @@ class SubGet:
                 except AttributeError as errno:
                     print "[plugin:"+self.sm.plugins[plugin]+"] "+self.LANG[45]
                     True # Plugin does not support searching by keywords
-            
+
+    def gtkPreferences(self, aid):
+        print("This action will open preferences...")
+        self.sendCriticAlert("Sorry, this feature is not implemented yet.")
 
     def gtkMainScreen(self,files):
         """ Main GTK screen of the application """
@@ -712,6 +757,11 @@ class SubGet:
 
 
         toolsMenu.append(clearMenu)
+
+        # Adding files to query
+        settingsMenu = gtk.ImageMenuItem(gtk.STOCK_PREFERENCES)
+        settingsMenu.connect("activate", self.gtkPreferences)
+        toolsMenu.append(settingsMenu)
 
         # Adding files to query
         openMenu = gtk.ImageMenuItem(gtk.STOCK_ADD, agr)
