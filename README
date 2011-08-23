@@ -5,6 +5,9 @@ Easily extendable by plugins, supports multi-language.
 Requirements: GTK+, Python 2.6/2.7, X11, PyGTK, alang, alang-py
 
 * Changelog:
+23.07.2011 (v.0.7.1.2) <webnull.www@gmail.com>:
+    + Saving settings to file
+
 23.07.2011 (v.0.7.1.1):
     + Draft of settings menu and KDE4 integration
 

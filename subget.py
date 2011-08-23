@@ -93,6 +93,8 @@ class SubGet:
     dialog=None
     subtitlesList=dict()
     Config = dict()
+    Windows = dict() # active or non-active windows
+    Windows['preferences'] = False
 
     def doPluginsLoad(self, args):
         global pluginsDir, plugins
@@ -259,7 +261,16 @@ class SubGet:
                              print "[plugin:"+Plugin+"] "+self.LANG[6]
                 
             
+    def dictGetKey(self, Array, Key):
+        """ Return key from dictionary, if not exists returns false """
 
+        if Key in Array:
+            if Array[Key] == "False":
+                return False
+
+            return Array[Key]
+        else:
+            return False
 
 
         # FLAG DISPLAYING
@@ -672,16 +683,42 @@ class SubGet:
                 except AttributeError as errno:
                     print "[plugin:"+self.sm.plugins[plugin]+"] "+self.LANG[45]
                     True # Plugin does not support searching by keywords
+    def gtkPreferencesQuit(self):
+        self.winPreferences.destroy()
+        self.Windows['preferences'] = False
+        Output = ""
+
+        # saving settings to file
+        for Section in self.Config:
+            Output += "["+str(Section)+"]\n"
+
+            for Option in self.Config[Section]:
+                Output += str(Option)+" = "+str(self.Config[Section][Option])+"\n"
+
+            Output += "\n"
+
+        try:
+            print("Writing ~/.subget/config")
+            Handler = open(os.path.expanduser("~/.subget/config"), "wb")
+            Handler.write(Output)
+            Handler.close()
+        except Exception as e:
+            print("Error saving configuration to ~/.subget/config, check this error message: "+str(e))
 
     def gtkPreferences(self, aid):
-        self.sendCriticAlert("Sorry, this feature is not implemented yet.")
-        return
+        #self.sendCriticAlert("Sorry, this feature is not implemented yet.")
+        #return
+        if self.Windows['preferences'] == True:
+            return
+
+        self.Windows['preferences'] = True
 
         self.winPreferences = gtk.Window(gtk.WINDOW_TOPLEVEL)
         self.winPreferences.set_title("Ustawienia")
         self.winPreferences.set_resizable(False)
         self.winPreferences.set_size_request(600, 400)
         self.winPreferences.set_icon_from_file(self.subgetOSPath+"/usr/share/subget/icons/Subget-logo.png")
+        self.winPreferences.connect('delete_event', lambda b: self.gtkPreferencesQuit())
 
         # Container
         self.winPreferences.fixed = gtk.Fixed()
@@ -689,7 +726,7 @@ class SubGet:
         # Notebook
         self.winPreferences.notebook = gtk.Notebook()
         self.winPreferences.notebook.set_scrollable(True)
-        self.winPreferences.notebook.set_size_request(580, 380)
+        self.winPreferences.notebook.set_size_request(580, 330)
         self.winPreferences.notebook.set_properties(group_id=0, tab_vborder=0, tab_hborder=1, tab_pos=gtk.POS_LEFT)
         self.winPreferences.notebook.popup_enable()
         self.winPreferences.notebook.show()
@@ -697,10 +734,31 @@ class SubGet:
         # Create tabs and append to notebook
         self.gtkPreferencesIntegration()
 
+        # Close button
+        self.winPreferences.CloseButton = gtk.Button(stock=gtk.STOCK_CLOSE)
+        self.winPreferences.CloseButton.set_size_request(90, 40)
+        self.winPreferences.CloseButton.connect('clicked', lambda b: self.gtkPreferencesQuit())
+
         # Glue it all together
         self.winPreferences.fixed.put(self.winPreferences.notebook, 10,10)
+        self.winPreferences.fixed.put(self.winPreferences.CloseButton, 490, 350)
         self.winPreferences.add(self.winPreferences.fixed)
         self.winPreferences.show_all()
+
+    def configSetButton(self, Type, Section, Option, Value):
+        Value = Value.get_active()
+
+        try:
+            self.Config[Section][Option] = Value
+            #print("SET to "+str(Value))
+        except Exception as e:
+            print("Error setting configuration variable: "+Section+"->"+Option+" = \""+str(Value)+"\". Error: "+str(e))
+
+    def revertBool(self, boolean):
+        if boolean == "False" or boolean == False:
+            return True
+        else:
+            return False
 
      
     def gtkPreferencesIntegration(self):
@@ -711,11 +769,36 @@ class SubGet:
         Label1.show()
 
         # Filemanagers
+
+        # ==== Dolphin, Konqueror
         Dolphin = gtk.CheckButton("Dolphin, Konqueror (KDE)")
+        self.Dolphin = Dolphin
+        Dolphin.connect("toggled", self.configSetButton, "filemanagers", "kde", Dolphin)
+
+        if not self.dictGetKey(self.Config['filemanagers'], 'kde') == False:
+            Dolphin.set_active(1)
+
+        # ==== Nautilus
         Nautilus = gtk.CheckButton("Nautilus (GNOME)")
+        Nautilus.connect("toggled", self.configSetButton, "filemanagers", "gnome", Nautilus)
+
+        if not self.dictGetKey(self.Config['filemanagers'], 'gnome') == False:
+            Nautilus.set_active(1)
+
+        # ==== Thunar
         Thunar = gtk.CheckButton("Thunar (XFCE)")
+        Thunar.connect("toggled", self.configSetButton, "filemanagers", "xfce", Thunar)
+
+        if not self.dictGetKey(self.Config['filemanagers'], 'xfce') == False:
+            Thunar.set_active(1)
+
+        # ==== PCManFM
         Thunar.set_sensitive(False)
         PCManFM = gtk.CheckButton("PCManFM (LXDE)")
+        PCManFM.connect("toggled", self.configSetButton, "filemanagers", "lxde", PCManFM)
+        if not self.dictGetKey(self.Config['filemanagers'], 'lxde') == False:
+            PCmanFM.set_active(1)
+
         PCManFM.set_sensitive(False)
 
         GeneralPreferences.put(Label1, 10, 6)
@@ -732,8 +815,24 @@ class SubGet:
         SelectPlayer.append_text("SMPlayer")
         SelectPlayer.append_text("VLC")
         SelectPlayer.append_text("Totem")
+        SelectPlayer.connect("changed", self.defaultPlayerSelection)
+
+
+        DefaultPlayer = self.dictGetKey(self.Config['afterdownload'], 'defaultplayer')
+
+        if DefaultPlayer == False:
+            SelectPlayer.set_active(0)
+        else:
+            DefaultPlayer = int(DefaultPlayer)
+            if DefaultPlayer > -1 and DefaultPlayer < 5:
+                SelectPlayer.set_active(DefaultPlayer)
 
         EnableVideoPlayer = gtk.CheckButton("Włącz funkcję automatycznego uruchamiania odtwarzacza filmowego")
+        EnableVideoPlayer.connect("toggled", self.configSetButton, "afterdownload", "playmovie", EnableVideoPlayer)
+
+        if not self.dictGetKey(self.Config['afterdownload'], 'playmovie') == False:
+            EnableVideoPlayer.set_active(1)
+        
 
         GeneralPreferences.put(Label2, 10, 100)
         GeneralPreferences.put(EnableVideoPlayer, 10, 120)
@@ -742,7 +841,8 @@ class SubGet:
         self.createTab(self.winPreferences.notebook, "Integracja systemowa", GeneralPreferences)
 
 
-        
+    def defaultPlayerSelection(self, widget):
+        self.Config['afterdownload']['defaultplayer'] = widget.get_active()
 
     def createTab(self, widget, title, inside):
         """ This appends a new page to the notebook. """
