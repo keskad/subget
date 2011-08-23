@@ -135,6 +135,8 @@ class SubGet:
 
 
     def loadConfig(self):
+        """ Parsing configuration from ~/.subget/config """
+
         configPath = os.path.expanduser("~/.subget/config")
         
         if os.path.isfile(configPath):
@@ -158,6 +160,8 @@ class SubGet:
                     self.Config[Section][Option] = Parser.get(Section, Option)
 
     def main(self):
+        """ Main function, getopt etc. """
+
         global consoleMode, action, LANG
 
         self.LANG = LANG
@@ -196,6 +200,8 @@ class SubGet:
             self.graphicalMode(args)
 
     def addSubtitlesRow(self, language, release_name, server, download_data, extension, File):
+            """ Adds parsed subtitles to list """
+
             if len(self.subtitlesList) == 0:
                 ID = 0
             else:
@@ -217,7 +223,8 @@ class SubGet:
 
         # UPDATE THE TREEVIEW LIST
     def TreeViewUpdate(self):
-        #gobject.timeout_add(100, self.TreeViewUpdate)
+            """ Refresh TreeView, run all plugins to parse files """
+
             subThreads = list()
 
             for Plugin in plugins:
@@ -667,8 +674,85 @@ class SubGet:
                     True # Plugin does not support searching by keywords
 
     def gtkPreferences(self, aid):
-        print("This action will open preferences...")
         self.sendCriticAlert("Sorry, this feature is not implemented yet.")
+        return
+
+        self.winPreferences = gtk.Window(gtk.WINDOW_TOPLEVEL)
+        self.winPreferences.set_title("Ustawienia")
+        self.winPreferences.set_resizable(False)
+        self.winPreferences.set_size_request(600, 400)
+        self.winPreferences.set_icon_from_file(self.subgetOSPath+"/usr/share/subget/icons/Subget-logo.png")
+
+        # Container
+        self.winPreferences.fixed = gtk.Fixed()
+
+        # Notebook
+        self.winPreferences.notebook = gtk.Notebook()
+        self.winPreferences.notebook.set_scrollable(True)
+        self.winPreferences.notebook.set_size_request(580, 380)
+        self.winPreferences.notebook.set_properties(group_id=0, tab_vborder=0, tab_hborder=1, tab_pos=gtk.POS_LEFT)
+        self.winPreferences.notebook.popup_enable()
+        self.winPreferences.notebook.show()
+
+        # Create tabs and append to notebook
+        self.gtkPreferencesIntegration()
+
+        # Glue it all together
+        self.winPreferences.fixed.put(self.winPreferences.notebook, 10,10)
+        self.winPreferences.add(self.winPreferences.fixed)
+        self.winPreferences.show_all()
+
+     
+    def gtkPreferencesIntegration(self):
+        # "General" preferences
+        GeneralPreferences = gtk.Fixed()
+        Label1 = gtk.Label("Integracja z menu kontekstowym menadżerów plików")
+        Label1.set_alignment (0, 0)
+        Label1.show()
+
+        # Filemanagers
+        Dolphin = gtk.CheckButton("Dolphin, Konqueror (KDE)")
+        Nautilus = gtk.CheckButton("Nautilus (GNOME)")
+        Thunar = gtk.CheckButton("Thunar (XFCE)")
+        Thunar.set_sensitive(False)
+        PCManFM = gtk.CheckButton("PCManFM (LXDE)")
+        PCManFM.set_sensitive(False)
+
+        GeneralPreferences.put(Label1, 10, 6)
+        GeneralPreferences.put(Dolphin, 10, 20)
+        GeneralPreferences.put(Nautilus, 10, 35)
+        GeneralPreferences.put(Thunar, 10, 50)
+        GeneralPreferences.put(PCManFM, 10, 65)
+
+        # Video player integration
+        Label2 = gtk.Label("Ustawienia odtwarzacza filmowego")
+        SelectPlayer = gtk.combo_box_new_text()
+        SelectPlayer.append_text("Domyślny systemowy")
+        SelectPlayer.append_text("MPlayer")
+        SelectPlayer.append_text("SMPlayer")
+        SelectPlayer.append_text("VLC")
+        SelectPlayer.append_text("Totem")
+
+        EnableVideoPlayer = gtk.CheckButton("Włącz funkcję automatycznego uruchamiania odtwarzacza filmowego")
+
+        GeneralPreferences.put(Label2, 10, 100)
+        GeneralPreferences.put(EnableVideoPlayer, 10, 120)
+        GeneralPreferences.put(SelectPlayer, 10, 145)
+        
+        self.createTab(self.winPreferences.notebook, "Integracja systemowa", GeneralPreferences)
+
+
+        
+
+    def createTab(self, widget, title, inside):
+        """ This appends a new page to the notebook. """
+        
+        page = gtk.Label(title)
+        page.show()
+        
+        widget.append_page(inside, page)
+        widget.set_tab_reorderable(page, True)
+        widget.set_tab_detachable(page, True)
 
     def gtkMainScreen(self,files):
         """ Main GTK screen of the application """

@@ -1,0 +1,15 @@
+[Desktop Entry]
+Type=Service
+Encoding=UTF-8
+Actions=SubgetDownload;
+ServiceTypes=KonqPopupMenu/Plugin,video/*
+#MimeType=all/all
+X-KDE-StartupNotify=false
+X-KDE-Priority=TopLevel
+
+[Desktop Action SubgetDownload]
+Exec=/home/webnull/Praca/python/subget/subget.py %U
+Icon=/usr/share/subget/icons/Subget-logo.png
+Name=Download subtitles
+Name[pl]=Pobierz napisy
+Name[en]=Download subtitles
