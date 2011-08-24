@@ -5,6 +5,9 @@ Easily extendable by plugins, supports multi-language.
 Requirements: GTK+, Python 2.6/2.7, X11, PyGTK, alang, alang-py
 
 * Changelog:
+24.07.2011 (v.0.7.3) <webnull.www@gmail.com>:
+    + Creating ~/.subget directory if not exists
+
 23.07.2011 (v.0.7.2) <webnull.www@gmail.com>:
     + Launching video player right after downloading subtitles
     + Watch for configuration file in /usr/share/subget/config if ~/.subget/config not exists

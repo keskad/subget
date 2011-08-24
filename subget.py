@@ -139,6 +139,12 @@ class SubGet:
     def loadConfig(self):
         """ Parsing configuration from ~/.subget/config """
 
+        if not os.path.isdir(os.path.expanduser("~/.subget/")):
+            try:
+                os.mkdir(os.path.expanduser("~/.subget/"))
+            except Exception:
+                print("Cannot create ~/.subget directory, please check your permissions")
+
         configPath = os.path.expanduser("~/.subget/config")
         if not os.path.isfile(configPath):
             configPath = "/usr/share/subget/config"
