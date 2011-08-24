@@ -1,0 +1,8 @@
+[filemanagers]
+kde = False
+gnome = False
+
+[afterdownload]
+defaultplayer = 0
+playmovie = False
+

@@ -140,6 +140,9 @@ class SubGet:
         """ Parsing configuration from ~/.subget/config """
 
         configPath = os.path.expanduser("~/.subget/config")
+        if not os.path.isfile(configPath):
+            configPath = "/usr/share/subget/config"
+
         
         if os.path.isfile(configPath):
             Parser = configparser.ConfigParser()
@@ -352,6 +355,12 @@ class SubGet:
 
                  Results = plugins[Plugin].language = language
                  Results = plugins[Plugin].download_by_data(self.subtitlesList[SelectID]['data'], filename)
+
+                 if not self.dictGetKey(self.Config['afterdownload'], 'playmovie') == False:
+                    VideoFile = self.dictGetKey(self.subtitlesList[SelectID]['data'], 'file')
+
+                    if not VideoFile == False:
+                        self.spawnVideoPlayer(VideoFile, filename)
 
                  w.destroy()
 
@@ -774,6 +783,7 @@ class SubGet:
         Dolphin = gtk.CheckButton("Dolphin, Konqueror (KDE)")
         self.Dolphin = Dolphin
         Dolphin.connect("toggled", self.configSetButton, "filemanagers", "kde", Dolphin)
+        Dolphin.set_sensitive(False)
 
         if not self.dictGetKey(self.Config['filemanagers'], 'kde') == False:
             Dolphin.set_active(1)
@@ -781,6 +791,7 @@ class SubGet:
         # ==== Nautilus
         Nautilus = gtk.CheckButton("Nautilus (GNOME)")
         Nautilus.connect("toggled", self.configSetButton, "filemanagers", "gnome", Nautilus)
+        Nautilus.set_sensitive(False)
 
         if not self.dictGetKey(self.Config['filemanagers'], 'gnome') == False:
             Nautilus.set_active(1)
@@ -828,7 +839,7 @@ class SubGet:
                 SelectPlayer.set_active(DefaultPlayer)
 
         EnableVideoPlayer = gtk.CheckButton("Włącz funkcję automatycznego uruchamiania odtwarzacza filmowego")
-        EnableVideoPlayer.connect("toggled", self.configSetButton, "afterdownload", "playmovie", EnableVideoPlayer)
+        EnableVideoPlayer.connect("toggled", self.gtkPreferencesIntegrationPlayMovie)
 
         if not self.dictGetKey(self.Config['afterdownload'], 'playmovie') == False:
             EnableVideoPlayer.set_active(1)
@@ -842,7 +853,40 @@ class SubGet:
 
 
     def defaultPlayerSelection(self, widget):
+        """ Select default external video playing program """
         self.Config['afterdownload']['defaultplayer'] = widget.get_active()
+
+
+    def spawnVideoPlayer(self, VideoFile, Subtitles):
+        DefaultPlayer = self.Config['afterdownload']['defaultplayer']
+        Command = ""
+
+        if DefaultPlayer == 0:
+            Command = "/usr/bin/xdg-open "+VideoFile+" > /dev/null 2> /dev/null &"
+        elif DefaultPlayer == 1: # MPlayer
+            Command = "/usr/bin/mplayer "+VideoFile+" -sub "+Subtitles+" > /dev/null 2> /dev/null &"
+        elif DefaultPlayer == 2: # SMPlayer
+            Command = "/usr/bin/smplayer "+VideoFile+" -sub "+Subtitles+" > /dev/null 2> /dev/null &"
+        elif DefaultPlayer == 3: # VLC
+            Command = "/usr/bin/vlc "+VideoFile+" --sub-file "+Subtitles+" > /dev/null 2> /dev/null &"
+        elif DefaultPlayer == 4: # Totem
+            Command = "/usr/bin/totem "+VideoFile+" > /dev/null 2> /dev/null &"
+
+        if not Command == "":
+            print("Executing: "+Command)
+            os.system(Command)
+             
+
+
+    def gtkPreferencesIntegrationPlayMovie(self, Widget):
+        Value = Widget.get_active()
+        self.Config['afterdownload']['playmovie'] = Value
+
+        if Value == True:
+            self.VideoPlayer.set_active(1)
+        else:
+            self.VideoPlayer.set_active(0)
+
 
     def createTab(self, widget, title, inside):
         """ This appends a new page to the notebook. """
@@ -1020,6 +1064,16 @@ class SubGet:
         self.fixed.put(self.DownloadButton, 510, 205) # put on fixed
 
         self.DownloadButton.connect('clicked', lambda b: self.GTKDownloadSubtitles())
+
+        # Videoplayer checkbutton
+        self.VideoPlayer = gtk.CheckButton("Uruchom odtwarzacz filmowy")
+        if not self.dictGetKey(self.Config['afterdownload'], 'playmovie') == False: # TRUE, playmovie active
+            self.VideoPlayer.set_active(1)
+        else:
+            self.VideoPlayer.set_active(0)
+            self.VideoPlayer.hide()
+
+        self.fixed.put(self.VideoPlayer, 10, 205)
 
         # Cancel button
         self.CancelButton = gtk.Button(stock=gtk.STOCK_CLOSE)
