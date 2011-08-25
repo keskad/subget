@@ -5,24 +5,28 @@ Easily extendable by plugins, supports multi-language.
 Requirements: GTK+, Python 2.6/2.7, X11, PyGTK, alang, alang-py
 
 * Changelog:
-24.07.2011 (v.0.7.3) <webnull.www@gmail.com>:
+25.08.2011 (v.0.7.4) <webnull.www@gmail.com>:
+    * Fixed Python 2.6 bug with incorrect modules path, now Subget detects and fixes the path
+    * Fixed months in README
+
+24.08.2011 (v.0.7.3) <webnull.www@gmail.com>:
     + Creating ~/.subget directory if not exists
 
-23.07.2011 (v.0.7.2) <webnull.www@gmail.com>:
+23.08.2011 (v.0.7.2) <webnull.www@gmail.com>:
     + Launching video player right after downloading subtitles
     + Watch for configuration file in /usr/share/subget/config if ~/.subget/config not exists
 
-23.07.2011 (v.0.7.1.2) <webnull.www@gmail.com>:
+23.08.2011 (v.0.7.1.2) <webnull.www@gmail.com>:
     + Saving settings to file
 
-23.07.2011 (v.0.7.1.1):
+23.08.2011 (v.0.7.1.1):
     + Draft of settings menu and KDE4 integration
 
-22.07.2011 (v.0.7.1):
+22.08.2011 (v.0.7.1):
     + First implementation of "Settings/Preferences" (ini files)
     + Critical error popups implementation using external programs (zenity, xmessage, kdialog)
 
-21.07.2011 (v.0.7):
+21.08.2011 (v.0.7):
     + Drag and drop support (tested on Linux with Dolphin and Thunar)
 
 31.07.2011 (v.0.6.3):

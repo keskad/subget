@@ -101,6 +101,12 @@ class SubGet:
         debugErrors = ""
 
         pluginsDir = get_python_lib()+"/subgetlib/"
+
+        # fix for python bug which returns invalid path
+        if not os.path.isdir(pluginsDir):
+            pluginsDir = pluginsDir.replace("/usr/lib/", "/usr/local/lib/")
+
+
         file_list = glob.glob(pluginsDir+"*.py")
 
         for Plugin in file_list:
