@@ -5,6 +5,9 @@ Easily extendable by plugins, supports multi-language.
 Requirements: GTK+, Python 2.6/2.7, X11, PyGTK, alang, alang-py
 
 * Changelog:
+28.08.2011 (v.0.7.5) <webnull.www@gmail.com>:
+    + Added support for Dolphin, Konqueror and Nautilus
+
 25.08.2011 (v.0.7.4) <webnull.www@gmail.com>:
     * Fixed Python 2.6 bug with incorrect modules path, now Subget detects and fixes the path
     * Fixed months in README

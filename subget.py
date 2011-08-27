@@ -4,6 +4,7 @@ import getopt, sys, os, re, glob, gtk, gobject, pango, time
 import pygtk
 from threading import Thread
 from distutils.sysconfig import get_python_lib
+import subgetcore
 
 if sys.version_info[0] >= 3:
     import configparser
@@ -784,6 +785,8 @@ class SubGet:
      
     def gtkPreferencesIntegration(self):
         # "General" preferences
+        Path = os.path.expanduser("~/")
+
         GeneralPreferences = gtk.Fixed()
         Label1 = gtk.Label("Integracja z menu kontekstowym menadżerów plików")
         Label1.set_alignment (0, 0)
@@ -794,16 +797,16 @@ class SubGet:
         # ==== Dolphin, Konqueror
         Dolphin = gtk.CheckButton("Dolphin, Konqueror (KDE)")
         self.Dolphin = Dolphin
-        Dolphin.connect("toggled", self.configSetButton, "filemanagers", "kde", Dolphin)
-        Dolphin.set_sensitive(False)
+        Dolphin.connect("toggled", subgetcore.filemanagers.KDEService, self, Path)
+        Dolphin.set_sensitive(True)
 
         if not self.dictGetKey(self.Config['filemanagers'], 'kde') == False:
             Dolphin.set_active(1)
 
         # ==== Nautilus
         Nautilus = gtk.CheckButton("Nautilus (GNOME)")
-        Nautilus.connect("toggled", self.configSetButton, "filemanagers", "gnome", Nautilus)
-        Nautilus.set_sensitive(False)
+        Nautilus.connect("toggled", subgetcore.filemanagers.Nautilus, self, Path)
+        Nautilus.set_sensitive(True)
 
         if not self.dictGetKey(self.Config['filemanagers'], 'gnome') == False:
             Nautilus.set_active(1)
