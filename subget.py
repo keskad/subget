@@ -797,7 +797,7 @@ class SubGet:
         # ==== Dolphin, Konqueror
         Dolphin = gtk.CheckButton("Dolphin, Konqueror (KDE)")
         self.Dolphin = Dolphin
-        Dolphin.connect("toggled", subgetcore.filemanagers.KDEService, self, Path)
+        Dolphin.connect("pressed", subgetcore.filemanagers.KDEService, self, Path)
         Dolphin.set_sensitive(True)
 
         if not self.dictGetKey(self.Config['filemanagers'], 'kde') == False:
@@ -805,7 +805,7 @@ class SubGet:
 
         # ==== Nautilus
         Nautilus = gtk.CheckButton("Nautilus (GNOME)")
-        Nautilus.connect("toggled", subgetcore.filemanagers.Nautilus, self, Path)
+        Nautilus.connect("pressed", subgetcore.filemanagers.Nautilus, self, Path)
         Nautilus.set_sensitive(True)
 
         if not self.dictGetKey(self.Config['filemanagers'], 'gnome') == False:
@@ -813,7 +813,7 @@ class SubGet:
 
         # ==== Thunar
         Thunar = gtk.CheckButton("Thunar (XFCE)")
-        Thunar.connect("toggled", self.configSetButton, "filemanagers", "xfce", Thunar)
+        Thunar.connect("pressed", self.configSetButton, "filemanagers", "xfce", Thunar)
 
         if not self.dictGetKey(self.Config['filemanagers'], 'xfce') == False:
             Thunar.set_active(1)
@@ -821,7 +821,7 @@ class SubGet:
         # ==== PCManFM
         Thunar.set_sensitive(False)
         PCManFM = gtk.CheckButton("PCManFM (LXDE)")
-        PCManFM.connect("toggled", self.configSetButton, "filemanagers", "lxde", PCManFM)
+        PCManFM.connect("pressed", self.configSetButton, "filemanagers", "lxde", PCManFM)
         if not self.dictGetKey(self.Config['filemanagers'], 'lxde') == False:
             PCmanFM.set_active(1)
 
@@ -1093,7 +1093,7 @@ class SubGet:
         # Cancel button
         self.CancelButton = gtk.Button(stock=gtk.STOCK_CLOSE)
         self.CancelButton.set_size_request(90, 40)
-        self.CancelButton.connect('clicked', lambda b: gtk.mainquit())
+        self.CancelButton.connect('clicked', lambda b: gtk.main_quit())
         self.fixed.put(self.CancelButton, 410, 205) # put on fixed
 
         # scrollbars

@@ -5,6 +5,9 @@ Easily extendable by plugins, supports multi-language.
 Requirements: GTK+, Python 2.6/2.7, X11, PyGTK, alang, alang-py
 
 * Changelog:
+28.08.2011 (v.0.7.5.1) <webnull.www@gmail.com>:
+    * Fixed GNOME and KDE integration
+
 28.08.2011 (v.0.7.5) <webnull.www@gmail.com>:
     + Added support for Dolphin, Konqueror and Nautilus
 
