@@ -4,24 +4,10 @@ import getopt, sys, os, re, glob, gtk, gobject, pango, time
 import pygtk
 from threading import Thread
 from distutils.sysconfig import get_python_lib
-import subgetcore
+import subgetcore # libraries
 
-import gtk
-import dbus
-import dbus.service
-import dbus.glib
-import sys
-
-class SubgetService(dbus.service.Object):
-    def __init__(self):
-        bus_name = dbus.service.BusName('org.freedesktop.subget', bus=dbus.SessionBus())
-        dbus.service.Object.__init__(self, bus_name, '/org/freedesktop/subget')
-
-    @dbus.service.method('org.freedesktop.subget')
-    def ping(self):
-        return True
-
-
+# dbus
+import gtk, dbus, dbus.service, dbus.glib
 
 if sys.version_info[0] >= 3:
     import configparser
@@ -62,15 +48,78 @@ else:
 sys.path.insert( 0, incpath )
 
 try:
-           from alang import alang
+    from alang import alang
 except ImportError, e:
-        print("Error " + str(e.args))
+    print("Error " + str(e.args))
 
 alang=alang()
 alang.setPathPrefix(winSubget)
 LANG=alang.loadLanguage('subget')
 
 ## ALANG
+
+class SubgetService(dbus.service.Object):
+    subget = None
+
+    def __init__(self):
+        bus_name = dbus.service.BusName('org.freedesktop.subget', bus=dbus.SessionBus())
+        dbus.service.Object.__init__(self, bus_name, '/org/freedesktop/subget')
+
+    @dbus.service.method('org.freedesktop.subget')
+    def ping(self):
+        """ Check if Subget is already running """
+
+        return True
+
+    @dbus.service.method('org.freedesktop.subget')
+    def openSearchMenu(self):
+        """ Opens search dialog """
+
+        if not self.subget == None:
+            return self.subget.gtkSearchMenu(None) 
+
+    @dbus.service.method('org.freedesktop.subget')
+    def openPluginsMenu(self):
+        """ Opens plugin menu """
+
+        if not self.subget == None:
+            return self.subget.gtkPluginMenu(None)
+
+    @dbus.service.method('org.freedesktop.subget')
+    def openSelectVideoDialog(self):
+        """ Opens Video Selection dialog """
+
+        if not self.subget == None:
+            return self.subget.gtkSelectVideo(None)
+
+    @dbus.service.method('org.freedesktop.subget')
+    def openAboutDialog(self):
+        """ Opens About dialog """
+
+        if not self.subget == None:
+            return self.subget.gtkAboutMenu(None)
+
+    @dbus.service.method('org.freedesktop.subget')
+    def addLinks(self, Links, Wait=False):
+        """ Add links seperated by new line.
+            Returns nothing when not waiting, and other values when waiting for function finish working.
+            On errors returns false.
+            Default - Don't wait.
+        """
+        if self.subget == None:
+            return False
+
+        if not str(type(Links).__name__) == "String":
+            return False
+
+        Links = Links.split("\n")
+        self.subget.files = Links
+
+        if not Wait == False:
+            return self.subget.TreeViewUpdate()
+        else:
+            self.subget.TreeViewUpdate()
+
 
 # THREADING SUPPORT
 
@@ -257,6 +306,7 @@ class SubGet:
         else:
             # run DBUS Service within GUI to serve interface for other applications/self
             self.DBUS = SubgetService()
+            self.DBUS.subget = self
             self.graphicalMode(args)
 
     def addSubtitlesRow(self, language, release_name, server, download_data, extension, File):
@@ -452,6 +502,8 @@ class SubGet:
                     self.TreeViewUpdate()
             else:
                 chooser.destroy()
+
+            return True
 
     def gtkPluginMenu(self, arg):
             """ GTK Widget with list of plugins """
@@ -722,6 +774,7 @@ class SubGet:
 
             self.sm.add(self.sm.fixed)
             self.sm.show_all()
+            return True
 
     def gtkDoSearch(self, arg):
             query = self.sm.entry.get_text()
@@ -797,7 +850,7 @@ class SubGet:
         #self.sendCriticAlert("Sorry, this feature is not implemented yet.")
         #return
         if self.Windows['preferences'] == True:
-            return
+            return False
 
         self.Windows['preferences'] = True
 
@@ -832,6 +885,7 @@ class SubGet:
         self.winPreferences.fixed.put(self.winPreferences.CloseButton, 490, 350)
         self.winPreferences.add(self.winPreferences.fixed)
         self.winPreferences.show_all()
+        return True
 
     def configSetButton(self, Type, Section, Option, Value):
         Value = Value.get_active()

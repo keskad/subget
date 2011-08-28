@@ -5,6 +5,9 @@ Easily extendable by plugins, supports multi-language.
 Requirements: GTK+, Python 2.6/2.7, X11, PyGTK, alang, alang-py
 
 * Changelog:
+28.08.2011 (v.0.7.8) <webnull.www@gmail.com>:
+    + New dbus functions openSearchMenu, openPluginsMenu, openSelectVideoDialog, openAboutDialog, addLinks
+
 28.08.2011 (v.0.7.7) <webnull.www@gmail.com>:
     + First draft of dbus interface
     * Only one instance of program can be running at once by one user
