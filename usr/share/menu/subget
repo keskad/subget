@@ -1,0 +1,2 @@
+?package(subget): needs="X11" section="Applications/Video" \
+	title="Subget" longtitle="Download video subtitles" icon="/usr/share/subget/icons/Subget-logo.png" command="/usr/bin/subget"
