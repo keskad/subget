@@ -294,9 +294,15 @@ class SubGet:
         if consoleMode == False and not os.name == "nt":
             try:
                 bus = dbus.SessionBus()
-                helloservice = bus.get_object('org.freedesktop.subget', '/org/freedesktop/subget')
-                ping = helloservice.get_dbus_method('ping', 'org.freedesktop.subget')
-                print(self.LANG[54]) # only one instance of Subget can be running at once
+                SubgetServiceObj = bus.get_object('org.freedesktop.subget', '/org/freedesktop/subget')
+                ping = SubgetServiceObj.get_dbus_method('ping', 'org.freedesktop.subget')
+
+                if len(args) > 0:
+                    addLinks = SubgetServiceObj.get_dbus_method('addLinks', 'org.freedesktop.subget')
+                    addLinks(str.join('\n', args), False)
+                    print "Added new files to existing list."
+                else:
+                    print(self.LANG[54]) # only one instance of Subget can be running at once
                 sys.exit(0)
             except dbus.exceptions.DBusException as e:
                 True

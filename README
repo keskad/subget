@@ -5,6 +5,9 @@ Easily extendable by plugins, supports multi-language.
 Requirements: GTK+, Python 2.6/2.7, X11, PyGTK, alang, alang-py
 
 * Changelog:
+28.08.2011 (v.0.8) <webnull.www@gmail.com>:
+    + Adding files from popup menu/console to existing instance of program
+
 28.08.2011 (v.0.7.8.1) <webnull.www@gmail.com>:
     * Propably disabled correctly dbus on Windows
 
