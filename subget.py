@@ -369,18 +369,18 @@ class SubGet:
                  Results = plugins[Plugin].language = language
                  Results = plugins[Plugin].download_by_data(self.subtitlesList[SelectID]['data'], filename)
 
-                 if not self.dictGetKey(self.Config['afterdownload'], 'playmovie') == False:
+                 if self.VideoPlayer.get_active() == True:
                     VideoFile = self.dictGetKey(self.subtitlesList[SelectID]['data'], 'file')
 
                     if not VideoFile == False:
-                        self.spawnVideoPlayer(VideoFile, filename)
+                        subgetcore.videoplayers.Spawn(self, VideoFile, filename)
 
                  w.destroy()
 
     def update_progress_bar(self):
             """ Progressbar updater, called asynchronously """
             self.pbar.pulse()
-            return gtk.TRUE
+            return True
 
 
         # DESTROY THE DIALOG
@@ -870,27 +870,6 @@ class SubGet:
     def defaultPlayerSelection(self, widget):
         """ Select default external video playing program """
         self.Config['afterdownload']['defaultplayer'] = widget.get_active()
-
-
-    def spawnVideoPlayer(self, VideoFile, Subtitles):
-        DefaultPlayer = self.Config['afterdownload']['defaultplayer']
-        Command = ""
-
-        if DefaultPlayer == 0:
-            Command = "/usr/bin/xdg-open "+VideoFile+" > /dev/null 2> /dev/null &"
-        elif DefaultPlayer == 1: # MPlayer
-            Command = "/usr/bin/mplayer "+VideoFile+" -sub "+Subtitles+" > /dev/null 2> /dev/null &"
-        elif DefaultPlayer == 2: # SMPlayer
-            Command = "/usr/bin/smplayer "+VideoFile+" -sub "+Subtitles+" > /dev/null 2> /dev/null &"
-        elif DefaultPlayer == 3: # VLC
-            Command = "/usr/bin/vlc "+VideoFile+" --sub-file "+Subtitles+" > /dev/null 2> /dev/null &"
-        elif DefaultPlayer == 4: # Totem
-            Command = "/usr/bin/totem "+VideoFile+" > /dev/null 2> /dev/null &"
-
-        if not Command == "":
-            print("Executing: "+Command)
-            os.system(Command)
-             
 
 
     def gtkPreferencesIntegrationPlayMovie(self, Widget):
