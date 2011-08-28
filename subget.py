@@ -6,9 +6,6 @@ from threading import Thread
 from distutils.sysconfig import get_python_lib
 import subgetcore # libraries
 
-# dbus
-import gtk, dbus, dbus.service, dbus.glib
-
 if sys.version_info[0] >= 3:
     import configparser
 else:
@@ -20,6 +17,9 @@ winSubget = ""
 
 if os.name == "nt":
     winSubget = str(os.path.dirname(sys.path[0])) 
+else:
+    # dbus
+    import dbus, dbus.service, dbus.glib
 
 consoleMode=False
 
@@ -58,67 +58,69 @@ LANG=alang.loadLanguage('subget')
 
 ## ALANG
 
-class SubgetService(dbus.service.Object):
-    subget = None
+## DBUS
+if not os.name == "nt":
+    class SubgetService(dbus.service.Object):
+        subget = None
 
-    def __init__(self):
-        bus_name = dbus.service.BusName('org.freedesktop.subget', bus=dbus.SessionBus())
-        dbus.service.Object.__init__(self, bus_name, '/org/freedesktop/subget')
+        def __init__(self):
+            bus_name = dbus.service.BusName('org.freedesktop.subget', bus=dbus.SessionBus())
+            dbus.service.Object.__init__(self, bus_name, '/org/freedesktop/subget')
 
-    @dbus.service.method('org.freedesktop.subget')
-    def ping(self):
-        """ Check if Subget is already running """
+        @dbus.service.method('org.freedesktop.subget')
+        def ping(self):
+            """ Check if Subget is already running """
 
-        return True
+            return True
 
-    @dbus.service.method('org.freedesktop.subget')
-    def openSearchMenu(self):
-        """ Opens search dialog """
+        @dbus.service.method('org.freedesktop.subget')
+        def openSearchMenu(self):
+            """ Opens search dialog """
 
-        if not self.subget == None:
-            return self.subget.gtkSearchMenu(None) 
+            if not self.subget == None:
+                return self.subget.gtkSearchMenu(None) 
 
-    @dbus.service.method('org.freedesktop.subget')
-    def openPluginsMenu(self):
-        """ Opens plugin menu """
+        @dbus.service.method('org.freedesktop.subget')
+        def openPluginsMenu(self):
+            """ Opens plugin menu """
 
-        if not self.subget == None:
-            return self.subget.gtkPluginMenu(None)
+            if not self.subget == None:
+                return self.subget.gtkPluginMenu(None)
 
-    @dbus.service.method('org.freedesktop.subget')
-    def openSelectVideoDialog(self):
-        """ Opens Video Selection dialog """
+        @dbus.service.method('org.freedesktop.subget')
+        def openSelectVideoDialog(self):
+            """ Opens Video Selection dialog """
 
-        if not self.subget == None:
-            return self.subget.gtkSelectVideo(None)
+            if not self.subget == None:
+                return self.subget.gtkSelectVideo(None)
 
-    @dbus.service.method('org.freedesktop.subget')
-    def openAboutDialog(self):
-        """ Opens About dialog """
+        @dbus.service.method('org.freedesktop.subget')
+        def openAboutDialog(self):
+            """ Opens About dialog """
 
-        if not self.subget == None:
-            return self.subget.gtkAboutMenu(None)
+            if not self.subget == None:
+                return self.subget.gtkAboutMenu(None)
 
-    @dbus.service.method('org.freedesktop.subget')
-    def addLinks(self, Links, Wait=False):
-        """ Add links seperated by new line.
-            Returns nothing when not waiting, and other values when waiting for function finish working.
-            On errors returns false.
-            Default - Don't wait.
-        """
-        if self.subget == None:
-            return False
+        @dbus.service.method('org.freedesktop.subget')
+        def addLinks(self, Links, Wait=False):
+            """ Add links seperated by new line.
+                Returns nothing when not waiting, and other values when waiting for function finish working.
+                On errors returns false.
+                Default - Don't wait.
+            """
+            if self.subget == None:
+                return False
 
-        if not str(type(Links).__name__) == "String":
-            return False
+            if not str(type(Links).__name__) == "String":
+                return False
 
-        Links = Links.split("\n")
-        self.subget.files = Links
+            Links = Links.split("\n")
+            self.subget.files = Links
 
-        if not Wait == False:
-            return self.subget.TreeViewUpdate()
-        else:
-            self.subget.TreeViewUpdate()
+            if not Wait == False:
+                return self.subget.TreeViewUpdate()
+            else:
+                self.subget.TreeViewUpdate()
 
 
 # THREADING SUPPORT
@@ -289,7 +291,7 @@ class SubGet:
 
         self.loadConfig()
 
-        if consoleMode == False:
+        if consoleMode == False and not os.name == "nt":
             try:
                 bus = dbus.SessionBus()
                 helloservice = bus.get_object('org.freedesktop.subget', '/org/freedesktop/subget')
@@ -304,9 +306,11 @@ class SubGet:
         if consoleMode == True:
             self.shellMode(args)
         else:
-            # run DBUS Service within GUI to serve interface for other applications/self
-            self.DBUS = SubgetService()
-            self.DBUS.subget = self
+            if not os.name == "nt":
+                # run DBUS Service within GUI to serve interface for other applications/self
+                self.DBUS = SubgetService()
+                self.DBUS.subget = self
+
             self.graphicalMode(args)
 
     def addSubtitlesRow(self, language, release_name, server, download_data, extension, File):
