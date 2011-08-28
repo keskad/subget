@@ -232,7 +232,7 @@ class SubGet:
 
             if not os.path.isfile(pixbuf_path):
                 pixbuf_path = self.subgetOSPath+'/usr/share/subget/icons/unknown.xpm'
-                print "[addSubtitlesRow] "+language+".xpm icon does not exists, using unknown.xpm"
+                print "[addSubtitlesRow] "+language+".xpm "+self.LANG[46]
 
             pixbuf = gtk.gdk.pixbuf_new_from_file(pixbuf_path)
 
@@ -774,7 +774,7 @@ class SubGet:
             self.Config[Section][Option] = Value
             #print("SET to "+str(Value))
         except Exception as e:
-            print("Error setting configuration variable: "+Section+"->"+Option+" = \""+str(Value)+"\". Error: "+str(e))
+            print(self.LANG[47]+" "+Section+"->"+Option+" = \""+str(Value)+"\". "+self.LANG[2]+": "+str(e))
 
     def revertBool(self, boolean):
         if boolean == "False" or boolean == False:
@@ -788,7 +788,7 @@ class SubGet:
         Path = os.path.expanduser("~/")
 
         GeneralPreferences = gtk.Fixed()
-        Label1 = gtk.Label("Integracja z menu kontekstowym menadżerów plików")
+        Label1 = gtk.Label(self.LANG[48])
         Label1.set_alignment (0, 0)
         Label1.show()
 
@@ -827,16 +827,16 @@ class SubGet:
 
         PCManFM.set_sensitive(False)
 
-        GeneralPreferences.put(Label1, 10, 6)
-        GeneralPreferences.put(Dolphin, 10, 20)
-        GeneralPreferences.put(Nautilus, 10, 35)
-        GeneralPreferences.put(Thunar, 10, 50)
-        GeneralPreferences.put(PCManFM, 10, 65)
+        GeneralPreferences.put(Label1, 10, 8)
+        GeneralPreferences.put(Dolphin, 10, 26)
+        GeneralPreferences.put(Nautilus, 10, 45)
+        GeneralPreferences.put(Thunar, 10, 64)
+        GeneralPreferences.put(PCManFM, 10, 83)
 
         # Video player integration
-        Label2 = gtk.Label("Ustawienia odtwarzacza filmowego")
+        Label2 = gtk.Label(self.LANG[49])
         SelectPlayer = gtk.combo_box_new_text()
-        SelectPlayer.append_text("Domyślny systemowy")
+        SelectPlayer.append_text(self.LANG[50])
         SelectPlayer.append_text("MPlayer")
         SelectPlayer.append_text("SMPlayer")
         SelectPlayer.append_text("VLC")
@@ -853,18 +853,18 @@ class SubGet:
             if DefaultPlayer > -1 and DefaultPlayer < 5:
                 SelectPlayer.set_active(DefaultPlayer)
 
-        EnableVideoPlayer = gtk.CheckButton("Włącz funkcję automatycznego uruchamiania odtwarzacza filmowego")
+        EnableVideoPlayer = gtk.CheckButton(self.LANG[51])
         EnableVideoPlayer.connect("toggled", self.gtkPreferencesIntegrationPlayMovie)
 
         if not self.dictGetKey(self.Config['afterdownload'], 'playmovie') == False:
             EnableVideoPlayer.set_active(1)
         
 
-        GeneralPreferences.put(Label2, 10, 100)
-        GeneralPreferences.put(EnableVideoPlayer, 10, 120)
-        GeneralPreferences.put(SelectPlayer, 10, 145)
+        GeneralPreferences.put(Label2, 10, 118)
+        GeneralPreferences.put(EnableVideoPlayer, 10, 138)
+        GeneralPreferences.put(SelectPlayer, 10, 163)
         
-        self.createTab(self.winPreferences.notebook, "Integracja systemowa", GeneralPreferences)
+        self.createTab(self.winPreferences.notebook, self.LANG[52], GeneralPreferences)
 
 
     def defaultPlayerSelection(self, widget):
@@ -1054,13 +1054,13 @@ class SubGet:
         image = gtk.Image()
         image.set_from_stock("gtk-go-down", gtk.ICON_SIZE_BUTTON)
         self.DownloadButton.set_image(image)
-        self.DownloadButton.set_size_request(80, 40)
-        self.fixed.put(self.DownloadButton, 510, 205) # put on fixed
+        self.DownloadButton.set_size_request(100, 40)
+        self.fixed.put(self.DownloadButton, 490, 205) # put on fixed
 
         self.DownloadButton.connect('clicked', lambda b: self.GTKDownloadSubtitles())
 
         # Videoplayer checkbutton
-        self.VideoPlayer = gtk.CheckButton("Uruchom odtwarzacz filmowy")
+        self.VideoPlayer = gtk.CheckButton(self.LANG[53])
         if not self.dictGetKey(self.Config['afterdownload'], 'playmovie') == False: # TRUE, playmovie active
             self.VideoPlayer.set_active(1)
         else:
@@ -1073,7 +1073,7 @@ class SubGet:
         self.CancelButton = gtk.Button(stock=gtk.STOCK_CLOSE)
         self.CancelButton.set_size_request(90, 40)
         self.CancelButton.connect('clicked', lambda b: gtk.main_quit())
-        self.fixed.put(self.CancelButton, 410, 205) # put on fixed
+        self.fixed.put(self.CancelButton, 390, 205) # put on fixed
 
         # scrollbars
         scrolled_window = gtk.ScrolledWindow()

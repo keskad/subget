@@ -5,6 +5,10 @@ Easily extendable by plugins, supports multi-language.
 Requirements: GTK+, Python 2.6/2.7, X11, PyGTK, alang, alang-py
 
 * Changelog:
+28.08.2011 (v.0.7.6) <webnull.www@gmail.com>:
+    + Added English language to new interface items
+    * Fixed sizes of buttons to fit english names 
+
 28.08.2011 (v.0.7.5.2) <webnull.www@gmail.com>:
     * Fixed VideoPlayer function
     * Moved VideoPlayer to subgetcore library

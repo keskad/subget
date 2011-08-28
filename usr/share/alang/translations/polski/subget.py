@@ -2,7 +2,7 @@
 
 class alangINC():
 	def return_array(a):
-		MyLang = range(46)
+		MyLang = range(54)
 		MyLang[0] = "subget dla GNU/Linux. Prosty program do pobierania napisów z interfejsem tekstowym oraz graficznym.\nUżycie: subget [long GNU option] [option] pierwszy-plik, drugi-plik, ...\n\n --help                : ta wiadomość\n --console, -c         : pokazuje wyniki w konsoli zamiast w graficznym okienku\n --language, -l        : wybierz preferowany język\n --quick, -q           : wybierz pierwszy znaleziony wynik"
 
                 MyLang[1] = "Spróbuj użyć --help aby wyświetlić możliwe opcje"
@@ -50,4 +50,12 @@ class alangINC():
                 MyLang[43] = "Wyczyść listę wyników"
                 MyLang[44] = "Wyczyść listę"
                 MyLang[45] = "Funkcja wyszukiwania po słowach kluczowych jest niedostępna dla tej wtyczki"
+                MyLang[46] = "nie istnieje, użyję domyślnej unknown.xpm"
+                MyLang[47] = "Wystąpił błąd podczas ustawiania zmiennej w konfiguracji:"
+                MyLang[48] = "Integracja z menu kontekstowym menadżerów plików"
+                MyLang[49] = "Ustawienia odtwarzacza filmowego"
+                MyLang[50] = "Domyślny systemowy"
+                MyLang[51] = "Automatyczne uruchamianie odtwarzacza filmowego"
+                MyLang[52] = "Integracja systemowa"
+                MyLang[53] = "Uruchom odtwarzacz filmowy"
 		return MyLang

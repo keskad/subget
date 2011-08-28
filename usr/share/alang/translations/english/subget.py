@@ -2,7 +2,7 @@
 
 class alangINC():
 	def return_array(a):
-		MyLang = range(46)
+		MyLang = range(54)
 		MyLang[0] = "subget for GNU/Linux. Simple Subtitle Downloader for shell and GUI.\nUsage: subget [long GNU option] [option] first-file, second-file, ...\n\n --help                : this message\n --console, -c         : show results in console, not in graphical user interface\n --language, -l        : specify preffered language\n --quick, -q           : grab first result and download"
 
                 MyLang[1] = "Try --help for usage"
@@ -51,4 +51,12 @@ class alangINC():
                 MyLang[43] = "Clear list before search"
                 MyLang[44] = "Clear list"
                 MyLang[45] = "Searching by keywords is not supported by this plugin"
+                MyLang[46] = "icon does not exists, using unknown.xpm"
+                MyLang[47] = "Error setting configuration variable:"
+                MyLang[48] = "File managers popup menu integration"
+                MyLang[49] = "Video Player settings"
+                MyLang[50] = "System's default"
+                MyLang[51] = "Start automaticaly when program runs"
+                MyLang[52] = "System integration"
+                MyLang[53] = "Start video player"
 		return MyLang
