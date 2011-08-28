@@ -413,11 +413,18 @@ class SubGet:
 
     def gtkPluginMenu(self, arg):
             """ GTK Widget with list of plugins """
+
+            if self.dictGetKey(self.Windows, 'gtkPluginMenu') == False:
+                self.Windows['gtkPluginMenu'] = True
+            else:
+                return False
+
             window = gtk.Window(gtk.WINDOW_TOPLEVEL)
             window.set_title(self.LANG[37])
             window.set_resizable(False)
-            window.set_size_request(500, 290)
+            window.set_size_request(700, 290)
             window.set_icon_from_file(self.subgetOSPath+"/usr/share/subget/icons/plugin.png")
+            window.connect("delete_event", self.closeWindow, window, 'gtkPluginMenu')
             fixed = gtk.Fixed()
 
             liststore = gtk.ListStore(gtk.gdk.Pixbuf, str, str, str, str)
@@ -498,14 +505,15 @@ class SubGet:
             treeview.set_search_column(1)
 
             # Allow sorting on the column
-            tvcolumn.set_sort_column_id(1)
-            tvcolumn1.set_sort_column_id(1)
-            tvcolumn2.set_sort_column_id(2)
-            tvcolumn3.set_sort_column_id(3)
+            if not self.configGetKey('interface', 'custom_plugins_sorting') == False:
+                tvcolumn.set_sort_column_id(1)
+                tvcolumn1.set_sort_column_id(1)
+                tvcolumn2.set_sort_column_id(2)
+                tvcolumn3.set_sort_column_id(3)
 
             scrolled_window = gtk.ScrolledWindow()
             scrolled_window.set_border_width(0)
-            scrolled_window.set_size_request(500, 230)
+            scrolled_window.set_size_request(700, 230)
             scrolled_window.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_ALWAYS)
             scrolled_window.add_with_viewport(treeview)
 
@@ -513,7 +521,7 @@ class SubGet:
             CancelButton = gtk.Button(stock=gtk.STOCK_CLOSE)
             CancelButton.set_size_request(90, 40)
             CancelButton.connect('clicked', lambda b: window.destroy())
-            fixed.put(CancelButton, 400, 240) # put on fixed
+            fixed.put(CancelButton, 600, 240) # put on fixed
 
             fixed.put(scrolled_window, 0, 0)
             window.add(fixed)
@@ -522,11 +530,17 @@ class SubGet:
     def gtkAboutMenu(self, arg):
             """ Shows about dialog """
 
+            if self.dictGetKey(self.Windows, 'gtkAboutMenu') == False:
+                self.Windows['gtkAboutMenu'] = True
+            else:
+                return False
+
             about = gtk.Window(gtk.WINDOW_TOPLEVEL)
             about.set_title(self.LANG[23])
             about.set_resizable(False)
             about.set_size_request(600,550)
             about.set_icon_from_file(self.subgetOSPath+"/usr/share/subget/icons/Subget-logo.png")
+            about.connect("delete_event", self.closeWindow, about, 'gtkAboutMenu')
 
             # container
             fixed = gtk.Fixed()
@@ -586,12 +600,22 @@ class SubGet:
             authorsLabel = gtk.Label(label)
             notebook.prepend_page(authorsFrame, authorsLabel)
 
+    def closeWindow(self, Event, X, Window, ID):
+        Window.destroy()
+        self.Windows[ID] = False
+
     def gtkSearchMenu(self, arg):
+            if self.dictGetKey(self.Windows, 'gtkSearchMenu') == False:
+                self.Windows['gtkSearchMenu'] = True
+            else:
+                return False
+
             self.sm = gtk.Window(gtk.WINDOW_TOPLEVEL)
             self.sm.set_title(self.LANG[39])
             self.sm.set_size_request(350, 180)
             self.sm.set_resizable(False)
             self.sm.set_icon_from_file(self.subgetOSPath+"/usr/share/subget/icons/Subget-logo.png")
+            self.sm.connect("delete_event", self.closeWindow, self.sm, 'gtkSearchMenu')
 
             self.sm.fixed = gtk.Fixed()
 
@@ -638,7 +662,7 @@ class SubGet:
             # cancel button
             self.sm.cancelButton = gtk.Button(self.LANG[42])
             self.sm.cancelButton.set_size_request(80, 35)
-            self.sm.cancelButton.connect('clicked', lambda b: self.sm.destroy())
+            self.sm.cancelButton.connect('clicked', self.closeWindow, False, self.sm, 'gtkSearchMenu')
 
             image = gtk.Image() # image for button
             image.set_from_stock(gtk.STOCK_CLOSE, 4)
@@ -659,7 +683,7 @@ class SubGet:
 
     def gtkDoSearch(self, arg):
             query = self.sm.entry.get_text()
-            self.sm.destroy()
+            #self.sm.destroy()
             time.sleep(0.1)
 
             if query == "" or query == None:
@@ -781,6 +805,18 @@ class SubGet:
             return True
         else:
             return False
+
+    def configGetKey(self, Section, Key):
+        if not Section in self.Config:
+            return False
+
+        if not Key in self.Config[Section]:
+            return False
+
+        if self.Config[Section][Key] == "false" or self.Config[Section][Key] == "False":
+            return False
+
+        return self.Config[Section][Key]
 
      
     def gtkPreferencesIntegration(self):
@@ -910,7 +946,11 @@ class SubGet:
         TARGET_STRING = 82
         TARGET_IMAGE = 83
 
-        self.window.drag_dest_set(0, [], 0)
+        if os.path.isfile("/usr/bin/nautilus"):
+            self.window.drag_dest_set(gtk.DEST_DEFAULT_DROP,[("text/plain", 0, TARGET_STRING),("image/*", 0, TARGET_IMAGE)],gtk.gdk.ACTION_COPY)
+        else:
+            self.window.drag_dest_set(0, [], 0)
+
         self.window.connect("drag_motion", self.motion_cb)
         self.window.connect("drag_drop", self.drop_cb)
         self.window.connect("drag_data_received", self.drag_data_received)
