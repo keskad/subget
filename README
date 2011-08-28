@@ -5,6 +5,9 @@ Easily extendable by plugins, supports multi-language.
 Requirements: GTK+, Python 2.6/2.7, X11, PyGTK, alang, alang-py
 
 * Changelog:
+28.08.2011 (v.0.9) <webnull.www@gmail.com>:
+    * Fixed threading, now application is not freezing when checking for subtitles
+
 28.08.2011 (v.0.8) <webnull.www@gmail.com>:
     + Adding files from popup menu/console to existing instance of program
 

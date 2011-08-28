@@ -1,10 +1,12 @@
 #!/usr/bin/python
 #-*- coding: utf-8 -*-
 import getopt, sys, os, re, glob, gtk, gobject, pango, time
-import pygtk
+import pygtk, glib
 from threading import Thread
 from distutils.sysconfig import get_python_lib
 import subgetcore # libraries
+
+gtk.gdk.threads_init()
 
 if sys.version_info[0] >= 3:
     import configparser
@@ -57,6 +59,19 @@ alang.setPathPrefix(winSubget)
 LANG=alang.loadLanguage('subget')
 
 ## ALANG
+
+# http://stackoverflow.com/questions/2615124/simple-pygtk-and-threads-example-please
+def yieldsleep(func):
+    def start(*args, **kwds):
+        iterable = func(*args, **kwds)
+        def step(*args, **kwds):
+            try:
+                time = next(iterable)
+                glib.timeout_add_seconds(time, step)
+            except StopIteration:
+                pass
+        glib.idle_add(step)
+    return start
 
 ## DBUS
 if not os.name == "nt":
@@ -341,20 +356,24 @@ class SubGet:
             self.liststore.append([pixbuf, str(release_name), str(server), ID])
 
 
-        # UPDATE THE TREEVIEW LIST
+    # UPDATE THE TREEVIEW LIST
     def TreeViewUpdate(self):
             """ Refresh TreeView, run all plugins to parse files """
 
             subThreads = list()
 
             for Plugin in plugins:
-                current = SubtitleThread(Plugin, self)
-                subThreads.append(current)
+                current = Thread(target=self.GTKCheckForSubtitles, args=(Plugin,))
+                current.setDaemon(True)
                 current.start()
+            #    current = SubtitleThread(Plugin, self)
+            #    current.setDaemon(True)
+            #    subThreads.append(current)
+            #    current.start()
 
-            for sThread in subThreads:
-                sThread.join()
-                
+            #for sThread in subThreads:
+            #    sThread.join()
+            #self.sObject.GTKCheckForSubtitles(self.Plugin)   
 
 
     def GTKCheckForSubtitles(self, Plugin):
