@@ -6,6 +6,23 @@ from threading import Thread
 from distutils.sysconfig import get_python_lib
 import subgetcore
 
+import gtk
+import dbus
+import dbus.service
+import dbus.glib
+import sys
+
+class SubgetService(dbus.service.Object):
+    def __init__(self):
+        bus_name = dbus.service.BusName('org.freedesktop.subget', bus=dbus.SessionBus())
+        dbus.service.Object.__init__(self, bus_name, '/org/freedesktop/subget')
+
+    @dbus.service.method('org.freedesktop.subget')
+    def ping(self):
+        return True
+
+
+
 if sys.version_info[0] >= 3:
     import configparser
 else:
@@ -141,6 +158,19 @@ class SubGet:
         elif os.path.isfile("/usr/bin/xmessage"):
             os.system("/usr/bin/xmessage -nearmouse \""+Message+"\"")
 
+    def pingSubget(self):
+            return False
+            #try:
+                #bus = dbus.SessionBus()
+                #helloservice = bus.get_object('org.freedesktop.subget', '/org/freedesktop/subget')
+                #instance = helloservice.get_dbus_method('getInstance', 'org.freedesktop.subget')
+
+                # if ping reply successed
+                #if instance() == True:
+                #    return True  
+                  
+            #except dbus.exceptions.DBusException:
+            #    return False
 
 
     def loadConfig(self):
@@ -210,11 +240,23 @@ class SubGet:
 
         self.loadConfig()
 
+        if consoleMode == False:
+            try:
+                bus = dbus.SessionBus()
+                helloservice = bus.get_object('org.freedesktop.subget', '/org/freedesktop/subget')
+                ping = helloservice.get_dbus_method('ping', 'org.freedesktop.subget')
+                print(self.LANG[54]) # only one instance of Subget can be running at once
+                sys.exit(0)
+            except dbus.exceptions.DBusException as e:
+                True
+
         self.doPluginsLoad(args)
 
         if consoleMode == True:
             self.shellMode(args)
         else:
+            # run DBUS Service within GUI to serve interface for other applications/self
+            self.DBUS = SubgetService()
             self.graphicalMode(args)
 
     def addSubtitlesRow(self, language, release_name, server, download_data, extension, File):
@@ -928,11 +970,11 @@ class SubGet:
         widget.set_tab_reorderable(page, True)
         widget.set_tab_detachable(page, True)
 
+
     def gtkMainScreen(self,files):
         """ Main GTK screen of the application """
         #if len(files) == 1:
         #gobject.timeout_add(1, self.TreeViewUpdate)
-        
         
         # Create a new window
         self.window = gtk.Window(gtk.WINDOW_TOPLEVEL)
