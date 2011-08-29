@@ -5,6 +5,13 @@ Easily extendable by plugins, supports multi-language.
 Requirements: GTK+, Python 2.6/2.7, X11, PyGTK, alang, alang-py
 
 * Changelog:
+29.08.2011 (v.0.9.2) <webnull.www@gmail.com>:
+    * Moved DBUS to subgetcore.subgetbus module
+    + New DBUS API methods clearList and toggleVideoPlayer
+
+28.08.2011 (v.0.9.1) <webnull.www@gmail.com>:
+    * Fixed plugin menu when not showing again after exit (fixed button event)
+
 28.08.2011 (v.0.9) <webnull.www@gmail.com>:
     * Fixed threading, now application is not freezing when checking for subtitles
 

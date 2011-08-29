@@ -1,3 +1,3 @@
 """ Subget core library """
 
-import filemanagers, videoplayers
+import filemanagers, videoplayers, subgetbus

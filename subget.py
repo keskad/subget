@@ -21,7 +21,7 @@ if os.name == "nt":
     winSubget = str(os.path.dirname(sys.path[0])) 
 else:
     # dbus
-    import dbus, dbus.service, dbus.glib
+    import dbus
 
 consoleMode=False
 
@@ -39,7 +39,6 @@ language="pl"
 languages=['pl', 'en']
 
 ## ALANG
-
 if os.name == "nt":
     incpath=winSubget+"/usr/share/alang/python/"
 elif os.path.isfile("usr/share/alang/python/alang.py"):
@@ -59,97 +58,6 @@ alang.setPathPrefix(winSubget)
 LANG=alang.loadLanguage('subget')
 
 ## ALANG
-
-# http://stackoverflow.com/questions/2615124/simple-pygtk-and-threads-example-please
-def yieldsleep(func):
-    def start(*args, **kwds):
-        iterable = func(*args, **kwds)
-        def step(*args, **kwds):
-            try:
-                time = next(iterable)
-                glib.timeout_add_seconds(time, step)
-            except StopIteration:
-                pass
-        glib.idle_add(step)
-    return start
-
-## DBUS
-if not os.name == "nt":
-    class SubgetService(dbus.service.Object):
-        subget = None
-
-        def __init__(self):
-            bus_name = dbus.service.BusName('org.freedesktop.subget', bus=dbus.SessionBus())
-            dbus.service.Object.__init__(self, bus_name, '/org/freedesktop/subget')
-
-        @dbus.service.method('org.freedesktop.subget')
-        def ping(self):
-            """ Check if Subget is already running """
-
-            return True
-
-        @dbus.service.method('org.freedesktop.subget')
-        def openSearchMenu(self):
-            """ Opens search dialog """
-
-            if not self.subget == None:
-                return self.subget.gtkSearchMenu(None) 
-
-        @dbus.service.method('org.freedesktop.subget')
-        def openPluginsMenu(self):
-            """ Opens plugin menu """
-
-            if not self.subget == None:
-                return self.subget.gtkPluginMenu(None)
-
-        @dbus.service.method('org.freedesktop.subget')
-        def openSelectVideoDialog(self):
-            """ Opens Video Selection dialog """
-
-            if not self.subget == None:
-                return self.subget.gtkSelectVideo(None)
-
-        @dbus.service.method('org.freedesktop.subget')
-        def openAboutDialog(self):
-            """ Opens About dialog """
-
-            if not self.subget == None:
-                return self.subget.gtkAboutMenu(None)
-
-        @dbus.service.method('org.freedesktop.subget')
-        def addLinks(self, Links, Wait=False):
-            """ Add links seperated by new line.
-                Returns nothing when not waiting, and other values when waiting for function finish working.
-                On errors returns false.
-                Default - Don't wait.
-            """
-            if self.subget == None:
-                return False
-
-            if not str(type(Links).__name__) == "String":
-                return False
-
-            Links = Links.split("\n")
-            self.subget.files = Links
-
-            if not Wait == False:
-                return self.subget.TreeViewUpdate()
-            else:
-                self.subget.TreeViewUpdate()
-
-
-# THREADING SUPPORT
-
-class SubtitleThread(Thread):
-    def __init__(self,Plugin,sObject):
-        Thread.__init__(self) # initialize thread
-        self.Plugin = Plugin
-        self.sObject = sObject
-        self.status = "Idle"
-
-    def run(self):
-        self.sObject.GTKCheckForSubtitles(self.Plugin)
-        self.status = "Running"
 
 # EVAL THREADS
 class threadingCommand (Thread):
@@ -329,7 +237,7 @@ class SubGet:
         else:
             if not os.name == "nt":
                 # run DBUS Service within GUI to serve interface for other applications/self
-                self.DBUS = SubgetService()
+                self.DBUS = subgetcore.subgetbus.SubgetService()
                 self.DBUS.subget = self
 
             self.graphicalMode(args)
@@ -643,7 +551,7 @@ class SubGet:
             # Cancel button
             CancelButton = gtk.Button(stock=gtk.STOCK_CLOSE)
             CancelButton.set_size_request(90, 40)
-            CancelButton.connect('clicked', lambda b: window.destroy())
+            CancelButton.connect('clicked', self.closeWindow, False, window, 'gtkPluginMenu')
             fixed.put(CancelButton, 600, 240) # put on fixed
 
             fixed.put(scrolled_window, 0, 0)
@@ -792,7 +700,7 @@ class SubGet:
             self.sm.cancelButton.set_image(image)
 
             # list clearing check box
-            self.sm.clearCB = gtk.CheckButton(self.LANG[43])
+            self.sm.clearCBclearCB = gtk.CheckButton(self.LANG[43])
 
             self.sm.fixed.put(self.sm.label, 10, 8)
             self.sm.fixed.put(self.sm.entry, 10, 60)
