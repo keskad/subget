@@ -700,7 +700,7 @@ class SubGet:
             self.sm.cancelButton.set_image(image)
 
             # list clearing check box
-            self.sm.clearCBclearCB = gtk.CheckButton(self.LANG[43])
+            self.sm.clearCB = gtk.CheckButton(self.LANG[43])
 
             self.sm.fixed.put(self.sm.label, 10, 8)
             self.sm.fixed.put(self.sm.entry, 10, 60)
