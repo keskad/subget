@@ -2,6 +2,18 @@ subget - simple program featuring downloading subtitles from multiple servers.
 
 Easily extendable by plugins, supports multi-language.
 
+Video Player option allows easily play movie using favorite media player right after downloading subtitles.
+
+-- Supported Media Players:
+ + Mplayer
+ + Mplayer2
+ + SMPlayer
+ + VLC
+ + GNOME Mplayer
+ + KMPlayer
+ + GMPlayer
+ + Totem
+
 Requirements: GTK+, Python 2.6/2.7, X11, PyGTK, alang, alang-py
 
 * Changelog:
