@@ -5,6 +5,9 @@ Easily extendable by plugins, supports multi-language.
 Requirements: GTK+, Python 2.6/2.7, X11, PyGTK, alang, alang-py
 
 * Changelog:
+10.09.2011 (v.0.9.3.1) <webnull.www@gmail.com>:
+    + Support for Rhythmbox
+
 10.09.2011 (v.0.9.3) <webnull.www@gmail.com>:
     + Support for MPlayer2, KMPlayer (Konqueror plugin), GMPlayer (mplayer-gui), GNOME Mplayer
 
