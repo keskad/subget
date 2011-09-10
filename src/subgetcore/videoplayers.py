@@ -3,7 +3,7 @@
 import os
 
 def Spawn(Subget, VideoFile, Subtitles):
-    DefaultPlayer = Subget.Config['afterdownload']['defaultplayer']
+    DefaultPlayer = int(Subget.Config['afterdownload']['defaultplayer'])
     Command = ""
 
     if DefaultPlayer == 0:
