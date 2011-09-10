@@ -910,6 +910,10 @@ class SubGet:
         SelectPlayer.append_text("SMPlayer")
         SelectPlayer.append_text("VLC")
         SelectPlayer.append_text("Totem")
+        SelectPlayer.append_text("MPlayer2")
+        SelectPlayer.append_text("KMPlayer")
+        SelectPlayer.append_text("GMPlayer")
+        SelectPlayer.append_text("GNOME Mplayer")
         SelectPlayer.connect("changed", self.defaultPlayerSelection)
 
 
@@ -919,7 +923,7 @@ class SubGet:
             SelectPlayer.set_active(0)
         else:
             DefaultPlayer = int(DefaultPlayer)
-            if DefaultPlayer > -1 and DefaultPlayer < 5:
+            if DefaultPlayer > -1 and DefaultPlayer < 9:
                 SelectPlayer.set_active(DefaultPlayer)
 
         EnableVideoPlayer = gtk.CheckButton(self.LANG[51])
