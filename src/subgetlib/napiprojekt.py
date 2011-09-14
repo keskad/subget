@@ -58,12 +58,12 @@ def check_exists(File):
     subtitleUrl = "?l="+language.upper()+"&f="+d+"&t="+f(d)+"&v=other&kolejka=false&nick=&pass=&napios="+os.name
 
     try:
-       conn = httplib.HTTPConnection('napiprojekt.pl', 80, timeout=HTTPTimeout)
+       conn = httplib.HTTPConnection('napiprojekt.pl', 80, timeout=float(HTTPTimeout))
        conn.request("GET", "/unit_napisy/dl.php"+subtitleUrl)
        response = conn.getresponse()
        subtitleZipped = response.read(5)
-    except Exception:
-       print "[plugin:napiprojekt] Connection timed out"
+    except Exception as e:
+       print "[plugin:napiprojekt] Connection timed out, exception: "+str(e)
        return False
 
     if len(subtitleZipped) > 0 and subtitleZipped != "NPc0":
@@ -156,4 +156,4 @@ def download_by_data(File, SavePath):
     else:
         return {'errInfo': "NOT_FOUND"}
         
-
+check_exists("/home/webnull/JD/downloads/the.mentalist.s03e19.repack.720p.hdtv.x264-ctu.mkv")

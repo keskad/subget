@@ -75,6 +75,8 @@ class SubGet:
     plugins=dict()
     pluginsList=list() # ordered list
     queueCount = 0
+    locks = dict()
+    locks['reorder'] = False
 
     def doPluginsLoad(self, args):
         global pluginsDir, plugins
@@ -268,6 +270,11 @@ class SubGet:
     def reorderTreeview(self):
         """ Sorting subtitles list by plugin priority """
 
+        if self.locks['reorder'] == True:
+            return False
+
+        self.locks['reorder'] = True
+
         if "plugins" in self.Config:
             if self.dictGetKey(self.Config['plugins'], 'list_ordering') == False:
                 print("Sorting disabled.")
@@ -296,6 +303,7 @@ class SubGet:
             for Item in sortedList:
                 self.addSubtitlesRow(Item['language'], Item['name'], Item['server'], Item['data'], Item['extension'], Item['file'])
 
+        self.locks['reorder'] = False
         
 
 
@@ -341,6 +349,10 @@ class SubGet:
                 print("[plugin:"+Plugin+"] "+self.LANG[6])
             else:
                 for Result in Results:
+                    if Result == False:
+                        self.queueCount = (self.queueCount - 1)
+                        return False
+
                     for Movie in Result:
                         try:
                             if Movie.has_key("title"):
@@ -626,6 +638,7 @@ class SubGet:
             # save configuration and close the window
             self.saveConfiguration()
             self.closeWindow(False, False, window, 'gtkPluginMenu')
+            self.reorderTreeview()
 
     def gtkAboutMenu(self, arg):
             """ Shows about dialog """

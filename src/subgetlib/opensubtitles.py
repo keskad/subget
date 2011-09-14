@@ -1,4 +1,4 @@
-import httplib, urllib re, time, struct, os
+import httplib, urllib, re, time, struct, os
 import gzip
 from xmlrpclib import ServerProxy, Error
 from xml.dom import minidom
