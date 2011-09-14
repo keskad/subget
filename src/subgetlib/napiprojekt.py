@@ -155,5 +155,3 @@ def download_by_data(File, SavePath):
         return SavePath
     else:
         return {'errInfo': "NOT_FOUND"}
-        
-check_exists("/home/webnull/JD/downloads/the.mentalist.s03e19.repack.720p.hdtv.x264-ctu.mkv")
