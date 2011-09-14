@@ -18,6 +18,12 @@ Video Player option allows easily play movie using favorite media player right a
 Requirements: GTK+, Python 2.6/2.7/3.0/3.1/3.2, X11, PyGTK, alang, alang-py
 
 * Changelog:
+14.09.2011 (v.0.9.3.5) <webnull.www@gmail.com>:
+    * Opensubtitles.org plugin is now working
+    + Added many flags from famfamfam (thanks to famfamfam)
+    * Optimalized code
+    * Timeout setting now works with all plugins
+
 14.09.2011 (v.0.9.3.4) <webnull.www@gmail.com>:
     * A little bit cleaned up code
     + List of plugins is now sortable, and subtitles will be ordered by priority of a plugin

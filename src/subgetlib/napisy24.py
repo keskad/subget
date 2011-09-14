@@ -8,6 +8,7 @@ retries=0 # Retry the connection if failed
 maxRetries=8
 errInfo=""
 subgetObject=""
+HTTPTimeout = 2
 
 ### Specification:
 # http://napisy24.pl/search.php?str=QUERY - searching
@@ -19,6 +20,10 @@ def loadSubgetObject(x):
     global subgetObject
 
     subgetObject = x
+
+    if "plugins" in subgetObject.Config:
+        if "timeout" in subgetObject.Config['plugins']:
+            HTTPTimeout = subgetObject.Config['plugins']['timeout']
 
 # fixes episode or season number for TV series eg. 1x3 => 01x03
 def addZero(number):
@@ -62,8 +67,10 @@ def download_list(files, query=''):
     return results
 
 def getListOfSubtitles(movieRealName, File):
+    global HTTPTimeout
+
     try:
-        conn = httplib.HTTPConnection('napisy24.pl', 80, timeout=2)
+        conn = httplib.HTTPConnection('napisy24.pl', 80, timeout=HTTPTimeout)
         conn.request("GET", "/search.php?str="+urllib.quote_plus(movieRealName))
         response = conn.getresponse()
         data = response.read()
@@ -182,6 +189,8 @@ def check_exists(File):
 
 
 def download_by_data(File, SavePath):
+    global HTTPTimeout
+
     Cookies = None
 
     # Search for cookies
@@ -198,7 +207,7 @@ def download_by_data(File, SavePath):
     Headers = {'Cookie': 'PHPSESSID='+PHPSESSID[0]+'; pobierzDotacje=1;', 'Referer': 'http://napisy24.pl/search.php?str='+File['search_string'], 'User-agent': 'Mozilla/5.0 (X11; U; Gentoo Linux; en-US) AppleWebKit/534.16 (KHTML, like Gecko) Chrome/13.0.481.0' }
 
     try:
-        conn = httplib.HTTPConnection('napisy24.pl', 80, Headers, timeout=2)
+        conn = httplib.HTTPConnection('napisy24.pl', 80, Headers, timeout=HTTPTimeout)
 
         if File['type'] == 'napisy.org':
             conn.request("GET", "/download/archiwum/"+File['id']+"/")

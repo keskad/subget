@@ -302,6 +302,9 @@ class SubGet:
     def TreeViewUpdate(self):
             """ Refresh TreeView, run all plugins to parse files """
 
+            if len(self.files) == 0:
+                return
+
             # increase queue
             self.queueCount = (self.queueCount + len(self.pluginsList))
 

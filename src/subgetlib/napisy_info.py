@@ -8,11 +8,16 @@ PluginInfo = { 'Requirements' : { 'OS' : 'All' }, 'Authors': 'webnull', 'API': 1
 LANGLIST = {'polski': 'pl', 'angielski': 'en'}
 
 subgetObject = ""
+HTTPTimeout = 2
 
 def loadSubgetObject(x):
     global subgetObject
 
     subgetObject = x
+
+    if "plugins" in subgetObject.Config:
+        if "timeout" in subgetObject.Config['plugins']:
+            HTTPTimeout = subgetObject.Config['plugins']['timeout']
 
 def download_list(files, query=''):
     results = list()
@@ -83,10 +88,12 @@ def check_exists(File):
 
 # SEARCH SUBTITLES BY MOVIE NAME
 def getListOfSubtitles(movieRealName, File):
+    global HTTPTimeout
+
     # http://napisy.info/plugin/SzukajNapisow.php?sid=subget&to=Sliders%2001x01
 
     try:
-        conn = httplib.HTTPConnection('napisy.info', 80, timeout=2)
+        conn = httplib.HTTPConnection('napisy.info', 80, timeout=HTTPTimeout)
         conn.request("GET", "/plugin/SzukajNapisow.php?sid=subget&to="+urllib.quote_plus(movieRealName))
         response = conn.getresponse()
         data = response.read()
@@ -118,10 +125,12 @@ def getListOfSubtitles(movieRealName, File):
 
 # GET MOVIE NAME FROM SERVER
 def getMovieName(parsedFileName):
+    global HTTPTimeout
+
     # http://napisy.info/plugin/SzukajTytulow.php?sid=subget&t=Sliders
 
     try:
-       conn = httplib.HTTPConnection('napisy.info', 80, timeout=2)
+       conn = httplib.HTTPConnection('napisy.info', 80, timeout=HTTPTimeout)
        conn.request("GET", "/plugin/SzukajTytulow.php?sid=subget&t="+urllib.quote_plus(parsedFileName))
        response = conn.getresponse()
        data = response.read()

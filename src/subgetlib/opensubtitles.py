@@ -1,209 +1,182 @@
-import httplib, urllib, StringIO, re, time, struct, os
-from xml.dom import minaidom
+import httplib, urllib re, time, struct, os
+import gzip
+from xmlrpclib import ServerProxy, Error
+from xml.dom import minidom
 
-apiUrl = "http://api.opensubtitles.org/xml-rpc"
-userAgent = "OS Test User Agent"
-loginToken=""
-retries=0 # Retry the connection if failed
-maxRetries=8
-errInfo=""
+apiUrl = 'http://api.opensubtitles.org/xml-rpc'
+userAgent = "Subget"
 subgetObject=""
+HTTPTimeout = 2
+server = ServerProxy(apiUrl)
+token = None
+Language = 'eng'
+LanguageTable = dict()
+LanguageTable['eng'] = 'en'
+LanguageTable['pol'] = 'pl'
+LanguageTable['ita'] = 'it'
+LanguageTable['esp'] = 'es'
+LanguageTable['cze'] = 'cz'
+LanguageTable['dut'] = 'de'
+LanguageTable['fre'] = 'fr'
+LanguageTable['rus'] = 'ru'
+LanguageTable['rum'] = 'ro'
+LanguageTable['fin'] = 'fi'
+LanguageTable['swe'] = 'se'
+LanguageTable['dan'] = 'dk'
+LanguageTable['tur'] = 'tr'
+LanguageTable['por'] = 'pt'
+LanguageTable['bra'] = 'br'
+LanguageTable['hun'] = 'hu'
+LanguageTable['bra'] = 'br'
+LanguageTable['hrv'] = 'hr'
+LanguageTable['scc'] = 'sc'
 
-PluginInfo = { 'Requirements' : { 'OS' : 'Unix' }, 'Authors': 'webnull' }
+PluginInfo = { 'Requirements' : { 'OS' : 'All' }, 'Authors': 'webnull', 'API': 1, 'domain': 'opensubtitles.org' }
 
 def loadSubgetObject(x):
     global subgetObject
     subgetObject = x
 
-def download_list(files, language='', query=''):
-    return
-    global loginToken
+    if "plugins" in subgetObject.Config:
+        if "timeout" in subgetObject.Config['plugins']:
+            HTTPTimeout = subgetObject.Config['plugins']['timeout']
 
-    # get login token, connection can be retried here "maxRetries" times
-    if loginToken == "":
-        getLoginToken() 
-    
-    for File in files:
-        searchSubtitles(File, language, query)
+def download_list(files):
+    results = searchSubtitles(files)
+    test = list()
+    test.append(results)
+    return test
 
 def download_quick(files):
     return
 
-def searchSubtitles(File, language, query):
-    global loginToken
+def download_by_data(File, SavePath):
+    global HTTPTimeout
 
-    print "Got file name: "+File
+    try:
+        conn = httplib.HTTPConnection('www.opensubtitles.org', 80, timeout=HTTPTimeout)
+        conn.request("GET", File['link'].replace("http://www.opensubtitles.org", ""))
+        response = conn.getresponse()
+        data = response.read()
+    except Exception as e:
+        print("[plugin:opensubtitles] Connection timed out, details: "+str(e))
+        return False
 
-    XMLData = """<?xml version="1.0"?>
-<methodCall>
-<methodName>SearchSubtitles</methodName>
-<params>
-  <param>
-   <value><string>"""+loginToken+"""</string></value>
-  </param>
-  <param>
-   <value>
-    <array>
-     <data>
-      <value>
-       <struct>"""
+    if os.name == "nt": # WINDOWS "THE PROBLEMATIC OS"
+        TMPName = os.path.expanduser("~").replace("\\\\", "/")+"/"+os.path.basename(File['file'])+".tmp"
+    else: # UNIX, Linux, *BSD
+        TMPName = "/tmp/"+os.path.basename(File['file'])
 
-    if language != "":
-        XMLData += "<member><name>sublanguageid</name><value><string>"+language+"</string></value></member>"
-
-    if query != "":
-        XMLData += "<member><name>query</name><value><string>"+query+"</string></value></member>"
-    else:
-        XMLData += "<member><name>moviehash</name><value><string>"+hashFile(File)+"</string></value></member>" # SEARCH BY MOVIE HASH
-        #XMLData += "<member><name>moviebytesize</name><value><string>"+str(os.path.getsize(File))+"</string></value></member>" # SEARCH BY FILE SIZE
+    try:
+        Handler = open(TMPName, "wb")
+        Handler.write(data)
+        Handler.close()
 
 
-    XMLData += """</struct>
-      </value>
-     </data>
-    </array>
-   </value>
-  </param>
-</params>
-</methodCall>"""
+        f = gzip.open(TMPName, 'rb')
+        file_content = f.read()
+        f.close()
+
+        Handler = open(SavePath, "wb")
+        Handler.write(file_content)
+        Handler.close()
+    except Exception as e:
+        print("[plugin:opensubtitles] Exception: "+str(e))
+
+    return True
+
+def search_by_keywords(Keywords):
+    searchList = []
+    token = getLoginToken()
+    searchList.append({'query': Keywords})
+    subtitlesList = server.SearchSubtitles(token, searchList)
+    return parseResults(subtitlesList)
+
+def searchSubtitles(Files):
+    global Language, LanguageTable
+
+    searchList = []
+    token = getLoginToken()
+    fileSizes = dict()
+
+    for File in Files:
+        #searchList.append({'sublanguageid': Language, 'moviehash': str(hashFile(File)), 'moviebytesize': str(int(os.path.getsize(File)))})
+        searchList.append({'moviehash': str(hashFile(File)), 'moviebytesize': str(int(os.path.getsize(File)))})
+        fileSizes[str(int(os.path.getsize(File)))] = File
+
+    subtitlesList = server.SearchSubtitles(token, searchList)
+    return parseResults(subtitlesList, fileSizes)
 
 
-    print "Sending"
-    print XMLData
-    print ""
-    
+def parseResults(subtitlesList, fileSizes=False):
+    nodes = list()
 
-    # PREPARE HEADERS FOR CONNECTION
-    sendHeaders = {
-         'Content-Length': str(len(XMLData)), 
-         'User-Agent': userAgent, 
-         'Content-Type': 'text/xml',
-         'Accept-Charset': 'UTF-8,ISO-8859-1,US-ASCII'
-                  }
+    for subtitle in subtitlesList['data']:
+        if not 'SubLanguageID' in subtitle:
+            continue
 
-    # CONNECT TO API
-    conn = httplib.HTTPConnection('api.opensubtitles.org')
+        if str(subtitle['SubLanguageID']) in LanguageTable:
+            subtitle['SubLanguageID'] = LanguageTable[subtitle['SubLanguageID']]
 
-    # SEND DATA
-    conn.request("POST", "/xml-rpc", XMLData, sendHeaders)
-    response = conn.getresponse()
-    data = response.read()
+        
+        if fileSizes != False:
+            if not subtitle['MovieByteSize'] in fileSizes:
+                continue
+            subtitle['File'] = fileSizes[subtitle['MovieByteSize']]
+        else:
+            subtitle['File'] = "None"
 
-    print "Receiving"
-    print data
-    
+        
+        nodes.append({'lang': subtitle['SubLanguageID'], 'site' : 'opensubtitles.org', 'title' : subtitle['SubFileName'], 'domain': 'opensubtitles.org', 'data': {'file': subtitle['File'], 'link': subtitle['SubDownloadLink']}, 'link': subtitle['SubDownloadLink'], 'file': subtitle['SubFileName']})
 
+    return nodes
 
 def getLoginToken():
-    global apiUrl, userAgent, loginToken, retries, maxRetries
+    global userAgent
 
-    #print "getLoginToken()"
-    XMLData = """<?xml version="1.0"?>
-<methodCall>
-<methodName>LogIn</methodName>
-<params><param>
-<value><string></string></value>
-</param>
-<param>
-<value><string></string></value>
-</param>
-<param>
-<value><string></string></value>
-</param>
-<param>
-<value><string>"""+userAgent+"""</string></value>
-</param></params>
-</methodCall>"""
+    try:
+        # Connexion to opensubtitles.org server
+        session = server.LogIn('', '', 'en', userAgent)
+        if session['status'] != '200 OK':
+            print("Cannot estabilish connection to server.")
 
-    sendHeaders = {
-         'Content-Length': str(len(XMLData)), 
-         'User-Agent': userAgent, 
-         'Content-Type': 'text/xml',
-         'Accept-Charset': 'UTF-8,ISO-8859-1,US-ASCII'
-                  }
+        return session['token']
 
-    conn = httplib.HTTPConnection('api.opensubtitles.org')
-    conn.request("POST", "/xml-rpc", XMLData, sendHeaders)
-    response = conn.getresponse()
-    data = response.read()
-
-    if re.findall("Error 503 Service Unavailable", data):
-        if retries < (maxRetries+1):
-            retries = (retries+1)
-            time.sleep(1)
-            return getLoginToken()
-        else:
-            errInfo = "Cannot connect to Opensubtitles.org while trying to grab session token (503 Service Unavailable). Reconnected "+str(maxRetries)+" times."
-            return
-
-    # initialize parser
-    dom = minidom.parseString(data)
-
-    # get all "member" tags
-    Members = dom.getElementsByTagName('member')
-
-    # search token in "member" tags
-    for node in Members:
-        Name = node.getElementsByTagName('name').item(0).firstChild.data
-        ValueString = node.getElementsByTagName('value').item(0).getElementsByTagName('string').item(0)
-        Value = ""
-
-        if Value != None:
-            Value = ValueString.firstChild.data
-        else:
-            continue
-            #ValueDouble = node.getElementsByTagName('value').item(0).getElementsByTagName('double').item(0) # DOUBLE TYPE VALUES PARSING, NOT TESTED
-
-            #if ValueDouble != None:
-                #Value = ValueDouble.firstChild.data
-
-        if Name == "token":
-            loginToken = Value
-            break
-    
-    # retry the connection "maxRetries" times if something will fail
-    if loginToken == "":
-        if retries < (maxRetries+1):
-            retries = (retries+1)
-            time.sleep(1)
-            getLoginToken()
-        else:
-            errInfo = "Cannot connect to Opensubtitles.org while trying to grab session token. Reconnected "+str(maxRetries)+" times."
-
-    return loginToken
+    except Exception:
+        return True
 
 # http://trac.opensubtitles.org/projects/opensubtitles/wiki/HashSourceCodes
-def hashFile(name): 
-      try: 
-                 
-                longlongformat = 'q'  # long long 
-                bytesize = struct.calcsize(longlongformat) 
-                    
-                f = open(name, "rb") 
-                    
-                filesize = os.path.getsize(name) 
-                hash = filesize 
-                    
-                if filesize < 65536 * 2: 
-                       return "SizeError" 
-                 
-                for x in range(65536/bytesize): 
-                        buffer = f.read(bytesize) 
-                        (l_value,)= struct.unpack(longlongformat, buffer)  
-                        hash += l_value 
-                        hash = hash & 0xFFFFFFFFFFFFFFFF #to remain as 64bit number  
-                         
-    
-                f.seek(max(0,filesize-65536),0) 
-                for x in range(65536/bytesize): 
-                        buffer = f.read(bytesize) 
-                        (l_value,)= struct.unpack(longlongformat, buffer)  
-                        hash += l_value 
-                        hash = hash & 0xFFFFFFFFFFFFFFFF 
-                 
-                f.close() 
-                returnedhash =  "%016x" % hash 
-                return returnedhash 
-    
-      except(IOError): 
-                return "IOError"
+def hashFile(path):
+    """Produce a hash for a video file : size + 64bit chksum of the first and last 64k (even if they overlap because the file is smaller than 128k)"""
+    try:
+        longlongformat = 'Q' # unsigned long long little endian
+        bytesize = struct.calcsize(longlongformat)
+        format = "<%d%s" % (65536//bytesize, longlongformat)
+        
+        f = open(path, "rb")
+        
+        filesize = os.fstat(f.fileno()).st_size
+        hash = filesize
+        
+        if filesize < 65536 * 2:
+            return "SizeError"
+        
+        buffer = f.read(65536)
+        longlongs = struct.unpack(format, buffer)
+        hash += sum(longlongs)
+        
+        f.seek(-65536, os.SEEK_END) # size is always > 131072
+        buffer = f.read(65536)
+        longlongs = struct.unpack(format, buffer)
+        hash += sum(longlongs)
+        hash &= 0xFFFFFFFFFFFFFFFF
+        
+        f.close()
+        returnedhash = "%016x" % hash
+        return returnedhash
+    except(IOError): 
+        return "IOError"
+
+#listOfFiles = list()
+#listOfFiles.append('/home/webnull/JD/downloads/the.mentalist.s03e22.720p.hdtv.x264-ctu.mkv')
+#download_list(listOfFiles)
