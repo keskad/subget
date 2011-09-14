@@ -121,6 +121,7 @@ class SubGet:
 
     def reorderPlugins(self):
         """ If plugins order is empty, try to create alphabetical order """
+
         for Item in self.plugins:
             self.pluginsList.append(Item)
 
@@ -609,11 +610,11 @@ class SubGet:
 
     def closePluginsMenu(self, x, liststore, window):
             Order = ""
-            self.pluginList = list() # clear the list
+            self.pluginsList = list() # clear the list
 
             # create new plugins list
             for Item in liststore:
-                self.pluginList.append(str(Item[1])) # add sorted elements
+                self.pluginsList.append(str(Item[1])) # add sorted elements
                 Order += str(Item[1])+","
 
             if not "plugins" in self.Config:
