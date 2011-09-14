@@ -297,7 +297,7 @@ class SubGet:
                 newList.append(Item)
 
             sortedList = sorted(newList, key=lambda k: k['priority'])
-            #self.subtitlesList = sortedList
+            self.subtitlesList = list()
             self.liststore.clear()
 
             for Item in sortedList:
