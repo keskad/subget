@@ -2,7 +2,7 @@
 
 class alangINC():
 	def return_array(a):
-		MyLang = range(55)
+		MyLang = range(63)
 		MyLang[0] = "subget for GNU/Linux. Simple Subtitle Downloader for shell and GUI.\nUsage: subget [long GNU option] [option] first-file, second-file, ...\n\n --help                : this message\n --console, -c         : show results in console, not in graphical user interface\n --language, -l        : specify preffered language\n --quick, -q           : grab first result and download"
 
                 MyLang[1] = "Try --help for usage"
@@ -60,4 +60,12 @@ class alangINC():
                 MyLang[52] = "System integration"
                 MyLang[53] = "Start video player"
                 MyLang[54] = "Only one instance (graphical window) of Subget can be running at once by one user."
+                MyLang[55] = "List ordering"
+                MyLang[56] = "Sort search results by plugins list"
+                MyLang[57] = "Extensions global settings"
+                MyLang[58] = "Timeout waiting for connection"
+                MyLang[59] = "Saving to"
+                MyLang[60] = "Cannot save to file"
+                MyLang[61] = "for more details please check this message"
+                MyLang[62] = "Settings"
 		return MyLang

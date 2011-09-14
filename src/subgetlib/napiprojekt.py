@@ -6,11 +6,16 @@ language = "PL"
 
 apiUrl = "http://napiprojekt.pl/unit_napisy/dl.php"
 subgetObject=""
+HTTPTimeout = 2
 
 def loadSubgetObject(x):
-    global subgetObject
+    global subgetObject, HTTPTimeout
 
     subgetObject = x
+
+    if "plugins" in subgetObject.Config:
+        if "timeout" in subgetObject.Config['plugins']:
+            HTTPTimeout = subgetObject.Config['plugins']['timeout']
 
 # thanks to gim,krzynio,dosiu,hash 2oo8 for this function
 def f(z):
@@ -42,7 +47,7 @@ def download_list(files, query=''):
 
 def check_exists(File):
     global subgetObject
-    global language
+    global language, HTTPTimeout
 
     d = hashlib.md5(open(File, "rb").read(10485760)).hexdigest()
 
@@ -53,7 +58,7 @@ def check_exists(File):
     subtitleUrl = "?l="+language.upper()+"&f="+d+"&t="+f(d)+"&v=other&kolejka=false&nick=&pass=&napios="+os.name
 
     try:
-       conn = httplib.HTTPConnection('napiprojekt.pl', 80, timeout=2)
+       conn = httplib.HTTPConnection('napiprojekt.pl', 80, timeout=HTTPTimeout)
        conn.request("GET", "/unit_napisy/dl.php"+subtitleUrl)
        response = conn.getresponse()
        subtitleZipped = response.read(5)
@@ -110,6 +115,8 @@ def get_subtitle(File):
         return {'errInfo': "NOT_FOUND"}
 
 def download_by_data(File, SavePath):
+    global HTTPTimeout
+
     language = File['lang']
 
     if File['file'][0:4] == "http":
@@ -125,7 +132,7 @@ def download_by_data(File, SavePath):
         # RECEIVE DATA
         try:
             subtitleUrl = "?l="+language.upper()+"&f="+d+"&t="+f(d)+"&v=other&kolejka=false&nick=&pass=&napios="+os.name
-            conn = httplib.HTTPConnection('napiprojekt.pl', 80, timeout=2)
+            conn = httplib.HTTPConnection('napiprojekt.pl', 80, timeout=HTTPTimeout)
             conn.request("GET", "/unit_napisy/dl.php"+subtitleUrl)
             response = conn.getresponse()
             subtitleZipped = response.read()

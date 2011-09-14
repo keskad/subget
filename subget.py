@@ -1,6 +1,6 @@
 #!/usr/bin/python
 #-*- coding: utf-8 -*-
-import getopt, sys, os, re, glob, gtk, gobject, pango, time
+import getopt, sys, os, re, glob, gtk, gobject, pango, time, operator
 import pygtk, glib
 from threading import Thread
 from distutils.sysconfig import get_python_lib
@@ -56,19 +56,6 @@ alang.setPathPrefix(winSubget)
 LANG=alang.loadLanguage('subget')
 
 ## ALANG
-
-# EVAL THREADS
-class threadingCommand (Thread):
-    def __init__(self, objCommand, tmp="", tmp2=""):
-        Thread.__init__(self)
-
-        self.objCommand = objCommand
-        self.tmp = tmp
-        self.tmp2 = tmp2
-
-    def run(self):
-        exec(self.objCommand)
-
 def usage():
     'Shows program usage and version, lists all options'
 
@@ -81,12 +68,13 @@ def exechelper(command):
 
 class SubGet:
     dialog=None
-    subtitlesList=dict()
+    subtitlesList=list()
     Config = dict()
     Windows = dict() # active or non-active windows
     Windows['preferences'] = False
     plugins=dict()
     pluginsList=list() # ordered list
+    queueCount = 0
 
     def doPluginsLoad(self, args):
         global pluginsDir, plugins
@@ -152,20 +140,6 @@ class SubGet:
             os.system("/usr/bin/zenity --info --text=\""+Message+"\"")
         elif os.path.isfile("/usr/bin/xmessage"):
             os.system("/usr/bin/xmessage -nearmouse \""+Message+"\"")
-
-    #def pingSubget(self):
-    #        return False
-            #try:
-                #bus = dbus.SessionBus()
-                #helloservice = bus.get_object('org.freedesktop.subget', '/org/freedesktop/subget')
-                #instance = helloservice.get_dbus_method('getInstance', 'org.freedesktop.subget')
-
-                # if ping reply successed
-                #if instance() == True:
-                #    return True  
-                  
-            #except dbus.exceptions.DBusException:
-            #    return False
 
 
     def loadConfig(self):
@@ -265,43 +239,80 @@ class SubGet:
 
             self.graphicalMode(args)
 
-    def addSubtitlesRow(self, language, release_name, server, download_data, extension, File):
+    def addSubtitlesRow(self, language, release_name, server, download_data, extension, File,Append=True):
             """ Adds parsed subtitles to list """
 
-            if len(self.subtitlesList) == 0:
-                ID = 0
-            else:
-                ID = (len(self.subtitlesList)+1)
+            #if len(self.subtitlesList) == 0:
+            #    ID = 0
+            #else:
+            #    ID = (len(self.subtitlesList)+1)
             
-            self.subtitlesList[ID] = {'language': language, 'name': release_name, 'server': server, 'data': download_data, 'extension': extension, 'file': File}
+            self.subtitlesList.append({'language': language, 'name': release_name, 'server': server, 'data': download_data, 'extension': extension, 'file': File})
 
             #print "Adding "+str(ID)+" - "+release_name
             pixbuf_path = self.subgetOSPath+'/usr/share/subget/icons/'+language+'.xpm'
 
             if not os.path.isfile(pixbuf_path):
                 pixbuf_path = self.subgetOSPath+'/usr/share/subget/icons/unknown.xpm'
-                print ("[addSubtitlesRow] "+language+".xpm "+self.LANG[46])
+                print("[addSubtitlesRow] "+language+".xpm "+self.LANG[46])
 
-            pixbuf = gtk.gdk.pixbuf_new_from_file(pixbuf_path)
+            try:
+                pixbuf = gtk.gdk.pixbuf_new_from_file(pixbuf_path)
+            except Exception:
+                print(pixbuf_path+" icon file not found")
+                True
 
-            self.liststore.append([pixbuf, str(release_name), str(server), ID])
+            self.liststore.append([pixbuf, str(release_name), str(server), (len(self.subtitlesList)-1)])
 
     def reorderTreeview(self):
-        print("HERE WILL BE SORTING CODE")
+        """ Sorting subtitles list by plugin priority """
+
+        if "plugins" in self.Config:
+            if self.dictGetKey(self.Config['plugins'], 'list_ordering') == False:
+                print("Sorting disabled.")
+                return True
+
+        while not self.queueCount == 0:
+            time.sleep(0.2) # give some time to finish the jobs
+            #print("SLEEPING 200ms sec, becasue count is "+str(self.queueCount))
+
+            if self.queueCount == 0:
+                break
+
+        #print("QUEUE COUNT: "+str(self.queueCount))
+
+        if self.queueCount == 0:
+            newList = list()
+
+            for Item in self.subtitlesList:
+                Item['priority'] = self.pluginsList.index(str(Item['extension']))
+                newList.append(Item)
+
+            sortedList = sorted(newList, key=lambda k: k['priority'])
+            #self.subtitlesList = sortedList
+            self.liststore.clear()
+
+            for Item in sortedList:
+                self.addSubtitlesRow(Item['language'], Item['name'], Item['server'], Item['data'], Item['extension'], Item['file'])
+
+        
 
 
     # UPDATE THE TREEVIEW LIST
     def TreeViewUpdate(self):
             """ Refresh TreeView, run all plugins to parse files """
 
-            subThreads = list()
+            # increase queue
+            self.queueCount = (self.queueCount + len(self.pluginsList))
 
             for Plugin in self.pluginsList:
                 current = Thread(target=self.GTKCheckForSubtitles, args=(Plugin,))
                 current.setDaemon(True)
                 current.start()
 
-            self.reorderTreeview()
+            current = Thread(target=self.reorderTreeview)
+            current.setDaemon(True)
+            current.start()
             #    current = SubtitleThread(Plugin, self)
             #    current.setDaemon(True)
             #    subThreads.append(current)
@@ -316,6 +327,7 @@ class SubGet:
             State = self.plugins[Plugin]
 
             if type(State).__name__ != "module":
+                self.queueCount = (self.queueCount - 1)
                 return
 
             Results = self.plugins[Plugin].language = language
@@ -332,6 +344,9 @@ class SubGet:
                                 print("[plugin:"+Plugin+"] "+self.LANG[7]+" - "+Movie['title'])
                         except AttributeError:
                              print("[plugin:"+Plugin+"] "+self.LANG[6])
+
+            # mark job as done
+            self.queueCount = (self.queueCount - 1)
                 
             
     def dictGetKey(self, Array, Key):
@@ -500,6 +515,7 @@ class SubGet:
             treeview.append_column(tvcolumn1)
             treeview.append_column(tvcolumn2)
             treeview.append_column(tvcolumn3)
+            treeview.set_reorderable(1)
 
             cellpb = gtk.CellRendererPixbuf()
             cell = gtk.CellRendererText()
@@ -535,6 +551,7 @@ class SubGet:
 
                     if OS == "All":
                         OS = "Unix, Linux, Windows"
+
                 except Exception:
                     OS = self.LANG[36]
 
@@ -579,12 +596,32 @@ class SubGet:
             # Cancel button
             CancelButton = gtk.Button(stock=gtk.STOCK_CLOSE)
             CancelButton.set_size_request(90, 40)
-            CancelButton.connect('clicked', self.closeWindow, False, window, 'gtkPluginMenu')
+            CancelButton.connect('clicked', self.closePluginsMenu, liststore, window)
             fixed.put(CancelButton, 600, 240) # put on fixed
 
             fixed.put(scrolled_window, 0, 0)
             window.add(fixed)
             window.show_all()
+
+
+    def closePluginsMenu(self, x, liststore, window):
+            Order = ""
+            self.pluginList = list() # clear the list
+
+            # create new plugins list
+            for Item in liststore:
+                self.pluginList.append(str(Item[1])) # add sorted elements
+                Order += str(Item[1])+","
+
+            if not "plugins" in self.Config:
+                self.Config['plugins'] = dict()
+
+            # add to configuration
+            self.Config['plugins']['order'] = Order[0:-1]
+
+            # save configuration and close the window
+            self.saveConfiguration()
+            self.closeWindow(False, False, window, 'gtkPluginMenu')
 
     def gtkAboutMenu(self, arg):
             """ Shows about dialog """
@@ -761,7 +798,7 @@ class SubGet:
                         self.plugins[Plugin].language = language
                         Results = self.plugins[Plugin].search_by_keywords(query) # query the plugin for results
 
-                        if Results == None:
+                        if Results == None or Results == False:
                             return
 
                         for Subtitles in Results:
@@ -808,12 +845,12 @@ class SubGet:
             Output += "\n"
 
         try:
-            print("Writing to ~/.subget/config")
+            print(self.LANG[59]+" ~/.subget/config")
             Handler = open(os.path.expanduser("~/.subget/config"), "wb")
             Handler.write(Output)
             Handler.close()
         except Exception as e:
-            print("Error saving configuration to ~/.subget/config, check this error message: "+str(e))
+            print(self.LANG[70]+" ~/.subget/config, "+self.LANG[71]+": "+str(e))
 
     def gtkPreferences(self, aid):
         #self.sendCriticAlert("Sorry, this feature is not implemented yet.")
@@ -824,7 +861,7 @@ class SubGet:
         self.Windows['preferences'] = True
 
         self.winPreferences = gtk.Window(gtk.WINDOW_TOPLEVEL)
-        self.winPreferences.set_title("Ustawienia")
+        self.winPreferences.set_title(self.LANG[62])
         self.winPreferences.set_resizable(False)
         self.winPreferences.set_size_request(600, 400)
         self.winPreferences.set_icon_from_file(self.subgetOSPath+"/usr/share/subget/icons/Subget-logo.png")
@@ -843,6 +880,7 @@ class SubGet:
 
         # Create tabs and append to notebook
         self.gtkPreferencesIntegration()
+        self.gtkPreferencesPlugins()
 
         # Close button
         self.winPreferences.CloseButton = gtk.Button(stock=gtk.STOCK_CLOSE)
@@ -971,6 +1009,54 @@ class SubGet:
         GeneralPreferences.put(SelectPlayer, 10, 163)
         
         self.createTab(self.winPreferences.notebook, self.LANG[52], GeneralPreferences)
+
+    # Set connection timeouts for all plugins supporting this function
+    def gtkPreferencesPlugins_Scale(self, x):
+        if not "plugins" in self.Config:
+            self.Config['plugins'] = dict()
+
+        self.Config['plugins']['timeout'] = int(x.value)
+
+    def gtkPreferencesPlugins_Sort(self, x):
+        self.x.get_active()
+
+    def gtkPreferencesPlugins(self):
+        g = gtk.Fixed()
+        Label = gtk.Label(self.LANG[55])
+        Label.set_alignment (0, 0)
+
+        # Sorting
+        AllowSorting = gtk.CheckButton(self.LANG[56])
+        if self.configGetKey('plugins', 'list_ordering') == "True":
+            AllowSorting.set_active(1)
+        else:
+            AllowSorting.set_active(0)
+
+        AllowSorting.connect("toggled", self.configSetButton, 'plugins', 'list_ordering', AllowSorting)
+
+        # Global settings
+        Label2 = gtk.Label(self.LANG[57])
+        adj = gtk.Adjustment(1.0, 1.0, 30.0, 1.0, 1.0, 1.0)
+        adj.connect("value_changed", self.gtkPreferencesPlugins_Scale)
+        scale = gtk.HScale(adj)
+        scale.set_digits(0)
+        scale.set_size_request(230, 40)
+        scaleValue = int(self.configGetKey('plugins', 'timeout'))
+
+        if not scaleValue == False and scaleValue > 0 and scaleValue <= 30:
+            adj.set_value(scaleValue)
+
+
+        Label3 = gtk.Label(self.LANG[58]+":")
+        
+        # put all elements
+        g.put(Label, 10, 8)
+        g.put(AllowSorting, 10, 26)
+        g.put(Label2, 10, 70)
+        g.put(Label3, 20, 95)
+        g.put(scale, 80, 115)
+
+        self.createTab(self.winPreferences.notebook, self.LANG[37], g)
 
 
     def defaultPlayerSelection(self, widget):

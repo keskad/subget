@@ -17,6 +17,13 @@ Video Player option allows easily play movie using favorite media player right a
 Requirements: GTK+, Python 2.6/2.7, X11, PyGTK, alang, alang-py
 
 * Changelog:
+14.09.2011 (v.0.9.3.4) <webnull.www@gmail.com>:
+    * A little bit cleaned up code
+    + List of plugins is now sortable, and subtitles will be ordered by priority of a plugin
+    + Timeout of extensions is now configurable via file and gui
+    + New tab in preferences window - "Plugins"
+    * Fixed KDE4 integration
+
 14.09.2011 (v.0.9.3.3) <webnull.www@gmail.com>:
     * Fixed compatibility with Python 3
     * Moved configuration saving from subget.py::SubGet.gtkPreferencesQuit() to subget.py::SubGet.saveConfiguration()

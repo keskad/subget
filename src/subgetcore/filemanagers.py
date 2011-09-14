@@ -47,7 +47,7 @@ def KDEService(Widget, Subget, Path):
         try:
             shutil.copyfile("/usr/share/subget/fm-integration/kde4.desktop", theFile)
             os.system("chmod +x \""+theFile+"\"")
-            Subget.Config['filemanagers']['kde4'] = True
+            Subget.Config['filemanagers']['kde'] = True
             print("KDE4 integration active.")
         except Exception as e:
             Widget.set_active(0)
@@ -55,7 +55,7 @@ def KDEService(Widget, Subget, Path):
     else:
         try:
             os.remove(theFile)
-            Subget.Config['filemanagers']['kde4'] = False
+            Subget.Config['filemanagers']['kde'] = False
         except Exception:
             Widget.set_sensitive(0)
             print("Cannot remove "+theFile+", error message: "+str(e))

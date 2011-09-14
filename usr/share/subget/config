@@ -1,8 +1,14 @@
 [filemanagers]
 kde = False
 gnome = False
+kde4 = True
 
 [afterdownload]
 defaultplayer = 0
 playmovie = False
+
+[plugins]
+timeout = 10
+order = napiprojekt,napisy_info,napisy24,allsubs,opensubtitles
+list_ordering = True
 
