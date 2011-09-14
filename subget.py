@@ -48,7 +48,7 @@ sys.path.insert( 0, incpath )
 
 try:
     from alang import alang
-except ImportError, e:
+except ImportError as e:
     print("Error " + str(e.args))
 
 alang=alang()
@@ -117,6 +117,27 @@ class SubGet:
                 self.plugins[Plugin] = str(errno)
                 print(self.LANG[5]+" "+Plugin+" ("+str(errno)+")")
 
+        # plugin execution order
+        if "plugins" in self.Config:
+            if "order" in self.Config['plugins']:
+                order = self.Config['plugins']['order'].split(",")
+
+                for Item in order:
+                    if Item in self.plugins:
+                        # Python 2.6 compatibility
+                        self.pluginsList.append(Item)
+            else:
+                self.reorderPlugins()
+        else:
+            self.reorderPlugins()
+
+    def reorderPlugins(self):
+        """ If plugins order is empty, try to create alphabetical order """
+        for Item in self.plugins:
+            self.pluginsList.append(Item)
+
+
+
     # close the window and quit
     def delete_event(self, widget, event, data=None):
         gtk.main_quit()
@@ -132,8 +153,8 @@ class SubGet:
         elif os.path.isfile("/usr/bin/xmessage"):
             os.system("/usr/bin/xmessage -nearmouse \""+Message+"\"")
 
-    def pingSubget(self):
-            return False
+    #def pingSubget(self):
+    #        return False
             #try:
                 #bus = dbus.SessionBus()
                 #helloservice = bus.get_object('org.freedesktop.subget', '/org/freedesktop/subget')
@@ -191,15 +212,15 @@ class SubGet:
         if os.name == "nt":
             self.subgetOSPath = winSubget+"/"
         elif os.path.exists("usr/share/subget"):
-            print "[debug] Developer mode"
+            print("[debug] Developer mode")
             self.subgetOSPath = "."
         else:
             self.subgetOSPath = ""
 
         try:
             opts, args = getopt.getopt(sys.argv[1:], "hcql:", ["help", "console", "quick", "language="])
-        except getopt.GetoptError, err:
-            print self.LANG[2]+": "+str(err)+", "+self.LANG[1]+"\n\n"
+        except getopt.GetoptError as err:
+            print(self.LANG[2]+": "+str(err)+", "+self.LANG[1]+"\n\n")
             usage()
             sys.exit(2)
 
@@ -211,6 +232,8 @@ class SubGet:
                 consoleMode=True
             if o in ('-q', '--quick'):
                 action="first-result"
+            if o in ('-w', '--watch-with-subtitles'):
+                action="watch"
 
         self.loadConfig()
 
@@ -223,7 +246,7 @@ class SubGet:
                 if len(args) > 0:
                     addLinks = SubgetServiceObj.get_dbus_method('addLinks', 'org.freedesktop.subget')
                     addLinks(str.join('\n', args), False)
-                    print "Added new files to existing list."
+                    print("Added new files to existing list.")
                 else:
                     print(self.LANG[54]) # only one instance of Subget can be running at once
                 sys.exit(0)
@@ -263,6 +286,9 @@ class SubGet:
 
             self.liststore.append([pixbuf, str(release_name), str(server), ID])
 
+    def reorderTreeview(self):
+        print("HERE WILL BE SORTING CODE")
+
 
     # UPDATE THE TREEVIEW LIST
     def TreeViewUpdate(self):
@@ -270,10 +296,12 @@ class SubGet:
 
             subThreads = list()
 
-            for Plugin in self.plugins:
+            for Plugin in self.pluginsList:
                 current = Thread(target=self.GTKCheckForSubtitles, args=(Plugin,))
                 current.setDaemon(True)
                 current.start()
+
+            self.reorderTreeview()
             #    current = SubtitleThread(Plugin, self)
             #    current.setDaemon(True)
             #    subThreads.append(current)
@@ -318,7 +346,7 @@ class SubGet:
             return False
 
 
-        # FLAG DISPLAYING
+    # displaying the flag
     def cell_pixbuf_func(self, celllayout, cell, model, iter):
             """ Flag rendering """
             cell.set_property('pixbuf', model.get_value(iter, 0))
@@ -330,7 +358,7 @@ class SubGet:
             self.dialog.show()
 
 
-        # SUBTITLES DOWNLOAD DIALOGS
+    # DOWNLOAD DIALOG
     def GTKDownloadSubtitles(self):
             """ Dialog with file name chooser to save subtitles to """
             #print "TEST: CLICKED, LETS GO DOWNLOAD!"
@@ -361,7 +389,7 @@ class SubGet:
                     else:
                         chooser.destroy()
                 else:
-                    print "[GTK:DownloadSubtitles] subtitle_ID="+str(SelectID)+" "+self.LANG[9]
+                    print("[GTK:DownloadSubtitles] subtitle_ID="+str(SelectID)+" "+self.LANG[9])
 
     def GTKDownloadDialog(self, SelectID, filename):
              """Download progress dialog, downloading and saving subtitles to file"""
@@ -491,7 +519,7 @@ class SubGet:
             tvcolumn2.set_attributes(cell2, text=3)
             tvcolumn3.set_attributes(cell3, text=4)
 
-            for Plugin in self.plugins:
+            for Plugin in self.pluginsList:
                 try:
                     API = self.plugins[Plugin].PluginInfo['API']
                 except Exception:
@@ -664,7 +692,7 @@ class SubGet:
             self.sm.cb.append_text(self.LANG[41])
             self.sm.plugins = dict()
 
-            for Plugin in self.plugins:
+            for Plugin in self.pluginsList:
                 if type(self.plugins[Plugin]).__name__ != "module":
                     continue
 
@@ -728,7 +756,7 @@ class SubGet:
 
             # search in all plugins
             if plugin == self.LANG[41]:
-                for Plugin in self.plugins:
+                for Plugin in self.pluginsList:
                     try:
                         self.plugins[Plugin].language = language
                         Results = self.plugins[Plugin].search_by_keywords(query) # query the plugin for results
@@ -759,11 +787,15 @@ class SubGet:
                         self.addSubtitlesRow(Result['lang'], Result['title'], Result['domain'], Result['data'], plugin, Result['file'])
 
                 except AttributeError as errno:
-                    print "[plugin:"+self.sm.plugins[plugin]+"] "+self.LANG[45]
+                    print("[plugin:"+self.sm.plugins[plugin]+"] "+self.LANG[45])
                     True # Plugin does not support searching by keywords
     def gtkPreferencesQuit(self):
         self.winPreferences.destroy()
         self.Windows['preferences'] = False
+        self.saveConfiguration()
+        
+
+    def saveConfiguration(self):
         Output = ""
 
         # saving settings to file
@@ -776,7 +808,7 @@ class SubGet:
             Output += "\n"
 
         try:
-            print("Writing ~/.subget/config")
+            print("Writing to ~/.subget/config")
             Handler = open(os.path.expanduser("~/.subget/config"), "wb")
             Handler.write(Output)
             Handler.close()
@@ -1023,7 +1055,7 @@ class SubGet:
             image = gtk.Image()
             image.set_from_file(self.subgetOSPath+"/usr/share/subget/icons/plugin.png")
             pluginMenu.set_image(image)
-        except gobject.GError, exc:
+        except gobject.GError as exc:
             True
 
         toolsMenu.append(pluginMenu)
@@ -1039,7 +1071,7 @@ class SubGet:
             image = gtk.Image()
             image.set_from_pixbuf(pixbuf)
             infoMenu.set_image(image)
-        except gobject.GError, exc:
+        except gobject.GError as exc:
             True
 
         toolsMenu.append(infoMenu)
@@ -1052,7 +1084,7 @@ class SubGet:
             image = gtk.Image()
             image.set_from_stock(gtk.STOCK_CLEAR, 2)
             clearMenu.set_image(image)
-        except gobject.GError, exc:
+        except gobject.GError as exc:
             True
 
 
@@ -1222,7 +1254,7 @@ class SubGet:
 
         # just find all matching subtitles and print it to console
         if action == "list":
-            for Plugin in self.plugins:
+            for Plugin in self.pluginsList:
                 State = self.plugins[Plugin]
 
                 if type(State).__name__ != "module":
@@ -1238,7 +1270,7 @@ class SubGet:
                     for Movie in Result:
                         try:
                             if Movie.has_key("title"):
-                                print Movie['domain']+"|"+Movie['lang']+"|"+Movie['title']
+                                print(Movie['domain']+"|"+Movie['lang']+"|"+Movie['title'])
                         except AttributeError:
                             continue
 
