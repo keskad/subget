@@ -100,7 +100,6 @@ def searchSubtitles(Files):
     fileSizes = dict()
 
     for File in Files:
-        #searchList.append({'sublanguageid': Language, 'moviehash': str(hashFile(File)), 'moviebytesize': str(int(os.path.getsize(File)))})
         searchList.append({'moviehash': str(hashFile(File)), 'moviebytesize': str(int(os.path.getsize(File)))})
         fileSizes[str(int(os.path.getsize(File)))] = File
 
@@ -165,7 +164,7 @@ def hashFile(path):
         longlongs = struct.unpack(format, buffer)
         hash += sum(longlongs)
         
-        f.seek(-65536, os.SEEK_END) # size is always > 131072
+        f.seek(-65536, os.SEEK_END)
         buffer = f.read(65536)
         longlongs = struct.unpack(format, buffer)
         hash += sum(longlongs)
@@ -176,7 +175,3 @@ def hashFile(path):
         return returnedhash
     except(IOError): 
         return "IOError"
-
-#listOfFiles = list()
-#listOfFiles.append('/home/webnull/JD/downloads/the.mentalist.s03e22.720p.hdtv.x264-ctu.mkv')
-#download_list(listOfFiles)
