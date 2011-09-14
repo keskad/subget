@@ -17,6 +17,10 @@ Video Player option allows easily play movie using favorite media player right a
 Requirements: GTK+, Python 2.6/2.7, X11, PyGTK, alang, alang-py
 
 * Changelog:
+14.09.2011 (v.0.9.3.2) <webnull.www@gmail.com>:
+    * Moved plugins to class, added pluginsList list() which will be used in upcoming versions
+    * Converted some print's to Python 3 compatibile
+
 10.09.2011 (v.0.9.3.1) <webnull.www@gmail.com>:
     + Support for Rhythmbox
 

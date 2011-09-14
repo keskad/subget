@@ -32,8 +32,6 @@ elif os.path.exists("usr/share/subget/plugins/"):
 else:
     pluginsDir="/usr/share/subget/plugins/"
 
-
-plugins=dict()
 action="list"
 language="pl"
 languages=['pl', 'en']
@@ -74,8 +72,8 @@ class threadingCommand (Thread):
 def usage():
     'Shows program usage and version, lists all options'
 
-    print LANG[0]
-    print ""
+    print(LANG[0])
+    print("")
 
 def exechelper(command):
     exec(command)
@@ -87,6 +85,8 @@ class SubGet:
     Config = dict()
     Windows = dict() # active or non-active windows
     Windows['preferences'] = False
+    plugins=dict()
+    pluginsList=list() # ordered list
 
     def doPluginsLoad(self, args):
         global pluginsDir, plugins
@@ -111,11 +111,11 @@ class SubGet:
             # load the plugin
             try:
                 exec("import subgetlib."+Plugin)
-                exec("plugins[\""+Plugin+"\"] = subgetlib."+Plugin)
-                plugins[Plugin].loadSubgetObject(self)
+                exec("self.plugins[\""+Plugin+"\"] = subgetlib."+Plugin)
+                self.plugins[Plugin].loadSubgetObject(self)
             except Exception as errno:
-                plugins[Plugin] = str(errno)
-                print self.LANG[5]+" "+Plugin+" ("+str(errno)+")"
+                self.plugins[Plugin] = str(errno)
+                print(self.LANG[5]+" "+Plugin+" ("+str(errno)+")")
 
     # close the window and quit
     def delete_event(self, widget, event, data=None):
@@ -257,7 +257,7 @@ class SubGet:
 
             if not os.path.isfile(pixbuf_path):
                 pixbuf_path = self.subgetOSPath+'/usr/share/subget/icons/unknown.xpm'
-                print "[addSubtitlesRow] "+language+".xpm "+self.LANG[46]
+                print ("[addSubtitlesRow] "+language+".xpm "+self.LANG[46])
 
             pixbuf = gtk.gdk.pixbuf_new_from_file(pixbuf_path)
 
@@ -270,7 +270,7 @@ class SubGet:
 
             subThreads = list()
 
-            for Plugin in plugins:
+            for Plugin in self.plugins:
                 current = Thread(target=self.GTKCheckForSubtitles, args=(Plugin,))
                 current.setDaemon(True)
                 current.start()
@@ -285,25 +285,25 @@ class SubGet:
 
 
     def GTKCheckForSubtitles(self, Plugin):
-            State = plugins[Plugin]
+            State = self.plugins[Plugin]
 
             if type(State).__name__ != "module":
                 return
 
-            Results = plugins[Plugin].language = language
-            Results = plugins[Plugin].download_list(self.files)
+            Results = self.plugins[Plugin].language = language
+            Results = self.plugins[Plugin].download_list(self.files)
 
             if Results == None:
-                print "[plugin:"+Plugin+"] "+self.LANG[6]
+                print("[plugin:"+Plugin+"] "+self.LANG[6])
             else:
                 for Result in Results:
                     for Movie in Result:
                         try:
                             if Movie.has_key("title"):
                                 self.addSubtitlesRow(Movie['lang'], Movie['title'], Movie['domain'], Movie['data'], Plugin, Movie['file'])
-                                print "[plugin:"+Plugin+"] "+self.LANG[7]+" - "+Movie['title']
+                                print("[plugin:"+Plugin+"] "+self.LANG[7]+" - "+Movie['title'])
                         except AttributeError:
-                             print "[plugin:"+Plugin+"] "+self.LANG[6]
+                             print("[plugin:"+Plugin+"] "+self.LANG[6])
                 
             
     def dictGetKey(self, Array, Key):
@@ -367,7 +367,7 @@ class SubGet:
              """Download progress dialog, downloading and saving subtitles to file"""
 
              Plugin = self.subtitlesList[SelectID]['extension']
-             State = plugins[Plugin]
+             State = self.plugins[Plugin]
 
              if type(State).__name__ == "module":
 
@@ -395,8 +395,8 @@ class SubGet:
                  w.add(fixed)
                  w.show_all()
 
-                 Results = plugins[Plugin].language = language
-                 Results = plugins[Plugin].download_by_data(self.subtitlesList[SelectID]['data'], filename)
+                 Results = self.plugins[Plugin].language = language
+                 Results = self.plugins[Plugin].download_by_data(self.subtitlesList[SelectID]['data'], filename)
 
                  if self.VideoPlayer.get_active() == True:
                     VideoFile = self.dictGetKey(self.subtitlesList[SelectID]['data'], 'file')
@@ -491,19 +491,19 @@ class SubGet:
             tvcolumn2.set_attributes(cell2, text=3)
             tvcolumn3.set_attributes(cell3, text=4)
 
-            for Plugin in plugins:
+            for Plugin in self.plugins:
                 try:
-                    API = plugins[Plugin].PluginInfo['API']
+                    API = self.plugins[Plugin].PluginInfo['API']
                 except Exception:
                     API = "?"
 
                 try:
-                    Author = plugins[Plugin].PluginInfo['Authors']
+                    Author = self.plugins[Plugin].PluginInfo['Authors']
                 except Exception:
                     Author = self.LANG[36]
 
                 try:
-                    OS = plugins[Plugin].PluginInfo['Requirements']['OS']
+                    OS = self.plugins[Plugin].PluginInfo['Requirements']['OS']
 
                     if OS == "All":
                         OS = "Unix, Linux, Windows"
@@ -511,7 +511,7 @@ class SubGet:
                     OS = self.LANG[36]
 
                 try:
-                    Packages = plugins[Plugin].PluginInfo['Requirements']['Packages']
+                    Packages = self.plugins[Plugin].PluginInfo['Requirements']['Packages']
 
                     if len(Packages) > 0:
                         i=0
@@ -525,7 +525,7 @@ class SubGet:
                 except Exception:
                     Packages = self.LANG[36]
 
-                if type(plugins[Plugin]).__name__ == "module":
+                if type(self.plugins[Plugin]).__name__ == "module":
                     pixbuf = gtk.gdk.pixbuf_new_from_file(self.subgetOSPath+'/usr/share/subget/icons/plugin.png') 
                     liststore.append([pixbuf, Plugin, OS, str(Author), str(API)])
                 else:
@@ -664,13 +664,13 @@ class SubGet:
             self.sm.cb.append_text(self.LANG[41])
             self.sm.plugins = dict()
 
-            for Plugin in plugins:
-                if type(plugins[Plugin]).__name__ != "module":
+            for Plugin in self.plugins:
+                if type(self.plugins[Plugin]).__name__ != "module":
                     continue
 
                 # does plugin inform about its domain?
-                if plugins[Plugin].PluginInfo.has_key('domain'):
-                    pluginDomain = plugins[Plugin].PluginInfo['domain']
+                if self.plugins[Plugin].PluginInfo.has_key('domain'):
+                    pluginDomain = self.plugins[Plugin].PluginInfo['domain']
                     self.sm.plugins[pluginDomain] = Plugin
                     self.sm.cb.append_text(pluginDomain)
                 else:
@@ -728,10 +728,10 @@ class SubGet:
 
             # search in all plugins
             if plugin == self.LANG[41]:
-                for Plugin in plugins:
+                for Plugin in self.plugins:
                     try:
-                        plugins[Plugin].language = language
-                        Results = plugins[Plugin].search_by_keywords(query) # query the plugin for results
+                        self.plugins[Plugin].language = language
+                        Results = self.plugins[Plugin].search_by_keywords(query) # query the plugin for results
 
                         if Results == None:
                             return
@@ -746,8 +746,8 @@ class SubGet:
                        True # Plugin does not support searching by keywords
             else:
                 try:
-                    plugins[self.sm.plugins[plugin]].language = language
-                    Results = plugins[self.sm.plugins[plugin]].search_by_keywords(query) # query the plugin for results
+                    self.plugins[self.sm.plugins[plugin]].language = language
+                    Results = self.plugins[self.sm.plugins[plugin]].search_by_keywords(query) # query the plugin for results
 
                     if Results == None:
                         return
@@ -1222,14 +1222,14 @@ class SubGet:
 
         # just find all matching subtitles and print it to console
         if action == "list":
-            for Plugin in plugins:
-                State = plugins[Plugin]
+            for Plugin in self.plugins:
+                State = self.plugins[Plugin]
 
                 if type(State).__name__ != "module":
                     continue
 
-                Results = plugins[Plugin].language = language
-                Results = plugins[Plugin].download_list(files)
+                Results = self.plugins[Plugin].language = language
+                Results = self.plugins[Plugin].download_list(files)
 
                 if Results == None:
                     continue
@@ -1249,7 +1249,7 @@ class SubGet:
 
         for File in files:
             for Plugin in plugins:
-                exec("State = plugins[\""+Plugin+"\"]")
+                exec("State = self.plugins[\""+Plugin+"\"]")
 
                 if type(State).__name__ != "module":
                     continue
@@ -1257,8 +1257,8 @@ class SubGet:
                 fileToList = list()
                 fileToList.append(File)
 
-                Results = plugins[Plugin].language = language
-                Results = plugins[Plugin].download_list(fileToList)
+                Results = self.plugins[Plugin].language = language
+                Results = self.plugins[Plugin].download_list(fileToList)
 
                 if Results != None:
                     if type(Results[0]).__name__ == "dict":
@@ -1266,8 +1266,8 @@ class SubGet:
                     else:
                         if Results[0][0]["lang"] == language:
                             FileTXT = File+".txt"
-                            exec("DLResults = plugins[\""+Plugin+"\"].download_by_data(Results[0][0]['data'], FileTXT)")
-                            print LANG[19]+" "+str(DLResults)
+                            exec("DLResults = self.plugins[\""+Plugin+"\"].download_by_data(Results[0][0]['data'], FileTXT)")
+                            print(LANG[19]+" "+str(DLResults))
                             Found = True
                             break
                         elif preferredData != None:
@@ -1278,7 +1278,7 @@ class SubGet:
         if Found == False and preferredData == True:
             FileTXT = File+".("+str(preferredData['lang'])+").txt"
             exec("DLResults = plugins[\""+Plugin+"\"].download_by_data(prefferedData['data'], FileTXT)")
-            print LANG[19]+" "+str(DLResults)+", "+LANG[20]
+            print(LANG[19]+" "+str(DLResults)+", "+LANG[20])
 
 if __name__ == "__main__":
     SubgetMain = SubGet()
