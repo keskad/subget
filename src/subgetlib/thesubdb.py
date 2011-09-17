@@ -5,6 +5,8 @@ userAgent = "SubDB/1.0 (Subget/1.0; http://github.com/webnull/subget)"
 subgetObject=""
 HTTPTimeout = 2
 Language = 'en'
+SleepTime = None
+SearchMethod = None
 
 PluginInfo = { 'Requirements' : { 'OS' : 'All' }, 'Authors': 'webnull', 'API': 1, 'domain': 'thesubdb.com' }
 
@@ -15,6 +17,33 @@ def loadSubgetObject(x):
     if "plugins" in subgetObject.Config:
         if "timeout" in subgetObject.Config['plugins']:
             HTTPTimeout = subgetObject.Config['plugins']['timeout']
+
+    SleepTime = subgetObject.configGetKey('plugin:thesubdb', 'sleep')
+
+    if SleepTime == False:
+        SleepTime = 0.2 # 200 ms between deep search
+        if not "plugin:thesubdb" in subgetObject.Config:
+            subgetObject.Config['plugin:thesubdb'] = dict()
+
+        subgetObject.Config['plugin:thesubdb']['sleep'] = "0.2"
+
+    else:
+        try:
+            SleepTime = float(subgetObject.configGetKey('plugin:thesubdb', 'sleep'))
+        except Exception:
+            SleepTime = 0.2
+            if not "plugin:thesubdb" in subgetObject.Config:
+                subgetObject.Config['plugin:thesubdb'] = dict()
+
+            subgetObject.Config['plugin:thesubdb']['sleep'] = "0.2"
+            
+
+    SearchMethod = subgetObject.configGetKey("plugin:thesubdb", "search_method")
+    if not SearchMethod == "simple" and not SearchMethod == "deeply":
+        SearchMethod = "simple"
+        subgetObject.Config['plugin:thesubdb']['search_method'] = 'simple' # simple or deeply
+
+
 
 def download_list(files, query=''):
     results = list()
@@ -31,8 +60,10 @@ def download_by_data(File, SavePath):
     global HTTPTimeout
 
     try:
+        Headers = dict()
+        Headers['User-Agent'] = userAgent
         conn = httplib.HTTPConnection('api.thesubdb.com', 80, timeout=HTTPTimeout)
-        conn.request("GET", File['link'])
+        conn.request("GET", File['link'], headers=Headers)
         response = conn.getresponse()
         data = response.read()
     except Exception as e:
@@ -68,26 +99,61 @@ def check_exists(File):
 
     Headers = dict()
     Headers['User-Agent'] = userAgent
+    langList = [ 'en', 'pl', 'pt', 'ru', 'hu', 'it', 'br', 'cz', 'de' ]
 
-    try:
-        Connection = httplib.HTTPConnection('api.thesubdb.com', 80, timeout=HTTPTimeout)
-        Connection.request("GET", "/?action=download&hash="+Hash+"&language=en,pl,pt,ru,hu,it,br,cz,de", headers=Headers)
-        Response = Connection.getresponse()
-        RespHeaders = Response.getheaders()
-    except Exception as e:
-        print("[plugin:thesubdb] Connection timed out, err: "+str(e))
-    Language = "en"
+    if SearchMethod == 'simple':
+        try:
+            Connection = httplib.HTTPConnection('api.thesubdb.com', 80, timeout=HTTPTimeout)
+            Connection.request("GET", "/?action=download&hash="+Hash+"&language=en,pl,pt,ru,hu,it,br,cz,de", headers=Headers)
+            Response = Connection.getresponse()
+            RespHeaders = Response.getheaders()
+        except Exception as e:
+            print("[plugin:thesubdb] Connection timed out, err: "+str(e))
 
-    for k in RespHeaders:
-        if k[0].lower() == "content-language":
-            Language = k[1].lower()
+        Language = "en"
 
-    if Response.status == 200:
+        for k in RespHeaders:
+            if k[0].lower() == "content-language":
+                Language = k[1].lower()
+
+        if Response.status == 200:
+            sublist = list()
+            sublist.append({'lang': Language, 'site' : 'opensubtitles.org', 'title' : File+" (hash)", 'domain': 'thesubdb.com', 'data': {'file': File, 'link': "/?action=download&hash="+Hash+"&language=pl,en,pt,ru,hu,it,br,cz,de"}, 'file': File})
+
+            return sublist
+        else:
+            print("[plugin:thesubdb] Not found for "+File+" in "+Language+" language.")
+            return False
+
+    elif SearchMethod == 'deeply':
         sublist = list()
-        sublist.append({'lang': Language, 'site' : 'opensubtitles.org', 'title' : File+" (hash)", 'domain': 'thesubdb.com', 'data': {'file': File, 'link': "/?action=download&hash="+Hash+"&language=pl,en,pt,ru,hu,it,br,cz,de"}, 'file': File})
+        Language = "?"
+
+        for lang in langList:
+            time.sleep(SleepTime)
+            try:
+                Connection = httplib.HTTPConnection('api.thesubdb.com', 80, timeout=HTTPTimeout)
+                Connection.request("GET", "/?action=download&hash="+Hash+"&language="+lang, headers=Headers)
+                Response = Connection.getresponse()
+                RespHeaders = Response.getheaders()
+            except Exception as e:
+                print("[plugin:thesubdb] Connection timed out, err: "+str(e))
+
+            for k in RespHeaders:
+                if k[0].lower() == "content-language":
+                    Language = k[1].lower()
+
+            if Response.status == 200:
+                sublist.append({'lang': Language, 'site' : 'opensubtitles.org', 'title' : File+" (hash)", 'domain': 'thesubdb.com', 'data': {'file': File, 'link': "/?action=download&hash="+Hash+"&language="+lang}, 'file': File})
+            else:
+                print("[plugin:thesubdb] Not found for "+File+" in "+lang+" language.")
+
+        if len(sublist) == 0:
+            return False
 
         return sublist
     else:
+        print("[plugin:thesubdb] Warning: Wrong method in config plugin:thesubdb->search_method (available methods: simple, deeply)")
         return False
 
 
