@@ -128,6 +128,13 @@ class SubGet:
         else:
             self.reorderPlugins()
 
+        # add missing plugins
+        for k in self.plugins:
+            try:
+                test = self.pluginsList.index(k)
+            except ValueError:
+                self.pluginsList.append(k)
+
     def reorderPlugins(self):
         """ If plugins order is empty, try to create alphabetical order """
 

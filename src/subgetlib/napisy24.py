@@ -43,7 +43,7 @@ def getListOfSubtitles(movieRealName, File):
         response = conn.getresponse()
         data = response.read()
     except Exception:
-        print "[plugin:napisy24] Connection timed out"
+        print("[plugin:napisy24] Connection timed out")
         return False
 
     nodes = list()
@@ -172,7 +172,7 @@ def download_by_data(File, SavePath):
 
     PHPSESSID = re.findall('PHPSESSID=([A-Za-z-_0-9]+);', Cookies)
 
-    Headers = {'Cookie': 'PHPSESSID='+PHPSESSID[0]+'; pobierzDotacje=1;', 'Referer': 'http://napisy24.pl/search.php?str='+File['search_string'], 'User-agent': 'Mozilla/5.0 (X11; U; Gentoo Linux; en-US) AppleWebKit/534.16 (KHTML, like Gecko) Chrome/13.0.481.0' }
+    Headers = {'Cookie': 'PHPSESSID='+PHPSESSID[0]+'; pobierzDotacje=1;', 'Referer': 'http://napisy24.pl/search.php?str='+File['search_string'], 'User-agent': 'Mozilla/5.0 (X11; U; Gentoo Linux; en-US) AppleWebKit/534.16 (KHTML, like Gecko) Chrome/14.0.341.0' }
 
     try:
         conn = httplib.HTTPConnection('napisy24.pl', 80, Headers, timeout=HTTPTimeout)
@@ -184,8 +184,8 @@ def download_by_data(File, SavePath):
 
         response = conn.getresponse()
         data = response.read()
-    except Exception:
-        print "[plugin:napisy24] Connection timed out"
+    except Exception as e:
+        print("[plugin:napisy24] Connection timed out, err: "+str(e))
         return False
 
     if os.name == "nt": # WINDOWS "THE PROBLEMATIC OS"
