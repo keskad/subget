@@ -110,6 +110,10 @@ def searchSubtitles(Files):
 def parseResults(subtitlesList, fileSizes=False):
     nodes = list()
 
+    if not type(subtitlesList['data']).__name__ == "list":
+        print("[plugin:opensubtitles] Got corrupted data, propably server is overloaded.")
+        return False
+
     for subtitle in subtitlesList['data']:
         if not 'SubLanguageID' in subtitle:
             continue

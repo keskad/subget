@@ -2,7 +2,7 @@
 
 class alangINC():
 	def return_array(a):
-		MyLang = range(63)
+		MyLang = range(65)
 		MyLang[0] = "subget dla GNU/Linux. Prosty program do pobierania napisów z interfejsem tekstowym oraz graficznym.\nUżycie: subget [long GNU option] [option] pierwszy-plik, drugi-plik, ...\n\n --help                : ta wiadomość\n --console, -c         : pokazuje wyniki w konsoli zamiast w graficznym okienku\n --language, -l        : wybierz preferowany język\n --quick, -q           : wybierz pierwszy znaleziony wynik"
 
                 MyLang[1] = "Spróbuj użyć --help aby wyświetlić możliwe opcje"
@@ -67,4 +67,6 @@ class alangINC():
                 MyLang[60] = "Niemożna zapisać konfiguracji do"
                 MyLang[61] = "po więcej szczegółów proszę sprawdzić ten komunikat"
                 MyLang[62] = "Ustawienia"
+                MyLang[63] = "Aktywuj wtyczkę"
+                MyLang[64] = "Dezaktywuj wtyczkę"
 		return MyLang

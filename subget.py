@@ -77,6 +77,7 @@ class SubGet:
     queueCount = 0
     locks = dict()
     locks['reorder'] = False
+    disabledPlugins = list()
 
     def doPluginsLoad(self, args):
         global pluginsDir, plugins
@@ -88,6 +89,12 @@ class SubGet:
         if not os.path.isdir(pluginsDir):
             pluginsDir = pluginsDir.replace("/usr/lib/", "/usr/local/lib/")
 
+        # list of disabled plugins
+        pluginsDisabled = self.configGetKey('plugins', 'disabled')
+
+        if pluginsDisabled is not False:
+            self.disabledPlugins = pluginsDisabled.split(",")
+
 
         file_list = glob.glob(pluginsDir+"*.py")
 
@@ -98,14 +105,14 @@ class SubGet:
             if Plugin == "__init__":
                 continue
 
-            # load the plugin
             try:
-                exec("import subgetlib."+Plugin)
-                exec("self.plugins[\""+Plugin+"\"] = subgetlib."+Plugin)
-                self.plugins[Plugin].loadSubgetObject(self)
-            except Exception as errno:
-                self.plugins[Plugin] = str(errno)
-                print(self.LANG[5]+" "+Plugin+" ("+str(errno)+")")
+                self.disabledPlugins.index(Plugin)
+                self.plugins[Plugin] = 'Disabled'
+                continue
+            except ValueError:
+                self.togglePlugin(False, Plugin, 'activate')
+                pass
+
 
         # plugin execution order
         if "plugins" in self.Config:
@@ -501,6 +508,124 @@ class SubGet:
 
             return True
 
+    def togglePlugin(self, x, Plugin, Action, liststore=None):
+        if Action == 'activate':
+            # load the plugin
+            try:
+                exec("import subgetlib."+Plugin)
+                exec("self.plugins[\""+Plugin+"\"] = subgetlib."+Plugin)
+                self.plugins[Plugin].loadSubgetObject(self)
+
+                # refresh the list
+                if not liststore == None:
+                    liststore.clear() 
+                    self.pluginsListing(liststore)
+
+                return True
+
+            except Exception as errno:
+                self.plugins[Plugin] = str(errno)
+                print(self.LANG[5]+" "+Plugin+" ("+str(errno)+")")
+                return False
+
+        elif Action == 'deactivate':
+            self.plugins[Plugin] = 'Disabled'
+
+            # refresh the list
+            if not liststore == None:
+                liststore.clear() 
+                self.pluginsListing(liststore)
+
+            return True
+
+    def pluginInfo(self, x, Plugin):
+        print("Feature not implemented.")
+
+    def pluginTreeviewEvent(self, treeview, event, liststore):
+        menu = gtk.Menu() 
+
+        if event.button == 3:
+            x = int(event.x)
+            y = int(event.y)
+            time = event.time
+
+            pthinfo = treeview.get_path_at_pos(x, y)
+
+            if pthinfo is not None:
+                path, col, cellx, celly = pthinfo
+                treeview.grab_focus()
+                treeview.set_cursor( path, col, 0)
+
+                # items
+                Info = None
+                Deactivate = gtk.MenuItem('Wyłącz wtyczkę')
+
+                Plugin = liststore[pthinfo[0][0]][1]
+                if self.plugins[Plugin] == 'Disabled':
+                    Deactivate = gtk.MenuItem(self.LANG[63])
+                    Deactivate.connect("activate", self.togglePlugin, Plugin, 'activate', liststore)
+                else:
+                    #Info = gtk.MenuItem('Informacje')
+                    #Info.connect("activate", self.pluginInfo, Plugin)
+                    Deactivate = gtk.MenuItem(self.LANG[64])
+                    Deactivate.connect("activate", self.togglePlugin, Plugin, 'deactivate', liststore)
+
+                #if not Info == None:
+                #    menu.append(Info)
+
+                menu.append(Deactivate)
+                menu.show_all()
+                menu.popup( None, None, None, event.button, time)
+
+            return True
+
+    def pluginsListing(self, liststore):
+            for Plugin in self.pluginsList:
+                try:
+                    API = self.plugins[Plugin].PluginInfo['API']
+                except Exception:
+                    API = "?"
+
+                try:
+                    Author = self.plugins[Plugin].PluginInfo['Authors']
+                except Exception:
+                    Author = self.LANG[36]
+
+                try:
+                    OS = self.plugins[Plugin].PluginInfo['Requirements']['OS']
+
+                    if OS == "All":
+                        OS = "Unix, Linux, Windows"
+
+                except Exception:
+                    OS = self.LANG[36]
+
+                try:
+                    Packages = self.plugins[Plugin].PluginInfo['Requirements']['Packages']
+
+                    if len(Packages) > 0:
+                        i=0
+                        for Package in Packages:
+                            if i == 0:
+                                Packages_c = Packages_c + Package
+                            else:
+                                Packages_c = Packages_c + Package + ", "
+                            i=i+1
+
+                except Exception:
+                    Packages = self.LANG[36]
+
+                if type(self.plugins[Plugin]).__name__ == "module":
+                    pixbuf = gtk.gdk.pixbuf_new_from_file(self.subgetOSPath+'/usr/share/subget/icons/plugin.png') 
+                    liststore.append([pixbuf, Plugin, OS, str(Author), str(API)])
+                elif self.plugins[Plugin] == "Disabled":
+                    pixbuf = gtk.gdk.pixbuf_new_from_file(self.subgetOSPath+'/usr/share/subget/icons/plugin-disabled.png')
+                    liststore.append([pixbuf, Plugin, OS, str(Author), str(API)])
+                else:
+                    pixbuf = gtk.gdk.pixbuf_new_from_file(self.subgetOSPath+'/usr/share/subget/icons/error.png') 
+                    liststore.append([pixbuf, Plugin, OS, str(Author), str(API)])
+
+
     def gtkPluginMenu(self, arg):
             """ GTK Widget with list of plugins """
 
@@ -551,50 +676,13 @@ class SubGet:
             tvcolumn2.set_attributes(cell2, text=3)
             tvcolumn3.set_attributes(cell3, text=4)
 
-            for Plugin in self.pluginsList:
-                try:
-                    API = self.plugins[Plugin].PluginInfo['API']
-                except Exception:
-                    API = "?"
-
-                try:
-                    Author = self.plugins[Plugin].PluginInfo['Authors']
-                except Exception:
-                    Author = self.LANG[36]
-
-                try:
-                    OS = self.plugins[Plugin].PluginInfo['Requirements']['OS']
-
-                    if OS == "All":
-                        OS = "Unix, Linux, Windows"
-
-                except Exception:
-                    OS = self.LANG[36]
-
-                try:
-                    Packages = self.plugins[Plugin].PluginInfo['Requirements']['Packages']
-
-                    if len(Packages) > 0:
-                        i=0
-                        for Package in Packages:
-                            if i == 0:
-                                Packages_c = Packages_c + Package
-                            else:
-                                Packages_c = Packages_c + Package + ", "
-                            i=i+1
-
-                except Exception:
-                    Packages = self.LANG[36]
-
-                if type(self.plugins[Plugin]).__name__ == "module":
-                    pixbuf = gtk.gdk.pixbuf_new_from_file(self.subgetOSPath+'/usr/share/subget/icons/plugin.png') 
-                    liststore.append([pixbuf, Plugin, OS, str(Author), str(API)])
-                else:
-                    pixbuf = gtk.gdk.pixbuf_new_from_file(self.subgetOSPath+'/usr/share/subget/icons/error.png') 
-                    liststore.append([pixbuf, Plugin, OS, str(Author), str(API)])
+            self.pluginsListing(liststore)
 
             # make treeview searchable
             treeview.set_search_column(1)
+
+            # context menu
+            treeview.connect("button-press-event", self.pluginTreeviewEvent, liststore)
 
             # Allow sorting on the column
             if not self.configGetKey('interface', 'custom_plugins_sorting') == False:
@@ -634,6 +722,15 @@ class SubGet:
 
             # add to configuration
             self.Config['plugins']['order'] = Order[0:-1]
+            
+            # save disabled items
+            Disabled = ""
+
+            for Item in self.plugins:
+                if self.plugins[Item] == 'Disabled':
+                    Disabled += str(Item)+","
+
+            self.Config['plugins']['disabled'] = Disabled[0:-1]
 
             # save configuration and close the window
             self.saveConfiguration()
