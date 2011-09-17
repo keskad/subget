@@ -11,7 +11,7 @@ SearchMethod = None
 PluginInfo = { 'Requirements' : { 'OS' : 'All' }, 'Authors': 'webnull', 'API': 1, 'domain': 'thesubdb.com' }
 
 def loadSubgetObject(x):
-    global subgetObject
+    global subgetObject, SearchMethod, SleepTime
     subgetObject = x
 
     if "plugins" in subgetObject.Config:
@@ -92,7 +92,7 @@ def searchSubtitles(Files):
     return False
 
 def check_exists(File):
-    global userAgent
+    global userAgent, SearchMethod, SleepTime
 
     URL = "http://api.thesubdb.com/?action=download&hash={hash}&language=en"
     Hash = get_hash(File)
@@ -153,7 +153,7 @@ def check_exists(File):
 
         return sublist
     else:
-        print("[plugin:thesubdb] Warning: Wrong method in config plugin:thesubdb->search_method (available methods: simple, deeply)")
+        print("[plugin:thesubdb] Warning: Wrong method in config plugin:thesubdb->search_method (available methods: simple, deeply) Selected: "+str(SearchMethod))
         return False
 
 
