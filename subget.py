@@ -515,6 +515,7 @@ class SubGet:
                 exec("import subgetlib."+Plugin)
                 exec("self.plugins[\""+Plugin+"\"] = subgetlib."+Plugin)
                 self.plugins[Plugin].loadSubgetObject(self)
+                self.plugins[Plugin].subgetcore = subgetcore
 
                 # refresh the list
                 if not liststore == None:

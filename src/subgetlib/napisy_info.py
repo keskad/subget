@@ -9,6 +9,7 @@ LANGLIST = {'polski': 'pl', 'angielski': 'en'}
 
 subgetObject = ""
 HTTPTimeout = 2
+subgetcore = None
 
 def loadSubgetObject(x):
     global subgetObject
@@ -28,48 +29,13 @@ def download_list(files, query=''):
     return results
 
 
-# fixes episode or season number for TV series eg. 1x3 => 01x03
-def addZero(number):
-    if len(number) == 1:
-        return "0"+str(number)
-    else:
-        return number
-
-
-def getSearchKeywords(File):
-    OriginalFileName = File
-    File = File.replace(".", " ").replace("[", " ").replace("]", " ").replace("-", " ").replace("_", " ")
-    SearchTV1 = re.findall("([A-Za-z0-9- ]+)(.?)S([0-9]+)E([0-9]+)(.*)", File)
-
-    # if its in TV series format eg. S01E02
-    if len(SearchTV1) > 0:
-            return ""+SearchTV1[0][0]+" "+addZero(SearchTV1[0][2])+"x"+addZero(SearchTV1[0][3])
-                   # title              # season           # episode
-    else:
-        # try luck again, now search in TV series format #2 eg. 01x02
-        SearchTV1 = re.findall("([A-Za-z0-9 ]+)(.?)([0-9]+)x([0-9]+)(.*)", File)
-
-        if len(SearchTV1) > 0:
-            return ""+SearchTV1[0][0]+" "+addZero(SearchTV1[0][2])+"x"+addZero(SearchTV1[0][3])
-                   # title              # season           # episode
-        else: # if not a TV show - just a movie release
-            SearchTV1 = re.findall("([A-Za-z0-9 ]+)(.?)([dvdrip|xvid|lol|tvrip|cam]+)(.*)", File, re.IGNORECASE)
-
-            # if its ripped movie release
-            if len(SearchTV1) > 0:
-                return SearchTV1[0][0] # print only title
-            else: # if its unidentified movie type
-                SearchTV1 = re.findall("([A-Za-z0-9 ]+)(.?)\.([a-zA-Z]{3}+)", File, re.IGNORECASE)
-                return SearchTV1
-
-
 def check_exists(File):
     # http://napisy.info/plugin/SzukajTytulow.php?sid=subget&t=Sliders
     # http://napisy.info/plugin/SzukajNapisow.php?sid=subget&to=Sliders%2001x01
     # http://napisy.info/napisy_info_[tutaj ID].zip
 
     if File != None:
-        movieName = getSearchKeywords(os.path.basename(File))
+        movieName = subgetcore.getSearchKeywords(os.path.basename(File))
         movieName = getMovieName(movieName)
         
         if movieName != False:
@@ -151,7 +117,7 @@ def getMovieName(parsedFileName):
 
 def get_subtitle(File):
     if File != None:
-        movieName = getSearchKeywords(os.path.basename(File))
+        movieName = subgetcore.getSearchKeywords(os.path.basename(File))
         movieName = getMovieName(movieName)
         
         if movieName != False:
