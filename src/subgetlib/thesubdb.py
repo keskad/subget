@@ -118,7 +118,7 @@ def check_exists(File):
 
         if Response.status == 200:
             sublist = list()
-            sublist.append({'lang': Language, 'site' : 'thesubdb.com', 'title' : File+" (hash)", 'domain': 'thesubdb.com', 'data': {'file': File, 'link': "/?action=download&hash="+Hash+"&language=pl,en,pt,ru,hu,it,br,cz,de"}, 'file': File})
+            sublist.append({'lang': Language, 'site' : 'thesubdb.com', 'title' : os.path.basename(File)+" (hash)", 'domain': 'thesubdb.com', 'data': {'file': File, 'link': "/?action=download&hash="+Hash+"&language=pl,en,pt,ru,hu,it,br,cz,de"}, 'file': File})
 
             return sublist
         else:
@@ -144,7 +144,7 @@ def check_exists(File):
                     Language = k[1].lower()
 
             if Response.status == 200:
-                sublist.append({'lang': Language, 'site' : 'thesubdb.com', 'title' : File+" (hash)", 'domain': 'thesubdb.com', 'data': {'file': File, 'link': "/?action=download&hash="+Hash+"&language="+lang}, 'file': File})
+                sublist.append({'lang': Language, 'site' : 'thesubdb.com', 'title' : os.path.basename(File)+" (hash)", 'domain': 'thesubdb.com', 'data': {'file': File, 'link': "/?action=download&hash="+Hash+"&language="+lang}, 'file': File})
             else:
                 print("[plugin:thesubdb] Not found for "+File+" in "+lang+" language.")
 
