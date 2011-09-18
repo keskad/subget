@@ -158,8 +158,7 @@ def download_by_data(File, SavePath):
     return True
 
 def search_by_keywords(Keywords):
-    #print("[plugin:thesubdb] thesubdb.com does not support searching by keywords.")
-    return False
+    return check_exists(Keywords)
 
 def convertToQuery(FileName):
     FileName = FileName.replace("  ", " ") # Fix double spaces
