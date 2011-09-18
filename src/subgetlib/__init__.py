@@ -5,4 +5,4 @@
     Jabber: webnull<at>ubuntu(.pl)
 """
 
-import allsubs, napiprojekt, napisy24, napisy_info, thesubdb
+import allsubs, napiprojekt, napisy24, napisy_info, thesubdb, subscene
