@@ -1214,9 +1214,14 @@ class SubGet:
         
         # Create a new window
         self.window = gtk.Window(gtk.WINDOW_TOPLEVEL)
+        self.screen = self.window.get_screen()
         self.window.set_title(self.LANG[10])
-        self.window.set_resizable(False)
-        self.window.set_size_request(600, 275)
+        self.window.set_resizable(True)
+
+        # make the application bigger if it will fit on screen
+        if self.screen.get_width() >= 800:
+            self.window.set_size_request(750, 340)
+
         self.window.connect("delete_event", self.delete_event)
         self.window.set_icon_from_file(self.subgetOSPath+"/usr/share/subget/icons/Subget-logo.png")
 
@@ -1325,7 +1330,7 @@ class SubGet:
         fileMenu.append(exit)
 
         ############# End of Menu #############
-        self.fixed = gtk.Fixed()
+        #self.fixed = gtk.Fixed()
 
         self.liststore = gtk.ListStore(gtk.gdk.Pixbuf, str, str, str)
         self.treeview = gtk.TreeView(self.liststore)
@@ -1373,7 +1378,7 @@ class SubGet:
         image.set_from_stock("gtk-go-down", gtk.ICON_SIZE_BUTTON)
         self.DownloadButton.set_image(image)
         self.DownloadButton.set_size_request(100, 40)
-        self.fixed.put(self.DownloadButton, 490, 205) # put on fixed
+        #self.fixed.put(self.DownloadButton, 490, 205) # put on fixed
 
         self.DownloadButton.connect('clicked', lambda b: self.GTKDownloadSubtitles())
 
@@ -1385,28 +1390,38 @@ class SubGet:
             self.VideoPlayer.set_active(0)
             self.VideoPlayer.hide()
 
-        self.fixed.put(self.VideoPlayer, 10, 205)
+        #self.fixed.put(self.VideoPlayer, 10, 205)
 
         # Cancel button
         self.CancelButton = gtk.Button(stock=gtk.STOCK_CLOSE)
         self.CancelButton.set_size_request(90, 40)
         self.CancelButton.connect('clicked', lambda b: gtk.main_quit())
-        self.fixed.put(self.CancelButton, 390, 205) # put on fixed
+        #self.fixed.put(self.CancelButton, 390, 205) # put on fixed
 
         # scrollbars
         scrolled_window = gtk.ScrolledWindow()
+        scrolled_window.set_shadow_type(gtk.SHADOW_ETCHED_IN)
         scrolled_window.set_border_width(0)
         scrolled_window.set_size_request(600, 200)
-        scrolled_window.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_ALWAYS)
-        scrolled_window.add_with_viewport(self.treeview)
+        scrolled_window.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
+        scrolled_window.add(self.treeview)
 
-        self.fixed.put(scrolled_window, 0, 0)
-        self.fixed.set_border_width(0)
+        #self.fixed.put(scrolled_window, 0, 0)
+        #self.fixed.set_border_width(0)
         
         vbox = gtk.VBox(False, 0)
         vbox.set_border_width(0)
         vbox.pack_start(mb, False, False, 0)
-        vbox.pack_start(self.fixed, False, False, 0)
+        vbox.pack_start(scrolled_window, True, True, 0)
+        buttonsAlligned = gtk.Alignment(0, 1, 0, 0)
+        #vbox.pack_start(self.fixed, False, False, 0)
+
+        hbox = gtk.HBox(False, 5)
+        hbox.pack_start(buttonsAlligned)
+        hbox.pack_start(self.VideoPlayer, False, False, 5)
+        hbox.pack_start(self.CancelButton, False, False, 5)
+        hbox.pack_end(self.DownloadButton, False, False, 5)
+        vbox.pack_start(hbox, False, False, 8)
 
         self.window.add(vbox)
         # create a TreeStore with one string column to use as the model

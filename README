@@ -18,6 +18,12 @@ Video Player option allows easily play movie using favorite media player right a
 Requirements: GTK+, Python 2.6/2.7/3.0/3.1/3.2, X11, PyGTK, alang, alang-py
 
 * Changelog:
+23.09.2011 (v.0.9.6) <webnull.www@gmail.com>:
+    * Rebuilded main window
+    * Main window is now resizable
+    + Main window size will now be automaticaly adjusted basing on screen resolution
+    * Column headers are now not scrolling with the list
+
 18.09.2011 (v.0.9.5.9) <webnull.www@gmail.com>:
     + Searching by keywords now works in subscene plugin
 
