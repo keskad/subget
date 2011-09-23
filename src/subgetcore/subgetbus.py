@@ -49,7 +49,7 @@ if not os.name == "nt":
         def clearList(self):
             """ Clean up the list """
             if not self.subget == None:
-                return self.subget.liststore.clear()
+                return self.subget.cleanUpResults()
 
 
         @dbus.service.method('org.freedesktop.subget')

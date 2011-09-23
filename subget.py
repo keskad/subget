@@ -566,7 +566,6 @@ class SubGet:
 
                 # items
                 Info = None
-                Deactivate = gtk.MenuItem('Wyłącz wtyczkę')
 
                 Plugin = liststore[pthinfo[0][0]][1]
                 if self.plugins[Plugin] == 'Disabled':
@@ -900,6 +899,10 @@ class SubGet:
             self.sm.show_all()
             return True
 
+    def cleanUpResults(self):
+        self.liststore.clear()
+        self.subtitlesList = list()
+
     def gtkDoSearch(self, arg):
             query = self.sm.entry.get_text()
             #self.sm.destroy()
@@ -909,7 +912,7 @@ class SubGet:
                 return
 
             if self.sm.clearCB.get_active():
-                self.liststore.clear()
+                self.cleanUpResults()
 
             plugin = self.sm.cb.get_active_text()
 
@@ -1291,7 +1294,7 @@ class SubGet:
 
         # "Clear"
         clearMenu = gtk.ImageMenuItem(self.LANG[44])
-        clearMenu.connect("activate", lambda b: self.liststore.clear())
+        clearMenu.connect("activate", lambda b: self.cleanUpResults())
 
         try:
             image = gtk.Image()
