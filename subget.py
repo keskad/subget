@@ -1341,6 +1341,10 @@ class SubGet:
         self.tvcolumn1 = gtk.TreeViewColumn(self.LANG[13])
         self.tvcolumn2 = gtk.TreeViewColumn(self.LANG[14])
 
+        # Resizable attributes
+        self.tvcolumn1.set_resizable(True)
+        self.tvcolumn2.set_resizable(True)
+
         self.treeview.append_column(self.tvcolumn)
         self.treeview.append_column(self.tvcolumn1)
         self.treeview.append_column(self.tvcolumn2)
