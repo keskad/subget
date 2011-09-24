@@ -1,6 +1,6 @@
 #!/usr/bin/python
 #-*- coding: utf-8 -*-
-import getopt, sys, os, re, glob, gtk, gobject, pango, time, operator
+import getopt, sys, os, re, glob, gtk, gobject, pango, time, operator, xml.dom.minidom
 import pygtk, glib
 from threading import Thread
 from distutils.sysconfig import get_python_lib
@@ -78,6 +78,7 @@ class SubGet:
     locks = dict()
     locks['reorder'] = False
     disabledPlugins = list()
+    versioning = None
 
     def doPluginsLoad(self, args):
         global pluginsDir, plugins
@@ -787,7 +788,54 @@ class SubGet:
 
             self.gtkAddTab(notebook, self.LANG[29], self.LANG[30])
 
-            self.gtkAddTab(notebook, self.LANG[31], "English:\n WebNuLL <http://webnull.kablownia.org>\n\nPolish:\n WebNuLL <http://webnull.kablownia.org>")
+            self.gtkAddTab(notebook, self.LANG[31], "English:\n WebNuLL <http://webnull.kablownia.org>\n\nPolski:\n WebNuLL <http://webnull.kablownia.org>")
+
+
+            if not os.path.isfile("/usr/share/subget/version.xml"):
+                self.gtkAddTab(notebook, self.LANG[65], self.LANG[66])
+            else:
+                if self.versioning == None:
+                    try:
+                        dom = xml.dom.minidom.parse("/usr/share/subget/version.xml")
+
+                        self.versioning = {'version': dom.getElementsByTagName('version')[0].childNodes[0].data, 'platforms': '', 'mirrors': '', 'developers': '', 'contact': ''}
+
+                        # Platforms list
+                        Platforms = dom.getElementsByTagName('platform')
+
+                        for Item in Platforms:
+                            self.versioning['platforms'] += "- "+Item.childNodes[0].data+"\n"
+                        del(Platforms)
+
+                        # Mirrors list
+                        Mirrors = dom.getElementsByTagName('mirror')
+
+                        for Item in Mirrors:
+                            self.versioning['mirrors'] += Item.childNodes[0].data+"\n"
+                        del(Mirrors)
+
+                        # Developers list
+                        Developers = dom.getElementsByTagName('developer')
+
+                        for Item in Developers:
+                            self.versioning['developers'] += '- '+Item.childNodes[0].data+"\n"
+                        del(Developers)
+
+                        # Contact list
+                        Contact = dom.getElementsByTagName('contact_im')
+
+                        for Item in Contact:
+                            self.versioning['contact'] += "* "+Item.getAttribute('type')+": "+Item.childNodes[0].data+"\n"
+                        del(Contact)
+                    except Exception as e:
+                        self.versioning = False
+                        print("Catched an exception while tried to parse /usr/share/subget/version.xml, details: "+str(e))
+                    
+
+                if self.versioning == False or self.versioning == None:
+                    self.gtkAddTab(notebook, self.LANG[65], self.LANG[67])
+                else:
+                    self.gtkAddTab(notebook, self.LANG[65], self.LANG[65]+": "+self.versioning['version']+"\n\n"+self.LANG[68]+":\n"+self.versioning['platforms']+"\n"+self.LANG[69]+":\n "+self.versioning['developers']+"\n"+self.LANG[70]+":\n"+self.versioning['contact'])
 
             fixed.put(notebook, 12, 160)
 

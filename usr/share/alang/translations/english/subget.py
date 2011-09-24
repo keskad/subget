@@ -2,7 +2,7 @@
 
 class alangINC():
 	def return_array(a):
-		MyLang = range(65)
+		MyLang = range(71)
 		MyLang[0] = "subget for GNU/Linux. Simple Subtitle Downloader for shell and GUI.\nUsage: subget [long GNU option] [option] first-file, second-file, ...\n\n --help                : this message\n --console, -c         : show results in console, not in graphical user interface\n --language, -l        : specify preffered language\n --quick, -q           : grab first result and download"
 
                 MyLang[1] = "Try --help for usage"
@@ -70,4 +70,10 @@ class alangINC():
                 MyLang[62] = "Settings"
                 MyLang[63] = "Activate plugin"
                 MyLang[64] = "Deactivate plugin"
+                MyLang[65] = "Version"
+                MyLang[66] = "Version information can't be read because file /usr/share/subget/version.xml is missing."
+                MyLang[67] = "Version information can't be read because there was a problem parsing file /usr/share/subget/version.xml"
+                MyLang[68] = "Supported platforms"
+                MyLang[69] = "Project developers"
+                MyLang[70] = "Contact"
 		return MyLang
