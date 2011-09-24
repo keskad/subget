@@ -809,7 +809,7 @@ class SubGet:
             # Scrollbars
             scrolled_window = gtk.ScrolledWindow()
             scrolled_window.set_border_width(0)
-            scrolled_window.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_ALWAYS)
+            scrolled_window.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
             scrolled_window.add_with_viewport(authorsFrameContent)
 
             authorsFrame.add(scrolled_window)
@@ -1077,13 +1077,13 @@ class SubGet:
 
         # ==== Thunar
         Thunar = gtk.CheckButton("Thunar (XFCE)")
-        Thunar.connect("pressed", self.configSetButton, "filemanagers", "xfce", Thunar)
+        Thunar.connect("pressed", subgetcore.filemanagers.ThunarUCA, self, Path)
 
         if not self.dictGetKey(self.Config['filemanagers'], 'xfce') == False:
             Thunar.set_active(1)
 
         # ==== PCManFM
-        Thunar.set_sensitive(False)
+        #Thunar.set_sensitive(False)
         PCManFM = gtk.CheckButton("PCManFM (LXDE)")
         PCManFM.connect("pressed", self.configSetButton, "filemanagers", "lxde", PCManFM)
         if not self.dictGetKey(self.Config['filemanagers'], 'lxde') == False:
