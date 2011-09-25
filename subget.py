@@ -210,7 +210,7 @@ class SubGet:
             self.subgetOSPath = ""
 
         try:
-            opts, args = getopt.getopt(sys.argv[1:], "hcql:", ["help", "console", "quick", "language="])
+            opts, args = getopt.getopt(sys.argv[1:], "hcqw", ["help", "console", "quick", "language=", "watch-with-subtitles"])
         except getopt.GetoptError as err:
             print(self.LANG[2]+": "+str(err)+", "+self.LANG[1]+"\n\n")
             usage()
@@ -250,24 +250,153 @@ class SubGet:
         if consoleMode == True:
             self.shellMode(args)
         else:
-            if not os.name == "nt":
-                # run DBUS Service within GUI to serve interface for other applications/self
-                self.DBUS = subgetcore.subgetbus.SubgetService()
-                self.DBUS.subget = self
+            # Fast download option
+            if action == "watch":
+                self.watchWithSubtitles(args)
+            else:
+                if not os.name == "nt":
+                    # run DBUS Service within GUI to serve interface for other applications/self
+                    self.DBUS = subgetcore.subgetbus.SubgetService()
+                    self.DBUS.subget = self
 
-            self.graphicalMode(args)
+                self.graphicalMode(args)
+
+
+
+    ########################################################
+    ##### FAST DOWNLOAD, "WATCH WITH SUBTITLES" OPTION #####
+    ########################################################
+
+
+    def textmodeDL(self, Plugin, File):
+        State = self.plugins[Plugin]
+
+        if type(State).__name__ != "module":
+            self.queueCount = (self.queueCount - 1)
+            return False
+
+
+        Results = self.plugins[Plugin].download_list(File)
+
+        for Result in Results:
+            if Result == False:
+                self.queueCount = (self.queueCount - 1)
+                return False
+
+            for Sub in Result:
+                try:
+                    self.subtitlesList.append({'language': Sub['lang'], 'name': Sub['title'], 'data': Sub['data'], 'extension': Plugin, 'file': Sub['file']})
+                except Exception as e:
+                    print("[textModeDL] Error trying to get list of subtitles from "+Plugin+" plugin, exception details: "+str(e))
+
+        self.queueCount = (self.queueCount - 1)
+
+
+
+    def textmodeWait(self):
+        """ Wait util jobs not done, after that sort all results and download subtitles """
+
+        Sleept = 0.0
+
+        while True:
+            time.sleep(0.2)
+            Sleept += 0.2
+
+            if self.queueCount <= 0:
+                break
+
+            # if waited too many time
+            if Sleept > 180:
+                print("[textmodeWait] One of plugins cannot finish its job, cancelling.")
+                return False
+
+        self.reorderTreeview(False) # Reorder list without using GTK
+
+
+        self.finishedJobs = dict()
+        prefferedLanguage = self.configGetKey('watch_with_subtitles', 'preffered_language')
+
+        # set default language to english
+        if prefferedLanguage == False:
+            prefferedLanguage = 'en'
+
+        # search for matching subtitles
+        for Job in self.subtitlesList:
+            if not Job['data']['file'] in self.finishedJobs:
+                if Job['language'].lower() == prefferedLanguage.lower():
+                    self.finishedJobs[Job['data']['file']] = Job
+                    current = Thread(target=self.textmodeDLSub, args=(Job,))
+                    current.setDaemon(False)
+                    current.start()
+
+        # accept other langages than preffered
+        if not self.configGetKey('watch_with_subtitles', 'only_preffered_language') == "True":
+            for Job in self.subtitlesList:
+                if not Job['data']['file'] in self.finishedJobs:
+                    self.finishedJobs[Job['data']['file']] = Job
+                    current = Thread(target=self.textmodeDLSub, args=(Job,))
+                    current.setDaemon(False)
+                    current.start()
+
+    def textmodeDLSub(self, Job):
+        print("Downloading to "+Job['data']['file']+".txt")
+        return self.plugins[Job['extension']].download_by_data(Job['data'], Job['data']['file']+".txt")
+
+
+    def watchWithSubtitles(self, args):
+        """ Download first matching subtitles and launch video player.
+            Always returns True
+        """
+
+        if len(args) == 0:
+            print("No files specified.")
+
+        # subtitlesList
+        self.queueCount = len(self.pluginsList)
+
+        for Plugin in self.pluginsList:
+            current = Thread(target=self.textmodeDL, args=(Plugin,args))
+            current.setDaemon(False)
+            current.start()
+
+        # Loop waiting for download to be done
+        current = Thread(target=self.textmodeWait)
+        current.setDaemon(False)
+        current.start()
+
+        # wait for threads to end jobs
+        current.join()
+
+        if len(args) == 1:
+            # get the first job using "for" and "break" after first result
+            if not self.configGetKey('watch_with_subtitles', 'download_only') == True:
+                Found = False
+
+                for File in self.finishedJobs:
+                    subgetcore.videoplayers.Spawn(self, File, File+".txt")
+
+                    Found = True
+                    break
+
+                if Found == False:
+                    self.sendCriticAlert("No subtitles found for file "+args[0])
+
+        return True
+
+
+    #################################################
+    ##### END OF "WATCH WITH SUBTITLES" OPTION  #####
+    #################################################
+
+
+
+
 
     def addSubtitlesRow(self, language, release_name, server, download_data, extension, File,Append=True):
             """ Adds parsed subtitles to list """
-
-            #if len(self.subtitlesList) == 0:
-            #    ID = 0
-            #else:
-            #    ID = (len(self.subtitlesList)+1)
             
             self.subtitlesList.append({'language': language, 'name': release_name, 'server': server, 'data': download_data, 'extension': extension, 'file': File})
 
-            #print "Adding "+str(ID)+" - "+release_name
             pixbuf_path = self.subgetOSPath+'/usr/share/subget/icons/'+language+'.xpm'
 
             if not os.path.isfile(pixbuf_path):
@@ -282,7 +411,7 @@ class SubGet:
 
             self.liststore.append([pixbuf, str(release_name), str(server), (len(self.subtitlesList)-1)])
 
-    def reorderTreeview(self):
+    def reorderTreeview(self, useGTK=True):
         """ Sorting subtitles list by plugin priority """
 
         if self.locks['reorder'] == True:
@@ -313,10 +442,15 @@ class SubGet:
 
             sortedList = sorted(newList, key=lambda k: k['priority'])
             self.subtitlesList = list()
-            self.liststore.clear()
 
-            for Item in sortedList:
-                self.addSubtitlesRow(Item['language'], Item['name'], Item['server'], Item['data'], Item['extension'], Item['file'])
+            if useGTK == True:
+                self.liststore.clear()
+
+                for Item in sortedList:
+                    self.addSubtitlesRow(Item['language'], Item['name'], Item['server'], Item['data'], Item['extension'], Item['file'])
+            else:
+                for Item in sortedList:
+                    self.subtitlesList.append({'language': Item['language'], 'name': Item['name'], 'server': Item['extension'], 'data': Item['data'], 'extension': Item['extension'], 'file': Item['file']})
 
         self.locks['reorder'] = False
         
@@ -1522,6 +1656,7 @@ class SubGet:
     def graphicalMode(self, files):
             """ Detects operating system and load GTK GUI """
             self.files = files
+
             self.gtkMainScreen(files)
             gobject.timeout_add(50, self.TreeViewUpdate)
             gtk.main()

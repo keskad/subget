@@ -18,6 +18,9 @@ Video Player option allows easily play movie using favorite media player right a
 Requirements: GTK+, Python 2.6/2.7/3.0/3.1/3.2, X11, PyGTK, alang, alang-py
 
 * Changelog:
+25.09.2011 (v.0.9.6.5) <webnull.www@gmail.com>:
+    + Experimental function "Watch with subtitles" available via "-w" or "--watch-with-subtitles"
+
 24.09.2011 (v.0.9.6.4) <webnull.www@gmail.com>:
     + Version informations in about menu
 
