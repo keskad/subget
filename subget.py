@@ -314,7 +314,7 @@ class SubGet:
 
 
         self.finishedJobs = dict()
-        prefferedLanguage = self.configGetKey('watch_with_subtitles', 'preffered_language')
+        prefferedLanguage = self.configGetKey('watch_with_subtitles', 'preferred_language')
 
         # set default language to english
         if prefferedLanguage == False:
@@ -330,7 +330,7 @@ class SubGet:
                     current.start()
 
         # accept other langages than preffered
-        if not self.configGetKey('watch_with_subtitles', 'only_preffered_language') == "True":
+        if not self.configGetKey('watch_with_subtitles', 'only_preferred_language') == "True":
             for Job in self.subtitlesList:
                 if not Job['data']['file'] in self.finishedJobs:
                     self.finishedJobs[Job['data']['file']] = Job
@@ -1188,6 +1188,7 @@ class SubGet:
         # Create tabs and append to notebook
         self.gtkPreferencesIntegration()
         self.gtkPreferencesPlugins()
+        self.gtkPreferencesWWS()
 
         # Close button
         self.winPreferences.CloseButton = gtk.Button(stock=gtk.STOCK_CLOSE)
@@ -1201,8 +1202,12 @@ class SubGet:
         self.winPreferences.show_all()
         return True
 
-    def configSetButton(self, Type, Section, Option, Value):
-        Value = Value.get_active()
+    def configSetButton(self, Type, Section, Option, Value, revert=False):
+
+        if revert == True:
+            Value = self.revertBool(Value.get_active())
+        else:
+            Value = Value.get_active()
 
         try:
             self.Config[Section][Option] = Value
@@ -1316,6 +1321,90 @@ class SubGet:
         GeneralPreferences.put(SelectPlayer, 10, 163)
         
         self.createTab(self.winPreferences.notebook, self.LANG[52], GeneralPreferences)
+
+    def configSetKey(self, Section, Option, Value):
+        if not Section in self.Config:
+            self.Config[Section] = dict()
+
+        self.Config[Section][Option] = str(Value)
+
+    def WWSDefaultLanguage(self, x, liststore, checkbox):
+        """ Sets preferred language for Watch with subtitles feature """
+        self.configSetKey('watch_with_subtitles', 'preferred_language', str(liststore[checkbox.get_active()][1]))
+        
+
+
+    def gtkPreferencesWWS(self):
+        """ Watch with subtitles preferences """
+
+        # "General" preferences
+        Path = os.path.expanduser("~/")
+
+        WWS = gtk.Fixed()
+        Label1 = gtk.Label(self.LANG[72])
+        Label1.set_alignment (0, 0)
+        Label1.show()
+
+        # Filemanagers
+
+        # ==== Download only option
+        downloadOnly = gtk.CheckButton(self.LANG[73])
+        downloadOnly.connect("pressed", self.configSetButton, 'watch_with_subtitles', 'download_only', downloadOnly, True)
+        downloadOnly.set_sensitive(True)
+        downloadOnly.set_active(bool(self.configGetKey('watch_with_subtitles', 'download_only')))
+
+        # ==== Only preferred language
+        only_preferred_language = gtk.CheckButton(self.LANG[74])
+        only_preferred_language.connect("pressed", self.configSetButton, 'watch_with_subtitles', 'only_preferred_language', only_preferred_language, True)
+        only_preferred_language.set_sensitive(True)
+        only_preferred_language.set_active(bool(self.configGetKey('watch_with_subtitles', 'only_preferred_language')))
+
+        # ==== Selection of preferred language
+        Label2 = gtk.Label(self.LANG[75])
+
+        liststore = gtk.ListStore(gtk.gdk.Pixbuf, str)
+        languages = os.listdir("/usr/share/subget/icons/")
+
+        preferred_language = gtk.ComboBox(liststore)
+        preferred_language.set_wrap_width(4)
+
+        preferred_language_conf = self.configGetKey('watch_with_subtitles', 'preferred_language')
+
+        i=0
+        fi=0
+
+        for Lang in languages:
+            basename, extension = os.path.splitext(Lang)
+
+            if extension == ".xpm":
+                i+=1
+
+                pixbuf = gtk.gdk.pixbuf_new_from_file("/usr/share/subget/icons/"+basename+".xpm")
+                liststore.append([pixbuf, str(basename)])
+                if basename == preferred_language_conf:
+                    fi=i
+
+        preferred_language.set_active((fi-1))
+
+        preferred_language.connect("changed", self.WWSDefaultLanguage, liststore, preferred_language)
+
+
+
+        cellpb = gtk.CellRendererPixbuf()
+        preferred_language.pack_start(cellpb, True)
+        preferred_language.add_attribute(cellpb, 'pixbuf', 0)
+        cell = gtk.CellRendererText()
+        preferred_language.pack_start(cell, True)
+        preferred_language.add_attribute(cell, 'text', 1)
+
+        WWS.put(Label1, 10, 8)
+        WWS.put(downloadOnly, 10, 25)
+        WWS.put(only_preferred_language, 10, 45)
+        WWS.put(Label2, 10, 80)
+        WWS.put(preferred_language, 150, 75)
+        #WWS.put(SelectPlayer, 10, 163)
+        
+        self.createTab(self.winPreferences.notebook, self.LANG[71], WWS)
 
     # Set connection timeouts for all plugins supporting this function
     def gtkPreferencesPlugins_Scale(self, x):

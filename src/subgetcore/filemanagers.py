@@ -17,6 +17,10 @@ def Nautilus(Widget, Subget, Path):
     if not os.path.isfile(theFile):
         try:
             shutil.copyfile("/usr/share/subget/fm-integration/gnome.sh", theFile)
+
+            if Subget.configGetKey('watch_with_subtitles', 'enabled') == "True":
+                shutil.copyfile("/usr/share/subget/fm-integration/gnome-wws.sh",  Path+"/.gnome2/nautilus-scripts/"+Subget.LANG[71])
+
             os.system("chmod +x \""+theFile+"\"")
             Subget.Config['filemanagers']['gnome'] = True
             print("GNOME integration active.")
@@ -25,6 +29,10 @@ def Nautilus(Widget, Subget, Path):
             print("Cannot create "+theFile+", error message: "+str(e))
     else:
         try:
+            if Subget.configGetKey('watch_with_subtitles', 'enabled') == "True":
+                if os.path.isfile(Path+"/.gnome2/nautilus-scripts/"+Subget.LANG[71]):
+                    os.remove(Path+"/.gnome2/nautilus-scripts/"+Subget.LANG[71])
+
             os.remove(theFile)
             Subget.Config['filemanagers']['gnome'] = False
         except Exception as e:
@@ -46,14 +54,23 @@ def KDEService(Widget, Subget, Path):
     if not os.path.isfile(theFile):
         try:
             shutil.copyfile("/usr/share/subget/fm-integration/kde4.desktop", theFile)
+
+            if Subget.configGetKey('watch_with_subtitles', 'enabled') == "True":
+                shutil.copyfile("/usr/share/subget/fm-integration/kde4-wws.desktop",  Path+"/.kde4/share/kde4/services/subget-wws.desktop")
+
             os.system("chmod +x \""+theFile+"\"")
             Subget.Config['filemanagers']['kde'] = True
             print("KDE4 integration active.")
         except Exception as e:
             Widget.set_active(0)
-            print("Cannot remove "+theFile+", error message: "+str(e))
+            print("Cannot create "+theFile+", error message: "+str(e))
     else:
         try:
+
+            if Subget.configGetKey('watch_with_subtitles', 'enabled') == "True":
+                if os.path.isfile(Path+"/.kde4/share/kde4/services/subget-wws.desktop"):
+                    os.remove(Path+"/.kde4/share/kde4/services/subget-wws.desktop")
+
             os.remove(theFile)
             Subget.Config['filemanagers']['kde'] = False
         except Exception:
@@ -118,7 +135,11 @@ def ThunarUCA(Widget, Subget, Path):
             Widget.set_active(False)
 
         Subget.Config['filemanagers']['xfce'] = True
-        XML = XML.replace('</actions>', '<action><icon>text-plain</icon><name>'+Subget.LANG[10]+'</name><command>/usr/bin/subget %F</command><description></description><patterns>*</patterns><startup-notify/><video-files/></action></actions>')
+
+        if Subget.configGetKey('watch_with_subtitles', 'enabled') == "True":
+            XML = XML.replace('</actions>', '<action><icon>text-plain</icon><name>'+Subget.LANG[10]+'</name><command>/usr/bin/subget %F</command><description></description><patterns>*</patterns><startup-notify/><video-files/></action><action><icon>text-plain</icon><name>'+Subget.LANG[71]+'</name><command>/usr/bin/subget -w %F</command><description></description><patterns>*</patterns><startup-notify/><video-files/></action></actions>')
+        else:
+            XML = XML.replace('</actions>', '<action><icon>text-plain</icon><name>'+Subget.LANG[10]+'</name><command>/usr/bin/subget %F</command><description></description><patterns>*</patterns><startup-notify/><video-files/></action></actions>')
 
         print("[thunar] Integration active")
 

@@ -1,0 +1,15 @@
+[Desktop Entry]
+Type=Service
+Encoding=UTF-8
+Actions=SubgetWatch;
+ServiceTypes=KonqPopupMenu/Plugin,video/*
+#MimeType=all/all
+X-KDE-StartupNotify=false
+X-KDE-Priority=TopLevel
+
+[Desktop Action SubgetWatch]
+Exec=/usr/bin/subget -w %U
+Icon=/usr/share/subget/icons/Subget-logo.png
+Name=Watch with subtitles
+Name[pl]=Obejrzyj z napisami
+Name[en]=Watch with subtitles
