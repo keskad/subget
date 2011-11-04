@@ -1,6 +1,6 @@
 #!/usr/bin/python
 #-*- coding: utf-8 -*-
-import getopt, sys, os, re, glob, gtk, gobject, pango, time, operator, xml.dom.minidom
+import getopt, sys, os, re, glob, gtk, gobject, pango, time, operator, xml.dom.minidom, gettext, locale
 import pygtk, glib
 from threading import Thread
 from distutils.sysconfig import get_python_lib
@@ -36,30 +36,40 @@ action="list"
 language="pl"
 languages=['pl', 'en']
 
-## ALANG
+
+    ####################################
+    ##### GNU Gettext translations #####
+    ####################################
+
 if os.name == "nt":
-    incpath=winSubget+"/usr/share/alang/python/"
-elif os.path.isfile("usr/share/alang/python/alang.py"):
-    incpath="usr/share/alang/python/";
+    incpath=winSubget+"/usr/share/subget/locale/"
+elif os.path.isdir("usr/share/subget/locale/"):
+    incpath="usr/share/subget/locale/";
 else:
-    incpath="/usr/share/alang/python/";
+    incpath="/usr/share/subget/locale/";
 
-sys.path.insert( 0, incpath )
+langs = ['pl_PL', 'en_US']
+lc, encoding = locale.getdefaultlocale()
 
-try:
-    from alang import alang
-except ImportError as e:
-    print("Error " + str(e.args))
+if (lc):
+    langs = [lc]
 
-alang=alang()
-alang.setPathPrefix(winSubget)
-LANG=alang.loadLanguage('subget')
+#print("Translations: "+incpath)
+gettext.bindtextdomain('subget', incpath)
 
-## ALANG
+t = gettext.translation('subget', incpath, langs, fallback=True)
+_ = t.gettext
+
+
+    ###########################################
+    ##### End of GNU Gettext translations #####
+    ###########################################
+
+
 def usage():
     'Shows program usage and version, lists all options'
 
-    print(LANG[0])
+    print(_("subget for GNU/Linux. Simple Subtitle Downloader for shell and GUI.\nUsage: subget [long GNU option] [option] first-file, second-file, ...\n\n\n --help                : this message\n --console, -c         : show results in console, not in graphical user interface\n --language, -l        : specify preffered language\n --quick, -q           : grab first result and download"))
     print("")
 
 def exechelper(command):
@@ -197,9 +207,10 @@ class SubGet:
     def main(self):
         """ Main function, getopt etc. """
 
-        global consoleMode, action, LANG
+        global consoleMode, action, _
 
-        self.LANG = LANG
+        self.LANG = _
+        self._ = _
 
         if os.name == "nt":
             self.subgetOSPath = winSubget+"/"
@@ -212,7 +223,7 @@ class SubGet:
         try:
             opts, args = getopt.getopt(sys.argv[1:], "hcqw", ["help", "console", "quick", "language=", "watch-with-subtitles"])
         except getopt.GetoptError as err:
-            print(self.LANG[2]+": "+str(err)+", "+self.LANG[1]+"\n\n")
+            print(_(Error)+": "+str(err)+", "+_("Try --help for usage")+"\n\n")
             usage()
             sys.exit(2)
 
@@ -240,7 +251,7 @@ class SubGet:
                     addLinks(str.join('\n', args), False)
                     print("Added new files to existing list.")
                 else:
-                    print(self.LANG[54]) # only one instance of Subget can be running at once
+                    print(_("Only one instance (graphical window) of Subget can be running at once by one user.")) # only one instance of Subget can be running at once
                 sys.exit(0)
             except dbus.exceptions.DBusException as e:
                 True
@@ -401,7 +412,7 @@ class SubGet:
 
             if not os.path.isfile(pixbuf_path):
                 pixbuf_path = self.subgetOSPath+'/usr/share/subget/icons/unknown.xpm'
-                print("[addSubtitlesRow] "+language+".xpm "+self.LANG[46])
+                print("[addSubtitlesRow] "+language+".xpm "+_("icon does not exists, using unknown.xpm"))
 
             try:
                 pixbuf = gtk.gdk.pixbuf_new_from_file(pixbuf_path)
@@ -495,7 +506,7 @@ class SubGet:
             Results = self.plugins[Plugin].download_list(self.files)
 
             if Results == None:
-                print("[plugin:"+Plugin+"] "+self.LANG[6])
+                print("[plugin:"+Plugin+"] "+_("ERROR: Cannot import"))
             else:
                 for Result in Results:
                     if Result == False:
@@ -506,9 +517,9 @@ class SubGet:
                         try:
                             if Movie.has_key("title"):
                                 self.addSubtitlesRow(Movie['lang'], Movie['title'], Movie['domain'], Movie['data'], Plugin, Movie['file'])
-                                print("[plugin:"+Plugin+"] "+self.LANG[7]+" - "+Movie['title'])
+                                print("[plugin:"+Plugin+"] "+_("found subtitles")+" - "+Movie['title'])
                         except AttributeError:
-                             print("[plugin:"+Plugin+"] "+self.LANG[6])
+                             print("[plugin:"+Plugin+"] "+_("no any subtitles found"))
 
             # mark job as done
             self.queueCount = (self.queueCount - 1)
@@ -549,15 +560,15 @@ class SubGet:
                 if self.dialog != None:
                     return
                 else:
-                    self.dialog = gtk.MessageDialog(parent = None,flags = gtk.DIALOG_DESTROY_WITH_PARENT,type = gtk.MESSAGE_INFO,buttons = gtk.BUTTONS_OK,message_format = self.LANG[18])
-                    self.dialog.set_title(self.LANG[17])
+                    self.dialog = gtk.MessageDialog(parent = None,flags = gtk.DIALOG_DESTROY_WITH_PARENT,type = gtk.MESSAGE_INFO,buttons = gtk.BUTTONS_OK,message_format = _("No subtitles selected."))
+                    self.dialog.set_title(_("Information"))
                     self.dialog.connect('response', lambda dialog, response: self.destroyDialog())
                     self.dialog.show()
             else:
                 SelectID = int(entry1.get_value(entry2, 3))
                 
                 if len(self.subtitlesList) == int(SelectID) or len(self.subtitlesList) > int(SelectID):
-                    chooser = gtk.FileChooserDialog(title=self.LANG[8],action=gtk.FILE_CHOOSER_ACTION_SAVE,buttons=(gtk.STOCK_CANCEL,gtk.RESPONSE_CANCEL,gtk.STOCK_SAVE,gtk.RESPONSE_OK))
+                    chooser = gtk.FileChooserDialog(title=_("Where to save the subtitles?"),action=gtk.FILE_CHOOSER_ACTION_SAVE,buttons=(gtk.STOCK_CANCEL,gtk.RESPONSE_CANCEL,gtk.STOCK_SAVE,gtk.RESPONSE_OK))
                     chooser.set_current_folder(os.path.dirname(self.subtitlesList[SelectID]['file']))
                     chooser.set_current_name(os.path.basename(self.subtitlesList[SelectID]['file'])+".txt")
                     response = chooser.run()
@@ -569,7 +580,7 @@ class SubGet:
                     else:
                         chooser.destroy()
                 else:
-                    print("[GTK:DownloadSubtitles] subtitle_ID="+str(SelectID)+" "+self.LANG[9])
+                    print("[GTK:DownloadSubtitles] subtitle_ID="+str(SelectID)+" "+_("not found in a list, its wired"))
 
     def GTKDownloadDialog(self, SelectID, filename):
              """Download progress dialog, downloading and saving subtitles to file"""
@@ -581,7 +592,7 @@ class SubGet:
 
                  w = gtk.Window(gtk.WINDOW_TOPLEVEL)
                  w.set_resizable(False)
-                 w.set_title(self.LANG[10])
+                 w.set_title(_("Download subtitles"))
                  w.set_border_width(0)
                  w.set_size_request(300, 70)
 
@@ -596,7 +607,7 @@ class SubGet:
                  self.pbar.show()
 
                  # label
-                 label = gtk.Label(self.LANG[11])
+                 label = gtk.Label(_("Please wait, downloading subtitles..."))
                  fixed.put(label, 50,5)
                  fixed.put(self.pbar, 50,30)
 
@@ -628,7 +639,7 @@ class SubGet:
 
     def gtkSelectVideo(self, arg):
             """ Selecting multiple videos to search for subtitles """
-            chooser = gtk.FileChooserDialog(title=self.LANG[21],action=gtk.FILE_CHOOSER_ACTION_OPEN,buttons=(gtk.STOCK_CANCEL,gtk.RESPONSE_CANCEL,gtk.STOCK_OPEN,gtk.RESPONSE_OK))
+            chooser = gtk.FileChooserDialog(title=_("Please select video files"),action=gtk.FILE_CHOOSER_ACTION_OPEN,buttons=(gtk.STOCK_CANCEL,gtk.RESPONSE_CANCEL,gtk.STOCK_OPEN,gtk.RESPONSE_OK))
             chooser.set_select_multiple(True)
             response = chooser.run()
 
@@ -668,7 +679,7 @@ class SubGet:
 
             except Exception as errno:
                 self.plugins[Plugin] = str(errno)
-                print(self.LANG[5]+" "+Plugin+" ("+str(errno)+")")
+                print(_("ERROR: Cannot import")+" "+Plugin+" ("+str(errno)+")")
                 return False
 
         elif Action == 'deactivate':
@@ -704,12 +715,12 @@ class SubGet:
 
                 Plugin = liststore[pthinfo[0][0]][1]
                 if self.plugins[Plugin] == 'Disabled':
-                    Deactivate = gtk.MenuItem(self.LANG[63])
+                    Deactivate = gtk.MenuItem(_("Activate plugin"))
                     Deactivate.connect("activate", self.togglePlugin, Plugin, 'activate', liststore)
                 else:
                     #Info = gtk.MenuItem('Informacje')
                     #Info.connect("activate", self.pluginInfo, Plugin)
-                    Deactivate = gtk.MenuItem(self.LANG[64])
+                    Deactivate = gtk.MenuItem(_("Deactivate plugin"))
                     Deactivate.connect("activate", self.togglePlugin, Plugin, 'deactivate', liststore)
 
                 #if not Info == None:
@@ -731,7 +742,7 @@ class SubGet:
                 try:
                     Author = self.plugins[Plugin].PluginInfo['Authors']
                 except Exception:
-                    Author = self.LANG[36]
+                    Author = _("Unknown")
 
                 try:
                     OS = self.plugins[Plugin].PluginInfo['Requirements']['OS']
@@ -740,7 +751,7 @@ class SubGet:
                         OS = "Unix, Linux, Windows"
 
                 except Exception:
-                    OS = self.LANG[36]
+                    OS = _("Unknown")
 
                 try:
                     Packages = self.plugins[Plugin].PluginInfo['Requirements']['Packages']
@@ -755,7 +766,7 @@ class SubGet:
                             i=i+1
 
                 except Exception:
-                    Packages = self.LANG[36]
+                    Packages = _("Unknown")
 
                 if type(self.plugins[Plugin]).__name__ == "module":
                     pixbuf = gtk.gdk.pixbuf_new_from_file(self.subgetOSPath+'/usr/share/subget/icons/plugin.png') 
@@ -777,7 +788,7 @@ class SubGet:
                 return False
 
             window = gtk.Window(gtk.WINDOW_TOPLEVEL)
-            window.set_title(self.LANG[37])
+            window.set_title(_("Plugins"))
             window.set_resizable(False)
             window.set_size_request(700, 290)
             window.set_icon_from_file(self.subgetOSPath+"/usr/share/subget/icons/plugin.png")
@@ -789,10 +800,10 @@ class SubGet:
 
 
             # column list
-            tvcolumn = gtk.TreeViewColumn(self.LANG[38])
-            tvcolumn1 = gtk.TreeViewColumn(self.LANG[33])
-            tvcolumn2 = gtk.TreeViewColumn(self.LANG[34])
-            tvcolumn3 = gtk.TreeViewColumn(self.LANG[35])
+            tvcolumn = gtk.TreeViewColumn(_("Plugin"))
+            tvcolumn1 = gtk.TreeViewColumn(_("Operating system"))
+            tvcolumn2 = gtk.TreeViewColumn(_("Authors"))
+            tvcolumn3 = gtk.TreeViewColumn(_("API interface version"))
 
             treeview.append_column(tvcolumn)
             treeview.append_column(tvcolumn1)
@@ -888,7 +899,7 @@ class SubGet:
                 return False
 
             about = gtk.Window(gtk.WINDOW_TOPLEVEL)
-            about.set_title(self.LANG[23])
+            about.set_title(_("About Subget"))
             about.set_resizable(False)
             about.set_size_request(600,550)
             about.set_icon_from_file(self.subgetOSPath+"/usr/share/subget/icons/Subget-logo.png")
@@ -903,12 +914,12 @@ class SubGet:
             fixed.put(logo, 12, 20)
 
             # title
-            title = gtk.Label(self.LANG[23])
+            title = gtk.Label(_("About Subget"))
             title.modify_font(pango.FontDescription("sans 18"))
             fixed.put(title, 150, 20)
 
             # description title
-            description = gtk.Label(self.LANG[24])
+            description = gtk.Label(_("Small, multiplatform and portable Subtitles downloader \nwritten in Python and GTK.\nWorks on most Unix systems, based on Linux kernel and on Windows NT.\nThis program is a free software licensed on GNU General Public License v3."))
             description.modify_font(pango.FontDescription("sans 8"))
             fixed.put(description, 150, 60)
 
@@ -918,15 +929,15 @@ class SubGet:
             notebook.show_tabs = True
             notebook.set_size_request(580, 370)
             notebook.set_border_width(0) 
-            self.gtkAddTab(notebook, self.LANG[25], self.LANG[26]+":\n WebNuLL <http://webnull.kablownia.org>\n\n"+self.LANG[27]+":\n Tiritto <http://dawid-niedzwiedzki.pl>\n WebNuLL <http://webnull.kablownia.org>\n\n"+self.LANG[28]+":\n iluzion <http://dobreprogramy.pl/iluzion>\n famfamfam <http://famfamfam.com>")
+            self.gtkAddTab(notebook, _("Team"), _("Programming")+":\n WebNuLL <http://webnull.kablownia.org>\n\n"+_("Testing")+":\n Tiritto <http://dawid-niedzwiedzki.pl>\n WebNuLL <http://webnull.kablownia.org>\n\n"+_("Special thanks")+":\n iluzion <http://dobreprogramy.pl/iluzion>\n famfamfam <http://famfamfam.com>")
 
-            self.gtkAddTab(notebook, self.LANG[29], self.LANG[30])
+            self.gtkAddTab(notebook, _("License"), _("This program was published on Free and Open Software license.\n\nConditions:\n - You have right to share this program in original or modified form\n - You are free to run this program in any purpose\n - You are free to view and modify the source code in any purpose\n - You have right to translate this program to any language you want\n - You must leave a note about original author when modifying or sharing this software\n - The program must remain on the same license when editing or sharing\n\n\nProgram license: GNU General Public License 3 (GNU GPLv3)"))
 
-            self.gtkAddTab(notebook, self.LANG[31], "English:\n WebNuLL <http://webnull.kablownia.org>\n\nPolski:\n WebNuLL <http://webnull.kablownia.org>")
+            self.gtkAddTab(notebook, _("Translating"), "English:\n WebNuLL <http://webnull.kablownia.org>\n\nPolski:\n WebNuLL <http://webnull.kablownia.org>")
 
 
             if not os.path.isfile("/usr/share/subget/version.xml"):
-                self.gtkAddTab(notebook, self.LANG[65], self.LANG[66])
+                self.gtkAddTab(notebook, _("Version"), _("Version information can't be read because file /usr/share/subget/version.xml is missing."))
             else:
                 if self.versioning == None:
                     try:
@@ -967,9 +978,9 @@ class SubGet:
                     
 
                 if self.versioning == False or self.versioning == None:
-                    self.gtkAddTab(notebook, self.LANG[65], self.LANG[67])
+                    self.gtkAddTab(notebook, _("Version"), _("Version information can't be read because there was a problem parsing file /usr/share/subget/version.xml"))
                 else:
-                    self.gtkAddTab(notebook, self.LANG[65], self.LANG[65]+": "+self.versioning['version']+"\n\n"+self.LANG[68]+":\n"+self.versioning['platforms']+"\n"+self.LANG[69]+":\n "+self.versioning['developers']+"\n"+self.LANG[70]+":\n"+self.versioning['contact'])
+                    self.gtkAddTab(notebook, _("Version"), _("Version")+": "+self.versioning['version']+"\n\n"+_("Supported platforms")+":\n"+self.versioning['platforms']+"\n"+_("Project developers")+":\n "+self.versioning['developers']+"\n"+_("Contact")+":\n"+self.versioning['contact'])
 
             fixed.put(notebook, 12, 160)
 
@@ -1010,7 +1021,7 @@ class SubGet:
                 return False
 
             self.sm = gtk.Window(gtk.WINDOW_TOPLEVEL)
-            self.sm.set_title(self.LANG[39])
+            self.sm.set_title(_("Search"))
             self.sm.set_size_request(350, 180)
             self.sm.set_resizable(False)
             self.sm.set_icon_from_file(self.subgetOSPath+"/usr/share/subget/icons/Subget-logo.png")
@@ -1019,7 +1030,7 @@ class SubGet:
             self.sm.fixed = gtk.Fixed()
 
             # informations
-            self.sm.label = gtk.Label(self.LANG[40])
+            self.sm.label = gtk.Label(_("Select website to search subtitles on.\nNote: not all websites supports searching subtitles by keywords."))
 
             # text query
             self.sm.entry = gtk.Entry()
@@ -1029,7 +1040,7 @@ class SubGet:
 
             # combo box with plugin selection
             self.sm.cb = gtk.combo_box_new_text()
-            self.sm.cb.append_text(self.LANG[41])
+            self.sm.cb.append_text(_("All"))
             self.sm.plugins = dict()
 
             for Plugin in self.pluginsList:
@@ -1050,7 +1061,7 @@ class SubGet:
 
 
             # search button
-            self.sm.searchButton = gtk.Button(self.LANG[39])
+            self.sm.searchButton = gtk.Button(_("Search"))
             self.sm.searchButton.set_size_request(80, 35)
 
             image = gtk.Image() # image for button
@@ -1059,7 +1070,7 @@ class SubGet:
             self.sm.searchButton.connect('clicked', self.gtkDoSearch)
 
             # cancel button
-            self.sm.cancelButton = gtk.Button(self.LANG[42])
+            self.sm.cancelButton = gtk.Button(_("Cancel"))
             self.sm.cancelButton.set_size_request(80, 35)
             self.sm.cancelButton.connect('clicked', self.closeWindow, False, self.sm, 'gtkSearchMenu')
 
@@ -1068,7 +1079,7 @@ class SubGet:
             self.sm.cancelButton.set_image(image)
 
             # list clearing check box
-            self.sm.clearCB = gtk.CheckButton(self.LANG[43])
+            self.sm.clearCB = gtk.CheckButton(_("Clear list before search"))
 
             self.sm.fixed.put(self.sm.label, 10, 8)
             self.sm.fixed.put(self.sm.entry, 10, 60)
@@ -1099,7 +1110,7 @@ class SubGet:
             plugin = self.sm.cb.get_active_text()
 
             # search in all plugins
-            if plugin == self.LANG[41]:
+            if plugin == _("All"):
                 for Plugin in self.pluginsList:
                     try:
                         self.plugins[Plugin].language = language
@@ -1131,7 +1142,7 @@ class SubGet:
                         self.addSubtitlesRow(Result['lang'], Result['title'], Result['domain'], Result['data'], plugin, Result['file'])
 
                 except AttributeError as errno:
-                    print("[plugin:"+self.sm.plugins[plugin]+"] "+self.LANG[45])
+                    print("[plugin:"+self.sm.plugins[plugin]+"] "+_("Searching by keywords is not supported by this plugin"))
                     True # Plugin does not support searching by keywords
     def gtkPreferencesQuit(self):
         self.winPreferences.destroy()
@@ -1152,12 +1163,12 @@ class SubGet:
             Output += "\n"
 
         try:
-            print(self.LANG[59]+" ~/.subget/config")
+            print(_("Saving to")+" ~/.subget/config")
             Handler = open(os.path.expanduser("~/.subget/config"), "wb")
             Handler.write(Output)
             Handler.close()
         except Exception as e:
-            print(self.LANG[70]+" ~/.subget/config, "+self.LANG[71]+": "+str(e))
+            print(_("Contact")+" ~/.subget/config, "+_("Watch with subtitles")+": "+str(e))
 
     def gtkPreferences(self, aid):
         #self.sendCriticAlert("Sorry, this feature is not implemented yet.")
@@ -1168,7 +1179,7 @@ class SubGet:
         self.Windows['preferences'] = True
 
         self.winPreferences = gtk.Window(gtk.WINDOW_TOPLEVEL)
-        self.winPreferences.set_title(self.LANG[62])
+        self.winPreferences.set_title(_("Settings"))
         self.winPreferences.set_resizable(False)
         self.winPreferences.set_size_request(600, 400)
         self.winPreferences.set_icon_from_file(self.subgetOSPath+"/usr/share/subget/icons/Subget-logo.png")
@@ -1213,7 +1224,7 @@ class SubGet:
             self.Config[Section][Option] = Value
             #print("SET to "+str(Value))
         except Exception as e:
-            print(self.LANG[47]+" "+Section+"->"+Option+" = \""+str(Value)+"\". "+self.LANG[2]+": "+str(e))
+            print(_("Error setting configuration variable:")+" "+Section+"->"+Option+" = \""+str(Value)+"\". "+_("Error")+": "+str(e))
 
     def revertBool(self, boolean):
         if boolean == "False" or boolean == False:
@@ -1239,7 +1250,7 @@ class SubGet:
         Path = os.path.expanduser("~/")
 
         GeneralPreferences = gtk.Fixed()
-        Label1 = gtk.Label(self.LANG[48])
+        Label1 = gtk.Label(_("File managers popup menu integration"))
         Label1.set_alignment (0, 0)
         Label1.show()
 
@@ -1285,9 +1296,9 @@ class SubGet:
         GeneralPreferences.put(PCManFM, 10, 83)
 
         # Video player integration
-        Label2 = gtk.Label(self.LANG[49])
+        Label2 = gtk.Label(_("Video Player settings"))
         SelectPlayer = gtk.combo_box_new_text()
-        SelectPlayer.append_text(self.LANG[50])
+        SelectPlayer.append_text(_("System's default"))
         SelectPlayer.append_text("MPlayer")
         SelectPlayer.append_text("SMPlayer")
         SelectPlayer.append_text("VLC")
@@ -1309,7 +1320,7 @@ class SubGet:
             if DefaultPlayer > -1 and DefaultPlayer < 10:
                 SelectPlayer.set_active(DefaultPlayer)
 
-        EnableVideoPlayer = gtk.CheckButton(self.LANG[51])
+        EnableVideoPlayer = gtk.CheckButton(_("Start automaticaly when program runs"))
         EnableVideoPlayer.connect("toggled", self.gtkPreferencesIntegrationPlayMovie)
 
         if not self.dictGetKey(self.Config['afterdownload'], 'playmovie') == False:
@@ -1320,7 +1331,7 @@ class SubGet:
         GeneralPreferences.put(EnableVideoPlayer, 10, 138)
         GeneralPreferences.put(SelectPlayer, 10, 163)
         
-        self.createTab(self.winPreferences.notebook, self.LANG[52], GeneralPreferences)
+        self.createTab(self.winPreferences.notebook, _("System integration"), GeneralPreferences)
 
     def configSetKey(self, Section, Option, Value):
         if not Section in self.Config:
@@ -1341,26 +1352,26 @@ class SubGet:
         Path = os.path.expanduser("~/")
 
         WWS = gtk.Fixed()
-        Label1 = gtk.Label(self.LANG[72])
+        Label1 = gtk.Label(_("\"Watch with subtitles\" settings"))
         Label1.set_alignment (0, 0)
         Label1.show()
 
         # Filemanagers
 
         # ==== Download only option
-        downloadOnly = gtk.CheckButton(self.LANG[73])
+        downloadOnly = gtk.CheckButton(_("Never launch movie, just download subtitles"))
         downloadOnly.connect("pressed", self.configSetButton, 'watch_with_subtitles', 'download_only', downloadOnly, True)
         downloadOnly.set_sensitive(True)
         downloadOnly.set_active(bool(self.configGetKey('watch_with_subtitles', 'download_only')))
 
         # ==== Only preferred language
-        only_preferred_language = gtk.CheckButton(self.LANG[74])
+        only_preferred_language = gtk.CheckButton(_("Download subtitles only in preferred language"))
         only_preferred_language.connect("pressed", self.configSetButton, 'watch_with_subtitles', 'only_preferred_language', only_preferred_language, True)
         only_preferred_language.set_sensitive(True)
         only_preferred_language.set_active(bool(self.configGetKey('watch_with_subtitles', 'only_preferred_language')))
 
         # ==== Selection of preferred language
-        Label2 = gtk.Label(self.LANG[75])
+        Label2 = gtk.Label(_("Preferred language:"))
 
         liststore = gtk.ListStore(gtk.gdk.Pixbuf, str)
         languages = os.listdir("/usr/share/subget/icons/")
@@ -1404,7 +1415,7 @@ class SubGet:
         WWS.put(preferred_language, 150, 75)
         #WWS.put(SelectPlayer, 10, 163)
         
-        self.createTab(self.winPreferences.notebook, self.LANG[71], WWS)
+        self.createTab(self.winPreferences.notebook, _("Watch with subtitles"), WWS)
 
     # Set connection timeouts for all plugins supporting this function
     def gtkPreferencesPlugins_Scale(self, x):
@@ -1418,11 +1429,11 @@ class SubGet:
 
     def gtkPreferencesPlugins(self):
         g = gtk.Fixed()
-        Label = gtk.Label(self.LANG[55])
+        Label = gtk.Label(_("List ordering"))
         Label.set_alignment (0, 0)
 
         # Sorting
-        AllowSorting = gtk.CheckButton(self.LANG[56])
+        AllowSorting = gtk.CheckButton(_("Sort search results by plugins list"))
         if self.configGetKey('plugins', 'list_ordering') == "True":
             AllowSorting.set_active(1)
         else:
@@ -1431,7 +1442,7 @@ class SubGet:
         AllowSorting.connect("toggled", self.configSetButton, 'plugins', 'list_ordering', AllowSorting)
 
         # Global settings
-        Label2 = gtk.Label(self.LANG[57])
+        Label2 = gtk.Label(_("Extensions global settings"))
         adj = gtk.Adjustment(1.0, 1.0, 30.0, 1.0, 1.0, 1.0)
         adj.connect("value_changed", self.gtkPreferencesPlugins_Scale)
         scale = gtk.HScale(adj)
@@ -1443,7 +1454,7 @@ class SubGet:
             adj.set_value(scaleValue)
 
 
-        Label3 = gtk.Label(self.LANG[58]+":")
+        Label3 = gtk.Label(_("Timeout waiting for connection")+":")
         
         # put all elements
         g.put(Label, 10, 8)
@@ -1452,7 +1463,7 @@ class SubGet:
         g.put(Label3, 20, 95)
         g.put(scale, 80, 115)
 
-        self.createTab(self.winPreferences.notebook, self.LANG[37], g)
+        self.createTab(self.winPreferences.notebook, _("Plugins"), g)
 
 
     def defaultPlayerSelection(self, widget):
@@ -1489,7 +1500,7 @@ class SubGet:
         # Create a new window
         self.window = gtk.Window(gtk.WINDOW_TOPLEVEL)
         self.screen = self.window.get_screen()
-        self.window.set_title(self.LANG[10])
+        self.window.set_title(_("Download subtitles"))
         self.window.set_resizable(True)
 
         # make the application bigger if it will fit on screen
@@ -1522,18 +1533,18 @@ class SubGet:
 
         # "File" menu
         fileMenu = gtk.Menu()
-        fileMenuItem = gtk.MenuItem(self.LANG[22])
+        fileMenuItem = gtk.MenuItem(_("File"))
         fileMenuItem.set_submenu(fileMenu)
         mb.append(fileMenuItem)
 
         # "Tools" menu
         toolsMenu = gtk.Menu()
-        toolsMenuItem = gtk.MenuItem(self.LANG[32])
+        toolsMenuItem = gtk.MenuItem(_("Tools"))
         toolsMenuItem.set_submenu(toolsMenu)
         mb.append(toolsMenuItem)
 
         # "Plugins list"
-        pluginMenu = gtk.ImageMenuItem(self.LANG[37], agr)
+        pluginMenu = gtk.ImageMenuItem(_("Plugins"), agr)
         key, mod = gtk.accelerator_parse("<Control>P")
         pluginMenu.add_accelerator("activate", agr, key,mod, gtk.ACCEL_VISIBLE)
         pluginMenu.connect("activate", self.gtkPluginMenu)
@@ -1548,7 +1559,7 @@ class SubGet:
         toolsMenu.append(pluginMenu)
 
         # "About"
-        infoMenu = gtk.ImageMenuItem(self.LANG[23], agr) # gtk.STOCK_CDROM
+        infoMenu = gtk.ImageMenuItem(_("About Subget"), agr) # gtk.STOCK_CDROM
         key, mod = gtk.accelerator_parse("<Control>I")
         infoMenu.add_accelerator("activate", agr, key,mod, gtk.ACCEL_VISIBLE)
         infoMenu.connect("activate", self.gtkAboutMenu)
@@ -1564,7 +1575,7 @@ class SubGet:
         toolsMenu.append(infoMenu)
 
         # "Clear"
-        clearMenu = gtk.ImageMenuItem(self.LANG[44])
+        clearMenu = gtk.ImageMenuItem(_("Clear list"))
         clearMenu.connect("activate", lambda b: self.cleanUpResults())
 
         try:
@@ -1611,9 +1622,9 @@ class SubGet:
 
 
         # column list
-        self.tvcolumn = gtk.TreeViewColumn(self.LANG[12])
-        self.tvcolumn1 = gtk.TreeViewColumn(self.LANG[13])
-        self.tvcolumn2 = gtk.TreeViewColumn(self.LANG[14])
+        self.tvcolumn = gtk.TreeViewColumn(_("Language"))
+        self.tvcolumn1 = gtk.TreeViewColumn(_("Name of release"))
+        self.tvcolumn2 = gtk.TreeViewColumn(_("Server"))
 
         # Resizable attributes
         self.tvcolumn1.set_resizable(True)
@@ -1651,7 +1662,7 @@ class SubGet:
 
         # Create buttons
         self.DownloadButton = gtk.Button(stock=gtk.STOCK_GO_DOWN)
-        self.DownloadButton.set_label(self.LANG[16])
+        self.DownloadButton.set_label(_("Download"))
         image = gtk.Image()
         image.set_from_stock("gtk-go-down", gtk.ICON_SIZE_BUTTON)
         self.DownloadButton.set_image(image)
@@ -1661,7 +1672,7 @@ class SubGet:
         self.DownloadButton.connect('clicked', lambda b: self.GTKDownloadSubtitles())
 
         # Videoplayer checkbutton
-        self.VideoPlayer = gtk.CheckButton(self.LANG[53])
+        self.VideoPlayer = gtk.CheckButton(_("Start video player"))
         if not self.dictGetKey(self.Config['afterdownload'], 'playmovie') == False: # TRUE, playmovie active
             self.VideoPlayer.set_active(1)
         else:
@@ -1708,7 +1719,7 @@ class SubGet:
         self.window.show_all()
 
         #else:
-            #    print self.LANG[15]
+            #    print(_("Sorry, GUI mode is not fully available yet."))
 
     ##### DRAG & DROP SUPPORT #####
     def motion_cb(self, wid, context, x, y, time):
@@ -1801,7 +1812,7 @@ class SubGet:
                         if Results[0][0]["lang"] == language:
                             FileTXT = File+".txt"
                             exec("DLResults = self.plugins[\""+Plugin+"\"].download_by_data(Results[0][0]['data'], FileTXT)")
-                            print(LANG[19]+" "+str(DLResults))
+                            print(_("Subtitles saved to")+" "+str(DLResults))
                             Found = True
                             break
                         elif preferredData != None:
@@ -1812,7 +1823,7 @@ class SubGet:
         if Found == False and preferredData == True:
             FileTXT = File+".("+str(preferredData['lang'])+").txt"
             exec("DLResults = plugins[\""+Plugin+"\"].download_by_data(prefferedData['data'], FileTXT)")
-            print(LANG[19]+" "+str(DLResults)+", "+LANG[20])
+            print(_("Subtitles saved to")+" "+str(DLResults)+", "+_("but not in your preferred language"))
 
 if __name__ == "__main__":
     SubgetMain = SubGet()

@@ -5,7 +5,7 @@ import shutil, os
 def Nautilus(Widget, Subget, Path):
     """ Nautilus integration """
 
-    theFile = Path+"/.gnome2/nautilus-scripts/"+Subget.LANG[10]
+    theFile = Path+"/.gnome2/nautilus-scripts/"+Subget._("Download subtitles")
 
     # check if Nautilus is installed
     if not os.path.isdir(Path+"/.gnome2/nautilus-scripts/"):
@@ -19,7 +19,7 @@ def Nautilus(Widget, Subget, Path):
             shutil.copyfile("/usr/share/subget/fm-integration/gnome.sh", theFile)
 
             if Subget.configGetKey('watch_with_subtitles', 'enabled') == "True":
-                shutil.copyfile("/usr/share/subget/fm-integration/gnome-wws.sh",  Path+"/.gnome2/nautilus-scripts/"+Subget.LANG[71])
+                shutil.copyfile("/usr/share/subget/fm-integration/gnome-wws.sh",  Path+"/.gnome2/nautilus-scripts/"+Subget._("Watch with subtitles"))
 
             os.system("chmod +x \""+theFile+"\"")
             Subget.Config['filemanagers']['gnome'] = True
@@ -30,8 +30,8 @@ def Nautilus(Widget, Subget, Path):
     else:
         try:
             if Subget.configGetKey('watch_with_subtitles', 'enabled') == "True":
-                if os.path.isfile(Path+"/.gnome2/nautilus-scripts/"+Subget.LANG[71]):
-                    os.remove(Path+"/.gnome2/nautilus-scripts/"+Subget.LANG[71])
+                if os.path.isfile(Path+"/.gnome2/nautilus-scripts/"+Subget._("Watch with subtitles")):
+                    os.remove(Path+"/.gnome2/nautilus-scripts/"+Subget._("Watch with subtitles"))
 
             os.remove(theFile)
             Subget.Config['filemanagers']['gnome'] = False
@@ -137,9 +137,9 @@ def ThunarUCA(Widget, Subget, Path):
         Subget.Config['filemanagers']['xfce'] = True
 
         if Subget.configGetKey('watch_with_subtitles', 'enabled') == "True":
-            XML = XML.replace('</actions>', '<action><icon>text-plain</icon><name>'+Subget.LANG[10]+'</name><command>/usr/bin/subget %F</command><description></description><patterns>*</patterns><startup-notify/><video-files/></action><action><icon>text-plain</icon><name>'+Subget.LANG[71]+'</name><command>/usr/bin/subget -w %F</command><description></description><patterns>*</patterns><startup-notify/><video-files/></action></actions>')
+            XML = XML.replace('</actions>', '<action><icon>text-plain</icon><name>'+Subget._("Download subtitles")+'</name><command>/usr/bin/subget %F</command><description></description><patterns>*</patterns><startup-notify/><video-files/></action><action><icon>text-plain</icon><name>'+Subget._("Watch with subtitles")+'</name><command>/usr/bin/subget -w %F</command><description></description><patterns>*</patterns><startup-notify/><video-files/></action></actions>')
         else:
-            XML = XML.replace('</actions>', '<action><icon>text-plain</icon><name>'+Subget.LANG[10]+'</name><command>/usr/bin/subget %F</command><description></description><patterns>*</patterns><startup-notify/><video-files/></action></actions>')
+            XML = XML.replace('</actions>', '<action><icon>text-plain</icon><name>'+Subget._("Download subtitles")+'</name><command>/usr/bin/subget %F</command><description></description><patterns>*</patterns><startup-notify/><video-files/></action></actions>')
 
         print("[thunar] Integration active")
 
