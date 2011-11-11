@@ -1308,6 +1308,7 @@ class SubGet:
         SelectPlayer.append_text("GMPlayer")
         SelectPlayer.append_text("GNOME Mplayer")
         SelectPlayer.append_text("Rhythmbox")
+        SelectPlayer.append_text("UMPlayer")
         SelectPlayer.connect("changed", self.defaultPlayerSelection)
 
 
@@ -1317,7 +1318,7 @@ class SubGet:
             SelectPlayer.set_active(0)
         else:
             DefaultPlayer = int(DefaultPlayer)
-            if DefaultPlayer > -1 and DefaultPlayer < 10:
+            if DefaultPlayer > -1 and DefaultPlayer < 11:
                 SelectPlayer.set_active(DefaultPlayer)
 
         EnableVideoPlayer = gtk.CheckButton(_("Start automaticaly when program runs"))

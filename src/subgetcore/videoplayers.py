@@ -26,6 +26,8 @@ def Spawn(Subget, VideoFile, Subtitles):
         Command = "/usr/bin/gnome-mplayer \""+VideoFile+"\" --subtitle=\""+Subtitles+"\" > /dev/null 2> /dev/null &"
     elif DefaultPlayer == 9: # Rhythmbox
         Command = "/usr/bin/rhythmbox \""+VideoFile+"\" > /dev/null 2> /dev/null &"
+    elif DefaultPlayer == 10: # Rhythmbox
+        Command = "/usr/bin/umplayer \""+VideoFile+"\" -sub \""+Subtitles+"\" > /dev/null 2> /dev/null &"
 
     if not Command == "":
         print("Executing: "+Command)
