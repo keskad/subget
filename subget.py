@@ -72,10 +72,6 @@ def usage():
     print(_("subget for GNU/Linux. Simple Subtitle Downloader for shell and GUI.\nUsage: subget [long GNU option] [option] first-file, second-file, ...\n\n\n --help                : this message\n --console, -c         : show results in console, not in graphical user interface\n --language, -l        : specify preffered language\n --quick, -q           : grab first result and download"))
     print("")
 
-def exechelper(command):
-    exec(command)
-
-
 class SubGet:
     dialog=None
     subtitlesList=list()
@@ -287,7 +283,10 @@ class SubGet:
             return False
 
 
-        Results = self.plugins[Plugin].download_list(File)
+        if self.plugins[Plugin].PluginInfo['API'] == 1:
+            Results = self.plugins[Plugin].download_list(File)
+        elif self.plugins[Plugin].PluginInfo['API'] == 2:
+            Results = self.plugins[Plugin].instance.download_list(File).output()
 
         for Result in Results:
             if Result == False:
@@ -502,8 +501,10 @@ class SubGet:
                 self.queueCount = (self.queueCount - 1)
                 return
 
-            Results = self.plugins[Plugin].language = language
-            Results = self.plugins[Plugin].download_list(self.files)
+            if self.plugins[Plugin].PluginInfo['API'] == 1:
+                Results = self.plugins[Plugin].download_list(self.files)
+            elif self.plugins[Plugin].PluginInfo['API'] == 2:
+                Results = self.plugins[Plugin].instance.download_list(self.files).output()
 
             if Results == None:
                 print("[plugin:"+Plugin+"] "+_("ERROR: Cannot import"))
@@ -515,11 +516,12 @@ class SubGet:
 
                     for Movie in Result:
                         try:
-                            if Movie.has_key("title"):
+                            if "title" in Movie:
                                 self.addSubtitlesRow(Movie['lang'], Movie['title'], Movie['domain'], Movie['data'], Plugin, Movie['file'])
                                 print("[plugin:"+Plugin+"] "+_("found subtitles")+" - "+Movie['title'])
-                        except AttributeError:
+                        except AttributeError as e:
                              print("[plugin:"+Plugin+"] "+_("no any subtitles found"))
+                             print(e)
 
             # mark job as done
             self.queueCount = (self.queueCount - 1)
@@ -615,7 +617,11 @@ class SubGet:
                  w.show_all()
 
                  Results = self.plugins[Plugin].language = language
-                 Results = self.plugins[Plugin].download_by_data(self.subtitlesList[SelectID]['data'], filename)
+
+                 if self.plugins[Plugin].PluginInfo['API'] == 1:
+                    Results = self.plugins[Plugin].download_by_data(self.subtitlesList[SelectID]['data'], filename)
+                 elif self.plugins[Plugin].PluginInfo['API'] == 2:
+                    Results = self.plugins[Plugin].instance.download_by_data(self.subtitlesList[SelectID]['data'], filename)
 
                  if self.VideoPlayer.get_active() == True:
                     VideoFile = self.dictGetKey(self.subtitlesList[SelectID]['data'], 'file')
@@ -666,9 +672,17 @@ class SubGet:
             # load the plugin
             try:
                 exec("import subgetlib."+Plugin)
-                exec("self.plugins[\""+Plugin+"\"] = subgetlib."+Plugin)
-                self.plugins[Plugin].loadSubgetObject(self)
-                self.plugins[Plugin].subgetcore = subgetcore
+                exec("self.plugins[Plugin] = subgetlib."+Plugin)
+
+                # old API v1
+                if self.plugins[Plugin].PluginInfo['API'] == 1:
+                    self.plugins[Plugin].loadSubgetObject(self)
+                    self.plugins[Plugin].subgetcore = subgetcore
+
+                # compability with new API v2
+                elif self.plugins[Plugin].PluginInfo['API'] == 2:
+                    exec("self.plugins[Plugin] = subgetlib."+Plugin+"")
+                    exec("self.plugins[Plugin].instance = subgetlib."+Plugin+".PluginMain(self)")
 
                 # refresh the list
                 if not liststore == None:
@@ -1775,7 +1789,11 @@ class SubGet:
                     continue
 
                 Results = self.plugins[Plugin].language = language
-                Results = self.plugins[Plugin].download_list(files)
+
+                if self.plugins[Plugin].PluginInfo['API'] == 1:
+                    Results = self.plugins[Plugin].download_list(files)
+                elif self.plugins[Plugin].PluginInfo['API'] == 2:
+                    Results = self.plugins[Plugin].instance.download_list(files).output()
 
                 if Results == None:
                     continue
@@ -1804,7 +1822,11 @@ class SubGet:
                 fileToList.append(File)
 
                 Results = self.plugins[Plugin].language = language
-                Results = self.plugins[Plugin].download_list(fileToList)
+
+                if self.plugins[Plugin].PluginInfo['API'] == 1:
+                    Results = self.plugins[Plugin].download_list(fileToList)
+                elif self.plugins[Plugin].PluginInfo['API'] == 2:
+                    Results = self.plugins[Plugin].instance.download_list(fileToList).output()
 
                 if Results != None:
                     if type(Results[0]).__name__ == "dict":
@@ -1812,7 +1834,12 @@ class SubGet:
                     else:
                         if Results[0][0]["lang"] == language:
                             FileTXT = File+".txt"
-                            exec("DLResults = self.plugins[\""+Plugin+"\"].download_by_data(Results[0][0]['data'], FileTXT)")
+
+                            if self.plugins[Plugin].PluginInfo['API'] == 1:
+                                DLResults = self.plugins[Plugin].download_by_data(Results[0][0]['data'], FileTXT)
+                            elif self.plugins[Plugin].PluginInfo['API'] == 2:
+                                DLResults = self.plugins[Plugin].instance.download_by_data(Results[0][0]['data'], FileTXT)
+
                             print(_("Subtitles saved to")+" "+str(DLResults))
                             Found = True
                             break
@@ -1823,7 +1850,12 @@ class SubGet:
                  
         if Found == False and preferredData == True:
             FileTXT = File+".("+str(preferredData['lang'])+").txt"
-            exec("DLResults = plugins[\""+Plugin+"\"].download_by_data(prefferedData['data'], FileTXT)")
+
+            if self.plugins[Plugin].PluginInfo['API'] == 1:
+                DLResults = self.plugins[Plugin].download_by_data(prefferedData['data'], FileTXT)
+            elif self.plugins[Plugin].PluginInfo['API'] == 2:
+                DLResults = self.plugins[Plugin].instance.download_by_data(prefferedData['data'], FileTXT)
+
             print(_("Subtitles saved to")+" "+str(DLResults)+", "+_("but not in your preferred language"))
 
 if __name__ == "__main__":

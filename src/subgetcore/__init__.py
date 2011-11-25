@@ -1,6 +1,6 @@
 """ Subget core library """
 
-import filemanagers, videoplayers, subgetbus, os, re
+import filemanagers, videoplayers, subgetbus, os, re, httplib
 
 # fixes episode or season number for TV series eg. 1x3 => 01x03
 def addZero(number):
@@ -62,3 +62,67 @@ def languageFromName(Name):
     else:
         return Name
 
+
+class SubtitlesList:
+    """ Creates a list of subtitles, easy to use in plugins """
+
+    results = list()
+
+    def append(self, language, site, title, url, data, domain, File):
+        """ Adds new element to list of subtitles """
+
+        self.results.append({'lang': language, 'site': site, 'title': title, 'url': url, 'data': data, 'domain': domain, 'file': File})
+
+    def output(self):
+        """ Called by Subget to get list of Subtitles """
+
+        results = list()
+        
+        for File in self.results:
+            results.append(File)
+
+        return [results]
+
+    
+
+
+class SubgetPlugin:
+    Subget = None
+    HTTPTimeout = 3
+
+    def removeNonAscii(s): 
+        """ Removes non-ascii characters from a string """
+
+        return "".join(filter(lambda x: ord(x)<128, s))
+
+    def __init__(self, SubgetLib=None):
+        self.Subget = SubgetLib
+        self.HTTPTimeout = self.Subget.configGetKey('plugins', 'timeout')
+
+        if self.HTTPTimeout == False or self.HTTPTimeout == None:
+            self.HTTPTimeout = 3
+
+    def temporaryPath(self, fileName):
+        """ Determinates temporary paths """
+
+        if os.name == "nt": # WINDOWS "THE PROBLEMATIC OS"
+            return os.path.expanduser("~").replace("\\\\", "/")+"/"+os.path.basename(fileName)+".zip.tmp"
+        else: # UNIX, Linux, *BSD
+            return "/tmp/"+os.path.basename(fileName+".zip")
+
+
+    def HTTPGet(self, Server, Request):
+        """ Do a simple HTTP GET request
+            Returns: False, False on error
+        """
+
+        try:
+            conn = httplib.HTTPConnection(Server, 80, timeout=float(self.HTTPTimeout))
+            conn.request("GET", Request)
+            response = conn.getresponse()
+            data = response.read()
+        except Exception as e:
+            print("[SubgetPlugin] Connection timed out, "+str(e))
+            return False, False
+
+        return response, data

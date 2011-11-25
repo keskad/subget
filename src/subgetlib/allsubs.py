@@ -1,114 +1,100 @@
-import httplib, urllib, time, os, hashlib, subprocess, re, zipfile
+import httplib, urllib, time, os, hashlib, subprocess, re, zipfile, subgetcore
 from xml.dom import minidom
-
-####
-PluginInfo = { 'Requirements' : { 'OS' : 'All'}, 'API': 1, 'Authors': 'webnull', 'domain': 'allsubs.org'  }
-subgetObject=""
-subgetcore = None
 
 ### Specification:
 # http://napisy24.pl/search.php?str=QUERY - searching
 # http://napisy24.pl/download/ID/ - downloading (ZIP format)
 
-def removeNonAscii(s): return "".join(filter(lambda x: ord(x)<128, s))
+####
+PluginInfo = { 'Requirements' : { 'OS' : 'All'}, 'API': 2, 'Authors': 'webnull', 'domain': 'allsubs.org'  }
 
-def loadSubgetObject(x):
-    global subgetObject
+class PluginMain(subgetcore.SubgetPlugin):
 
-    subgetObject = x
+    def download_list(self, files, query=''):
+        #results = list()
+        #for File in files:
+        #    results.append(self.check_exists(File))
 
-def download_list(files, query=''):
-    results = list()
+        results = subgetcore.SubtitlesList()
 
-    for File in files:
-        results.append(check_exists(File))
+        for File in files:
+            self.check_exists(File, results)
 
-    return results
+        print results.output()
 
-def getListOfSubtitles(movieRealName, File):
-    try:
-        conn = httplib.HTTPConnection('api.allsubs.org', 80, timeout=3)
-        conn.request("GET", "/index.php?limit=20&search="+urllib.quote_plus(movieRealName))
-        response = conn.getresponse()
-        data = response.read()
-    except Exception:
-        print "[plugin:allsubs] Connection timed out"
-        return False
+        return results
 
-    nodes = list()
+    def getListOfSubtitles(self, movieRealName, File, resultsClass):
+        response, data = self.HTTPGet("api.allsubs.org", "/index.php?limit=20&search="+urllib.quote_plus(movieRealName))
 
-    dom = minidom.parseString(data)
+        if response == False or data == False:
+            return False
 
-    resultsCount = int(dom.getElementsByTagName('found_results').item(0).firstChild.data)
+        dom = minidom.parseString(data)
 
-    Results = dom.getElementsByTagName('item')
+        resultsCount = int(dom.getElementsByTagName('found_results').item(0).firstChild.data)
 
-    for node in Results:
-        try:
-            Title = str(node.getElementsByTagName('title').item(0).firstChild.data)
-            Download = str(node.getElementsByTagName('link').item(0).firstChild.data).replace("subs-download", "subs-download2")
-            Languages = str(node.getElementsByTagName('languages').item(0).firstChild.data)
-            Languages = Languages.split(",")
-            Language = Languages[0]
-            Count = (len(str(node.getElementsByTagName('files_in_archive').item(0).firstChild.data).split('|'))-1)
-        except AttributeError:
-            continue
-   
-        nodes.append({'lang': str(Language).lower(), 'site' : 'allsubs.org', 'title' : Title+" ("+str(Count)+")", 'url' : Download, 'data': {'file': File, 'url': Download, 'lang': str(Language).lower()}, 'domain': 'allsubs.org', 'file': File})
+        Results = dom.getElementsByTagName('item')
 
-    return nodes
+        for node in Results:
+            try:
+                Title = str(node.getElementsByTagName('title').item(0).firstChild.data)
+                Download = str(node.getElementsByTagName('link').item(0).firstChild.data).replace("subs-download", "subs-download2")
+                Languages = str(node.getElementsByTagName('languages').item(0).firstChild.data)
+                Languages = Languages.split(",")
+                Language = Languages[0]
+                Count = (len(str(node.getElementsByTagName('files_in_archive').item(0).firstChild.data).split('|'))-1)
+            except AttributeError:
+                continue
+       
+            resultsClass.append(str(Language).lower(), 'allsubs.org', Title+" ("+str(Count)+")", Download, {'file': File, 'url': Download, 'lang': str(Language).lower()}, 'allsubs.org', File)
 
-def search_by_keywords(Keywords):
-    return check_exists(Keywords)
+        return True
 
-def check_exists(File):
-    global subgetObject
-    global language
+    def search_by_keywords(self, Keywords):
+        return self.check_exists(Keywords)
 
-    if File != None:
-        movieName = subgetcore.getSearchKeywords(os.path.basename(File))
-         
-        if movieName != False:
-            subtitleList = getListOfSubtitles(movieName, File)
-            return subtitleList
+    def check_exists(self, File, results):
+        global subgetObject
+        global language
+
+        if File != None:
+            movieName = subgetcore.getSearchKeywords(os.path.basename(File))
+             
+            if movieName != False:
+                subtitleList = self.getListOfSubtitles(movieName, File, results)
+                return True
+            else:
+                return {'errInfo': "NOT_FOUND"}
+
         else:
             return {'errInfo': "NOT_FOUND"}
 
-    else:
-        return {'errInfo': "NOT_FOUND"}
 
+    def download_by_data(self, File, SavePath):
+        response, data = self.HTTPGet('www.allsubs.org', File['url'].replace('http://www.allsubs.org', ''))
 
-def download_by_data(File, SavePath):
-    try:
-        conn = httplib.HTTPConnection('www.allsubs.org', 80, timeout=3)
-        conn.request("GET", File['url'].replace('http://www.allsubs.org', ''))
-        response = conn.getresponse()
-        data = response.read()
-    except Exception as e:
-        print "[plugin:allsubs] Error: "+str(e)
-        return False
+        if response == False or data == False:
+            return False
 
-    if os.name == "nt": # WINDOWS "THE PROBLEMATIC OS"
-        TMPName = os.path.expanduser("~").replace("\\\\", "/")+"/"+os.path.basename(File['file'])+".zip.tmp"
-    else: # UNIX, Linux, *BSD
-        TMPName = "/tmp/"+os.path.basename(File['file']+".zip")
+        TMPName = self.temporaryPath(File['file'])
 
-    Handler = open(TMPName, "wb")
-    Handler.write(data)
-    Handler.close()
-
-    z = zipfile.ZipFile(TMPName)
-    ListOfNames = z.namelist()
-
-    # single file in archive
-    if len(ListOfNames) == 1:
-        Handler = open(SavePath, "wb")
-        Handler.write(z.read(ListOfNames[0]))
+        Handler = open(TMPName, "wb")
+        Handler.write(data)
         Handler.close()
-        z.close()
-    else:
-        z.extractall(os.path.dirname(SavePath))
-        z.close()
 
-    #os.remove(TMPName)
-    return SavePath
+        z = zipfile.ZipFile(TMPName)
+        ListOfNames = z.namelist()
+
+        # single file in archive
+        if len(ListOfNames) == 1:
+            Handler = open(SavePath, "wb")
+            Handler.write(z.read(ListOfNames[0]))
+            Handler.close()
+            z.close()
+        else:
+            z.extractall(os.path.dirname(SavePath))
+            z.close()
+
+        #os.remove(TMPName)
+        return SavePath
