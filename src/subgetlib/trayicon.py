@@ -1,9 +1,5 @@
 import subgetcore, gtk, sys
 
-### Specification:
-# http://napisy24.pl/search.php?str=QUERY - searching
-# http://napisy24.pl/download/ID/ - downloading (ZIP format)
-
 ####
 PluginInfo = {'Requirements' : { 'OS' : 'All'}, 'API': 2, 'Authors': 'webnull', 'domain': '', 'type': 'extension', 'isPlugin': False}
 
