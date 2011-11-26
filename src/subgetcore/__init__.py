@@ -83,7 +83,34 @@ class SubtitlesList:
 
         return [results]
 
-    
+class Hooking:
+    Hooks = dict() # list of all hooks
+
+    def connectHook(self, name, method):
+        """ Connect to hook's socket """
+        if not name in self.Hooks:
+            self.Hooks[name] = list()
+
+        self.Hooks[name].append(method)
+
+    def getAllHooks(self, name):
+        """ Get all hooked methods to execute them """
+
+        if name in self.Hooks:
+            return self.Hooks[name]
+
+        return False
+
+    def executeHooks(self, hooks):
+        """ Executes all functions from list. Takes self.getAllHooks as hooks """
+
+        if not hooks == False:
+            for Hook in hooks:
+                Hook(True)
+
+            return True
+
+        return False        
 
 
 class SubgetPlugin:

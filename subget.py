@@ -85,6 +85,11 @@ class SubGet:
     locks['reorder'] = False
     disabledPlugins = list()
     versioning = None
+    Hooking = None
+
+    def __init__(self):
+        # initialize hooking
+        self.Hooking = subgetcore.Hooking()
 
     def doPluginsLoad(self, args):
         global pluginsDir, plugins
@@ -365,6 +370,9 @@ class SubGet:
         self.queueCount = len(self.pluginsList)
 
         for Plugin in self.pluginsList:
+            if not self.isPlugin(Plugin):
+                continue
+
             current = Thread(target=self.textmodeDL, args=(Plugin,args))
             current.setDaemon(False)
             current.start()
@@ -477,6 +485,9 @@ class SubGet:
             self.queueCount = (self.queueCount + len(self.pluginsList))
 
             for Plugin in self.pluginsList:
+                if not self.isPlugin(Plugin):
+                    continue
+
                 current = Thread(target=self.GTKCheckForSubtitles, args=(Plugin,))
                 current.setDaemon(True)
                 current.start()
@@ -684,6 +695,14 @@ class SubGet:
                     exec("self.plugins[Plugin] = subgetlib."+Plugin+"")
                     exec("self.plugins[Plugin].instance = subgetlib."+Plugin+".PluginMain(self)")
 
+                    if "_pluginInit" in dir(self.plugins[Plugin].instance):
+                        self.plugins[Plugin].instance._pluginInit()
+
+
+
+                if not "type" in self.plugins[Plugin].PluginInfo:
+                    self.plugins[Plugin].PluginInfo['type'] = 'normal'
+
                 # refresh the list
                 if not liststore == None:
                     liststore.clear() 
@@ -697,6 +716,14 @@ class SubGet:
                 return False
 
         elif Action == 'deactivate':
+            if self.plugins[Plugin] == 'disabled':
+                return True
+
+            try:
+                self.plugins[Plugin].instance._pluginDestroy()
+            except Exception:
+                pass
+
             self.plugins[Plugin] = 'Disabled'
 
             # refresh the list
@@ -782,11 +809,24 @@ class SubGet:
                 except Exception:
                     Packages = _("Unknown")
 
+                if self.plugins[Plugin] == "Disabled":
+                    pixbuf = gtk.gdk.pixbuf_new_from_file(self.subgetOSPath+'/usr/share/subget/icons/plugin-disabled.png')
+                    liststore.append([pixbuf, Plugin, OS, str(Author), str(API)])
+                    continue
+
+                if not "PluginInfo" in dir(self.plugins[Plugin]):
+                    pixbuf = gtk.gdk.pixbuf_new_from_file(self.subgetOSPath+'/usr/share/subget/icons/error.png') 
+                    liststore.append([pixbuf, Plugin, OS, str(Author), str(API)])
+                    print("Not callable: "+Plugin)
+                    continue
+
+                if self.plugins[Plugin].PluginInfo['type'] == 'extension':
+                    pixbuf = gtk.gdk.pixbuf_new_from_file(self.subgetOSPath+'/usr/share/subget/icons/extension.png') 
+                    liststore.append([pixbuf, Plugin, OS, str(Author), str(API)])
+                    continue
+
                 if type(self.plugins[Plugin]).__name__ == "module":
                     pixbuf = gtk.gdk.pixbuf_new_from_file(self.subgetOSPath+'/usr/share/subget/icons/plugin.png') 
-                    liststore.append([pixbuf, Plugin, OS, str(Author), str(API)])
-                elif self.plugins[Plugin] == "Disabled":
-                    pixbuf = gtk.gdk.pixbuf_new_from_file(self.subgetOSPath+'/usr/share/subget/icons/plugin-disabled.png')
                     liststore.append([pixbuf, Plugin, OS, str(Author), str(API)])
                 else:
                     pixbuf = gtk.gdk.pixbuf_new_from_file(self.subgetOSPath+'/usr/share/subget/icons/error.png') 
@@ -882,6 +922,12 @@ class SubGet:
             # create new plugins list
             for Item in liststore:
                 self.pluginsList.append(str(Item[1])) # add sorted elements
+
+                # Skip extensions
+                if "PluginInfo" in dir(self.plugins[str(Item[1])]): 
+                    if self.plugins[str(Item[1])].PluginInfo['type'] == 'extension':
+                        continue
+
                 Order += str(Item[1])+","
 
             if not "plugins" in self.Config:
@@ -1028,6 +1074,24 @@ class SubGet:
         Window.destroy()
         self.Windows[ID] = False
 
+    def isPlugin(self, Plugin):
+        if type(self.plugins[Plugin]).__name__ != "module":
+            return False
+
+        if not "PluginInfo" in dir(self.plugins[Plugin]):
+            return False
+
+        if self.plugins[Plugin].PluginInfo['type'] == 'extension':
+            if "isPlugin" in self.plugins[Plugin].PluginInfo:
+                if self.plugins[Plugin].PluginInfo['isPlugin'] == True or self.plugins[Plugin].PluginInfo['isPlugin'] == "True":
+                    return True
+                else:
+                    return False
+            else:
+                return False
+
+        return True
+
     def gtkSearchMenu(self, arg):
             if self.dictGetKey(self.Windows, 'gtkSearchMenu') == False:
                 self.Windows['gtkSearchMenu'] = True
@@ -1058,7 +1122,7 @@ class SubGet:
             self.sm.plugins = dict()
 
             for Plugin in self.pluginsList:
-                if type(self.plugins[Plugin]).__name__ != "module":
+                if not self.isPlugin(Plugin):
                     continue
 
                 # does plugin inform about its domain?
@@ -1127,6 +1191,9 @@ class SubGet:
             if plugin == _("All"):
                 for Plugin in self.pluginsList:
                     try:
+                        if not self.isPlugin(Plugin):
+                            continue
+
                         self.plugins[Plugin].language = language
                         Results = self.plugins[Plugin].search_by_keywords(query) # query the plugin for results
 
@@ -1732,6 +1799,11 @@ class SubGet:
         
 
         self.window.show_all()
+        
+        try:
+            self.Hooking.executeHooks(self.Hooking.getAllHooks("onGTKWindowOpen"))
+        except Exception as e:
+            print("Error: Cannot execute hook onGTKWindowOpen")
 
         #else:
             #    print(_("Sorry, GUI mode is not fully available yet."))
@@ -1785,7 +1857,7 @@ class SubGet:
             for Plugin in self.pluginsList:
                 State = self.plugins[Plugin]
 
-                if type(State).__name__ != "module":
+                if not self.isPlugin(Plugin):
                     continue
 
                 Results = self.plugins[Plugin].language = language
@@ -1813,9 +1885,9 @@ class SubGet:
 
         for File in files:
             for Plugin in plugins:
-                exec("State = self.plugins[\""+Plugin+"\"]")
+                State = self.plugins[Plugin]
 
-                if type(State).__name__ != "module":
+                if not self.isPlugin(Plugin):
                     continue
 
                 fileToList = list()
