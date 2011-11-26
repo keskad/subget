@@ -11,7 +11,9 @@ class PluginMain(subgetcore.SubgetPlugin):
 
         if len(sys.argv) == 1:
             # hide window on program startup?
-            if self.Subget.configGetKey('startup', 'hide_at_startup') == True:
+            hide_at_startup = self.Subget.configGetKey('startup', 'hide_at_startup')
+
+            if hide_at_startup == True or hide_at_startup == "True":
                 self.Subget.window.hide()
 
         self.initializeIcon()

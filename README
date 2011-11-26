@@ -19,6 +19,9 @@ Video Player option allows easily play movie using favorite media player right a
 Requirements: GTK+, Python 2.6/2.7/3.0/3.1/3.2, X11, PyGTK, python-dbus, python-gettext, p7zip (Gentoo: app-arch/p7zip, Debian/Ubuntu: p7zip-full)
 
 * Changelog:
+25.11.2011 (v.0.9.9.2) <webnull.www@gmail.com>:
+    * Fixed "hide_at_startup" configuration variable
+
 25.11.2011 (v.0.9.9.1) <webnull.www@gmail.com>:
     + Added hooking to Subget (Subget.Hooking in application, self.Subget.Hooking inside of plugin, subgetcore.Hooking as class)
     + "trayicon" plugin (very simple at now) - configurable via "[startup] hide_at_startup = True/False"
