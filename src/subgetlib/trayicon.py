@@ -5,13 +5,14 @@ PluginInfo = {'Requirements' : { 'OS' : 'All'}, 'API': 2, 'Authors': 'webnull', 
 
 class PluginMain(subgetcore.SubgetPlugin):
     iconInitialized = False
+    lastWindowPosition = None # Remember window's last position
 
     def _onGTKLoopEnd(self, Data):
         """ Start when GTK window appears """
 
         if len(sys.argv) == 1:
             # hide window on program startup?
-            hide_at_startup = self.Subget.configGetKey('startup', 'hide_at_startup')
+            hide_at_startup = self.Subget.configGetKey('trayicon', 'hide_at_startup')
 
             if hide_at_startup == True or hide_at_startup == "True":
                 self.Subget.window.hide()
@@ -34,8 +35,19 @@ class PluginMain(subgetcore.SubgetPlugin):
 
         if visible == False:
             self.Subget.window.set_visible(True)
+
+            #### Restore last window position
+            remember_window_position = self.Subget.configGetKey('trayicon', 'remember_window_position')
+
+            if remember_window_position == True or remember_window_position == "True":
+                if self.lastWindowPosition != None:
+                    self.Subget.window.set_uposition(self.lastWindowPosition[0], self.lastWindowPosition[1])
         else:
+            self.lastWindowPosition = self.Subget.window.get_position()
             self.Subget.window.set_visible(False)
+        
+       
+            
 
     def _pluginInit(self):
         """ Initialize plugin """
