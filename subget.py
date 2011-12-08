@@ -1573,6 +1573,12 @@ class SubGet:
         widget.set_tab_reorderable(page, True)
         widget.set_tab_detachable(page, True)
 
+    def mainTreeViewSelection(self, Object, Event):
+        """ Handling all events in main gtk.Treeview """
+
+        if str(Event.type.value_name) == "GDK_2BUTTON_PRESS":
+            self.GTKDownloadSubtitles()
+
 
     def gtkMainScreen(self,files):
         """ Main GTK screen of the application """
@@ -1701,6 +1707,8 @@ class SubGet:
 
         self.liststore = gtk.ListStore(gtk.gdk.Pixbuf, str, str, str)
         self.treeview = gtk.TreeView(self.liststore)
+        selection = self.treeview.get_selection()
+        self.treeview.connect('button-press-event', self.mainTreeViewSelection)
 
 
         # column list
