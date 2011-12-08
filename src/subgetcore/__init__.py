@@ -129,6 +129,25 @@ class SubgetPlugin:
         if self.HTTPTimeout == False or self.HTTPTimeout == None:
             self.HTTPTimeout = 3
 
+    def check_exists(self, File, results):
+        return False
+
+    def download_list(self, files, query=''):
+        """ Download list of subtitles for a number of files """
+
+        results = SubtitlesList()
+
+        for File in files:
+            self.check_exists(File, results)
+
+        return results
+
+
+    def search_by_keywords(self, Keywords):
+        """ Dummy function, you need to replace it to enable search by keyword function """
+
+        return False
+
     def temporaryPath(self, fileName):
         """ Determinates temporary paths """
 

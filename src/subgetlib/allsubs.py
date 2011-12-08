@@ -10,20 +10,6 @@ PluginInfo = { 'Requirements' : { 'OS' : 'All'}, 'API': 2, 'Authors': 'webnull',
 
 class PluginMain(subgetcore.SubgetPlugin):
 
-    def download_list(self, files, query=''):
-        #results = list()
-        #for File in files:
-        #    results.append(self.check_exists(File))
-
-        results = subgetcore.SubtitlesList()
-
-        for File in files:
-            self.check_exists(File, results)
-
-        print results.output()
-
-        return results
-
     def getListOfSubtitles(self, movieRealName, File, resultsClass):
         response, data = self.HTTPGet("api.allsubs.org", "/index.php?limit=20&search="+urllib.quote_plus(movieRealName))
 
