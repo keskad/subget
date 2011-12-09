@@ -1,6 +1,69 @@
 """ Subget core library """
 
-import filemanagers, videoplayers, subgetbus, os, re, httplib
+import filemanagers, videoplayers, subgetbus, os, re, httplib, logging, inspect
+from time import strftime, localtime
+
+class Logging:
+    logger = None
+
+    # -1 = Don't log any messages even important too
+    # 0 = Don't log any messages, only if important (critical errors)
+    # 1 = Log everything but debugging messages
+    # 2 = Debug messages
+
+    loggingLevel = 1 
+
+    def __init__(self):
+        self.initializeLogger()
+
+    def convertMessage(self, message, stackPosition):
+        return strftime("%d/%m/%Y %H:%M:%S", localtime())+", "+stackPosition+": "+message
+
+    def initializeLogger(self):
+        try:
+            self.logger = logging.getLogger('logdetect')
+            handler = logging.FileHandler(os.path.expanduser("~/.subget/subget.log"))
+            self.logger.addHandler(handler)
+            self.logger.setLevel(logging.INFO)
+            return True
+        except Exception as e:
+            self.logger = None
+            print("Cannot get access ~/.subget/subget.log, check your permissions")
+            pass
+        return False
+
+    def turnOffLogger(self):
+        self.logger = None
+        return True
+
+    def output(self, message, utype='', savetoLogs=True):
+        """ Output to log file and to console """
+
+        message = self.convertMessage(message, inspect.stack()[1][3])
+        
+        if utype == "debug" and self.loggingLevel > 1:
+            if self.logger != None and savetoLogs == True:
+                self.logger.debug(message)
+
+            print(message)
+
+        elif utype == "" and self.loggingLevel > 0:
+            if self.logger != None and savetoLogs == True:
+                self.logger.info(message)
+
+            print(message)
+
+        elif utype == "warning" and self.loggingLevel > 0:
+            if self.logger != None and savetoLogs == True:
+                self.logger.warning(message)
+
+            print(message)
+
+        elif utype == "critical" and self.loggingLevel > -1:
+            if self.logger != None and savetoLogs == True:
+                self.logger.critical(message)
+
+            print(message)
 
 # fixes episode or season number for TV series eg. 1x3 => 01x03
 def addZero(number):

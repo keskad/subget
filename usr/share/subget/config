@@ -3,6 +3,9 @@ kde = False
 gnome = False
 kde4 = True
 
+[logging]
+level = 1
+
 [afterdownload]
 defaultplayer = 0
 playmovie = False

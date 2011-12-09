@@ -1,10 +1,11 @@
 #!/usr/bin/python
 #-*- coding: utf-8 -*-
-import getopt, sys, os, re, glob, gtk, gobject, pango, time, operator, xml.dom.minidom, gettext, locale
-import pygtk, glib
+import getopt, sys, os, re, glob, gtk, gobject, time, operator, gettext, locale, xml.dom.minidom
+import glib
 from threading import Thread
 from distutils.sysconfig import get_python_lib
 import subgetcore # libraries
+from pango import FontDescription
 
 gtk.gdk.threads_init()
 
@@ -88,8 +89,9 @@ class SubGet:
     Hooking = None
 
     def __init__(self):
-        # initialize hooking
+        # initialize hooking and logging
         self.Hooking = subgetcore.Hooking()
+        self.Logging = subgetcore.Logging()
 
     def doPluginsLoad(self, args):
         global pluginsDir, plugins
@@ -190,7 +192,7 @@ class SubGet:
             try:
                 Parser.read(configPath)
             except Exception as e:
-                print("Error parsing configuration file from "+configPath+", error: "+str(e))
+                self.Logging.output("Error parsing configuration file from "+configPath+", error: "+str(e), "critical", True)
                 self.sendCriticAlert("Subget: Error parsing configuration file from "+configPath+", error: "+str(e))
                 sys.exit(os.EX_CONFIG)
 
@@ -216,7 +218,7 @@ class SubGet:
         if os.name == "nt":
             self.subgetOSPath = winSubget+"/"
         elif os.path.exists("usr/share/subget"):
-            print("[debug] Developer mode")
+            self.Logging.output("Developer mode")
             self.subgetOSPath = "."
         else:
             self.subgetOSPath = ""
@@ -240,6 +242,11 @@ class SubGet:
                 action="watch"
 
         self.loadConfig()
+        try:
+            level = int(self.configGetKey("logging", "level"))
+            self.Logging.loggingLevel = level
+        except Exception:
+            self.Logging.loggingLevel = 1
 
         if consoleMode == False and not os.name == "nt":
             try:
@@ -250,9 +257,9 @@ class SubGet:
                 if len(args) > 0:
                     addLinks = SubgetServiceObj.get_dbus_method('addLinks', 'org.freedesktop.subget')
                     addLinks(str.join('\n', args), False)
-                    print("Added new files to existing list.")
+                    self.Logging.output(_("Added new files to existing list."), "", False)
                 else:
-                    print(_("Only one instance (graphical window) of Subget can be running at once by one user.")) # only one instance of Subget can be running at once
+                    self.Logging.output(_("Only one instance (graphical window) of Subget can be running at once by one user."), "", False) # only one instance of Subget can be running at once
                 sys.exit(0)
             except dbus.exceptions.DBusException as e:
                 True
@@ -302,7 +309,7 @@ class SubGet:
                 try:
                     self.subtitlesList.append({'language': Sub['lang'], 'name': Sub['title'], 'data': Sub['data'], 'extension': Plugin, 'file': Sub['file']})
                 except Exception as e:
-                    print("[textModeDL] Error trying to get list of subtitles from "+Plugin+" plugin, exception details: "+str(e))
+                    self.Logging.output("[textModeDL] Error trying to get list of subtitles from "+Plugin+" plugin, exception details: "+str(e))
 
         self.queueCount = (self.queueCount - 1)
 
@@ -322,7 +329,7 @@ class SubGet:
 
             # if waited too many time
             if Sleept > 180:
-                print("[textmodeWait] One of plugins cannot finish its job, cancelling.")
+                self.Logging.output("[textmodeWait]" + _("One of plugins cannot finish its job, cancelling."), "warning")
                 return False
 
         self.reorderTreeview(False) # Reorder list without using GTK
@@ -354,7 +361,7 @@ class SubGet:
                     current.start()
 
     def textmodeDLSub(self, Job):
-        print("Downloading to "+Job['data']['file']+".txt")
+        self.Logging.output("[textmodeWait]" + _("Downloading to") + " "+Job['data']['file']+".txt")
         return self.plugins[Job['extension']].download_by_data(Job['data'], Job['data']['file']+".txt")
 
 
@@ -364,7 +371,9 @@ class SubGet:
         """
 
         if len(args) == 0:
-            print("No files specified.")
+            self.Logging.output(_("No files specified in watch with subtitles."), "", False)
+            self.sendCriticAlert(_("No files specified in watch with subtitles."))
+            sys.exit(1)
 
         # subtitlesList
         self.queueCount = len(self.pluginsList)
@@ -397,7 +406,8 @@ class SubGet:
                     break
 
                 if Found == False:
-                    self.sendCriticAlert("No subtitles found for file "+args[0])
+                    self.Logging.output(_("No subtitles found for file") + " "+args[0], "warning")
+                    self.sendCriticAlert(_("No subtitles found for file") + " "+args[0])
 
         return True
 
@@ -419,12 +429,12 @@ class SubGet:
 
             if not os.path.isfile(pixbuf_path):
                 pixbuf_path = self.subgetOSPath+'/usr/share/subget/icons/unknown.xpm'
-                print("[addSubtitlesRow] "+language+".xpm "+_("icon does not exists, using unknown.xpm"))
+                self.Logging.output("[addSubtitlesRow] "+language+".xpm "+_("icon does not exists, using unknown.xpm"), "warning", False)
 
             try:
                 pixbuf = gtk.gdk.pixbuf_new_from_file(pixbuf_path)
             except Exception:
-                print(pixbuf_path+" icon file not found")
+                self.Logging.output(pixbuf_path+" "+_("icon file not found"), "warning", True)
                 True
 
             self.liststore.append([pixbuf, str(release_name), str(server), (len(self.subtitlesList)-1)])
@@ -439,7 +449,7 @@ class SubGet:
 
         if "plugins" in self.Config:
             if self.dictGetKey(self.Config['plugins'], 'list_ordering') == False:
-                print("Sorting disabled.")
+                self.Logging.output(_("Sorting disabled."), "debug", True)
                 return True
 
         while not self.queueCount == 0:
@@ -518,7 +528,7 @@ class SubGet:
                 Results = self.plugins[Plugin].instance.download_list(self.files).output()
 
             if Results == None:
-                print("[plugin:"+Plugin+"] "+_("ERROR: Cannot import"))
+                self.Logging.output("[plugin:"+Plugin+"] "+_("ERROR: Cannot import"), "warning", True)
             else:
                 for Result in Results:
                     if Result == False:
@@ -529,10 +539,9 @@ class SubGet:
                         try:
                             if "title" in Movie:
                                 self.addSubtitlesRow(Movie['lang'], Movie['title'], Movie['domain'], Movie['data'], Plugin, Movie['file'])
-                                print("[plugin:"+Plugin+"] "+_("found subtitles")+" - "+Movie['title'])
+                                self.Logging.output("[plugin:"+Plugin+"] "+_("found subtitles")+" - "+Movie['title'], "debug", True)
                         except AttributeError as e:
-                             print("[plugin:"+Plugin+"] "+_("no any subtitles found"))
-                             print(e)
+                             self.Logging.output("[plugin:"+Plugin+"] "+_("no any subtitles found")+", "+str(e), "debug", True)
 
             # mark job as done
             self.queueCount = (self.queueCount - 1)
@@ -593,7 +602,7 @@ class SubGet:
                     else:
                         chooser.destroy()
                 else:
-                    print("[GTK:DownloadSubtitles] subtitle_ID="+str(SelectID)+" "+_("not found in a list, its wired"))
+                    self.Logging.output("[GTK:DownloadSubtitles] subtitle_ID="+str(SelectID)+" "+_("not found in a list, its wired"), "warning", True)
 
     def GTKDownloadDialog(self, SelectID, filename):
              """Download progress dialog, downloading and saving subtitles to file"""
@@ -712,7 +721,7 @@ class SubGet:
 
             except Exception as errno:
                 self.plugins[Plugin] = str(errno)
-                print(_("ERROR: Cannot import")+" "+Plugin+" ("+str(errno)+")")
+                self.Logging.output(_("ERROR: Cannot import")+" "+Plugin+" ("+str(errno)+")", "warning", True)
                 return False
 
         elif Action == 'deactivate':
@@ -817,7 +826,6 @@ class SubGet:
                 if not "PluginInfo" in dir(self.plugins[Plugin]):
                     pixbuf = gtk.gdk.pixbuf_new_from_file(self.subgetOSPath+'/usr/share/subget/icons/error.png') 
                     liststore.append([pixbuf, Plugin, OS, str(Author), str(API)])
-                    print("Not callable: "+Plugin)
                     continue
 
                 if self.plugins[Plugin].PluginInfo['type'] == 'extension':
@@ -975,12 +983,12 @@ class SubGet:
 
             # title
             title = gtk.Label(_("About Subget"))
-            title.modify_font(pango.FontDescription("sans 18"))
+            title.modify_font(FontDescription("sans 18"))
             fixed.put(title, 150, 20)
 
             # description title
             description = gtk.Label(_("Small, multiplatform and portable Subtitles downloader \nwritten in Python and GTK.\nWorks on most Unix systems, based on Linux kernel and on Windows NT.\nThis program is a free software licensed on GNU General Public License v3."))
-            description.modify_font(pango.FontDescription("sans 8"))
+            description.modify_font(FontDescription("sans 8"))
             fixed.put(description, 150, 60)
 
             # TABS
@@ -1034,7 +1042,7 @@ class SubGet:
                         del(Contact)
                     except Exception as e:
                         self.versioning = False
-                        print("Catched an exception while tried to parse /usr/share/subget/version.xml, details: "+str(e))
+                        self.Logging.output("Catched an exception while tried to parse /usr/share/subget/version.xml, details: "+str(e), "error", True)
                     
 
                 if self.versioning == False or self.versioning == None:
@@ -1223,7 +1231,7 @@ class SubGet:
                         self.addSubtitlesRow(Result['lang'], Result['title'], Result['domain'], Result['data'], plugin, Result['file'])
 
                 except AttributeError as errno:
-                    print("[plugin:"+self.sm.plugins[plugin]+"] "+_("Searching by keywords is not supported by this plugin"))
+                    self.Logging.output("[plugin:"+self.sm.plugins[plugin]+"] "+_("Searching by keywords is not supported by this plugin"), "", True)
                     True # Plugin does not support searching by keywords
     def gtkPreferencesQuit(self):
         self.winPreferences.destroy()
@@ -1244,12 +1252,12 @@ class SubGet:
             Output += "\n"
 
         try:
-            print(_("Saving to")+" ~/.subget/config")
+            self.Logging.output(_("Saving to")+" ~/.subget/config", "debug", True)
             Handler = open(os.path.expanduser("~/.subget/config"), "wb")
             Handler.write(Output)
             Handler.close()
         except Exception as e:
-            print(_("Contact")+" ~/.subget/config, "+_("Watch with subtitles")+": "+str(e))
+            self.Logging.output(_("Error, cannot save to")+" ~/.subget/config, "+str(e), "critical", True)
 
     def gtkPreferences(self, aid):
         #self.sendCriticAlert("Sorry, this feature is not implemented yet.")
@@ -1305,7 +1313,7 @@ class SubGet:
             self.Config[Section][Option] = Value
             #print("SET to "+str(Value))
         except Exception as e:
-            print(_("Error setting configuration variable:")+" "+Section+"->"+Option+" = \""+str(Value)+"\". "+_("Error")+": "+str(e))
+            self.Logging.output(_("Error setting configuration variable:")+" "+Section+"->"+Option+" = \""+str(Value)+"\". "+_("Error")+": "+str(e), "warning", True)
 
     def revertBool(self, boolean):
         if boolean == "False" or boolean == False:
@@ -1811,7 +1819,7 @@ class SubGet:
         try:
             self.Hooking.executeHooks(self.Hooking.getAllHooks("onGTKWindowOpen"))
         except Exception as e:
-            print("Error: Cannot execute hook onGTKWindowOpen")
+            self.Logging.output(_("Error")+": "+_("Cannot execute hook")+"; GTKWindowOpen", "warning", True)
 
         #else:
             #    print(_("Sorry, GUI mode is not fully available yet."))

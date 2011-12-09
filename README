@@ -19,6 +19,11 @@ Video Player option allows easily play movie using favorite media player right a
 Requirements: GTK+, Python 2.6/2.7/3.0/3.1/3.2, X11, PyGTK, python-dbus, python-gettext, p7zip (Gentoo: app-arch/p7zip, Debian/Ubuntu: p7zip-full)
 
 * Changelog:
+09.12.2011 (v.0.9.9.6) <webnull.www@gmail.com>:
+    * Translation fixes
+    + Support for logging to file and to console with stack support
+    + New plugin - daemonize (enable/disable from plugins menu)
+
 08.12.2011 (v.0.9.9.5) <webnull.www@gmail.com>:
     + Double-click on main Treeview list now allows to save subtitles
 

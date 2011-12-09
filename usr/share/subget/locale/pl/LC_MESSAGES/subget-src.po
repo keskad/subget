@@ -228,3 +228,21 @@ msgstr "Pobieraj tłumaczenia tylko w preferowanym języku"
 msgid "Preferred language:"
 msgstr "Preferowany język:"
 
+msgid "Added new files to existing list."
+msgstr "Dodaję nowe pliki do istniejącej listy w innym oknie programu."
+
+msgid "No files specified in watch with subtitles."
+msgstr "Nie określono plików do przetworzenia dla funkcji watch with subtitles."
+
+msgid "Sorting disabled."
+msgstr "Sortowanie wyłączone."
+
+msgid "Error, cannot save to"
+msgstr "Wystąpił błąd, nie można zapisać do"
+
+msgid "Cannot execute hook"
+msgstr "Nie można wykonać zaczepionej funkcji"
+
+msgid "icon file not found"
+msgstr "- plik ikony nie został odnaleziony"
+
