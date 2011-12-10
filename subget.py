@@ -91,7 +91,15 @@ class SubGet:
     def __init__(self):
         # initialize hooking and logging
         self.Hooking = subgetcore.Hooking()
-        self.Logging = subgetcore.Logging()
+        self.Logging = subgetcore.Logging(self)
+
+    def getPath(self, path):
+        userPath = os.path.expanduser("~")+path
+
+        if os.path.exists(userPath):
+            return userPath
+        else:
+            return self.subgetOSPath+path
 
     def doPluginsLoad(self, args):
         global pluginsDir, plugins
@@ -218,7 +226,7 @@ class SubGet:
         if os.name == "nt":
             self.subgetOSPath = winSubget+"/"
         elif os.path.exists("usr/share/subget"):
-            self.Logging.output("Developer mode")
+            self.Logging.output("Developer mode", "", False)
             self.subgetOSPath = "."
         else:
             self.subgetOSPath = ""
@@ -1620,29 +1628,32 @@ class SubGet:
         self.window.connect("drag_data_received", self.drag_data_received)
 
         ############# Menu #############
-        mb = gtk.MenuBar()
+        self.window.Menubar = gtk.MenuBar()
         icon_theme = gtk.icon_theme_get_default()
 
+        # Here will be all menus and submenus accessible from plugins api
+        self.window.Menubar.elementsArray = dict()
+
         # Shortcuts
-        agr = gtk.AccelGroup()
-        self.window.add_accel_group(agr)
+        self.window.agr = gtk.AccelGroup()
+        self.window.add_accel_group(self.window.agr)
 
         # "File" menu
-        fileMenu = gtk.Menu()
-        fileMenuItem = gtk.MenuItem(_("File"))
-        fileMenuItem.set_submenu(fileMenu)
-        mb.append(fileMenuItem)
+        self.window.Menubar.elementsArray['fileMenu'] = gtk.Menu()
+        self.window.Menubar.elementsArray['fileMenuItem'] = gtk.MenuItem(_("File"))
+        self.window.Menubar.elementsArray['fileMenuItem'].set_submenu(self.window.Menubar.elementsArray['fileMenu'])
+        self.window.Menubar.append(self.window.Menubar.elementsArray['fileMenuItem'])
 
         # "Tools" menu
-        toolsMenu = gtk.Menu()
-        toolsMenuItem = gtk.MenuItem(_("Tools"))
-        toolsMenuItem.set_submenu(toolsMenu)
-        mb.append(toolsMenuItem)
+        self.window.Menubar.elementsArray['toolsMenu'] = gtk.Menu()
+        self.window.Menubar.elementsArray['toolsMenuItem'] = gtk.MenuItem(_("Tools"))
+        self.window.Menubar.elementsArray['toolsMenuItem'].set_submenu(self.window.Menubar.elementsArray['toolsMenu'])
+        self.window.Menubar.append(self.window.Menubar.elementsArray['toolsMenuItem'])
 
         # "Plugins list"
-        pluginMenu = gtk.ImageMenuItem(_("Plugins"), agr)
+        pluginMenu = gtk.ImageMenuItem(_("Plugins"), self.window.agr)
         key, mod = gtk.accelerator_parse("<Control>P")
-        pluginMenu.add_accelerator("activate", agr, key,mod, gtk.ACCEL_VISIBLE)
+        pluginMenu.add_accelerator("activate", self.window.agr, key,mod, gtk.ACCEL_VISIBLE)
         pluginMenu.connect("activate", self.gtkPluginMenu)
 
         try:
@@ -1652,12 +1663,12 @@ class SubGet:
         except gobject.GError as exc:
             True
 
-        toolsMenu.append(pluginMenu)
+        self.window.Menubar.elementsArray['toolsMenu'].append(pluginMenu)
 
         # "About"
-        infoMenu = gtk.ImageMenuItem(_("About Subget"), agr) # gtk.STOCK_CDROM
+        infoMenu = gtk.ImageMenuItem(_("About Subget"), self.window.agr) # gtk.STOCK_CDROM
         key, mod = gtk.accelerator_parse("<Control>I")
-        infoMenu.add_accelerator("activate", agr, key,mod, gtk.ACCEL_VISIBLE)
+        infoMenu.add_accelerator("activate", self.window.agr, key,mod, gtk.ACCEL_VISIBLE)
         infoMenu.connect("activate", self.gtkAboutMenu)
 
         try:
@@ -1668,7 +1679,7 @@ class SubGet:
         except gobject.GError as exc:
             True
 
-        toolsMenu.append(infoMenu)
+        self.window.Menubar.elementsArray['toolsMenu'].append(infoMenu)
 
         # "Clear"
         clearMenu = gtk.ImageMenuItem(_("Clear list"))
@@ -1682,33 +1693,33 @@ class SubGet:
             True
 
 
-        toolsMenu.append(clearMenu)
+        self.window.Menubar.elementsArray['toolsMenu'].append(clearMenu)
 
         # Adding files to query
         settingsMenu = gtk.ImageMenuItem(gtk.STOCK_PREFERENCES)
         settingsMenu.connect("activate", self.gtkPreferences)
-        toolsMenu.append(settingsMenu)
+        self.window.Menubar.elementsArray['toolsMenu'].append(settingsMenu)
 
         # Adding files to query
-        openMenu = gtk.ImageMenuItem(gtk.STOCK_ADD, agr)
+        openMenu = gtk.ImageMenuItem(gtk.STOCK_ADD, self.window.agr)
         key, mod = gtk.accelerator_parse("<Control>O")
-        openMenu.add_accelerator("activate", agr, key,mod, gtk.ACCEL_VISIBLE)
+        openMenu.add_accelerator("activate", self.window.agr, key,mod, gtk.ACCEL_VISIBLE)
         openMenu.connect("activate", self.gtkSelectVideo)
-        fileMenu.append(openMenu)
+        self.window.Menubar.elementsArray['fileMenu'].append(openMenu)
 
         # Search
-        find = gtk.ImageMenuItem(gtk.STOCK_FIND, agr)
+        find = gtk.ImageMenuItem(gtk.STOCK_FIND, self.window.agr)
         key, mod = gtk.accelerator_parse("<Control>F")
-        find.add_accelerator("activate", agr, key, mod, gtk.ACCEL_VISIBLE)
+        find.add_accelerator("activate", self.window.agr, key, mod, gtk.ACCEL_VISIBLE)
         find.connect("activate", self.gtkSearchMenu)
-        fileMenu.append(find)
+        self.window.Menubar.elementsArray['fileMenu'].append(find)
 
         # Exit position in menu
-        exit = gtk.ImageMenuItem(gtk.STOCK_QUIT, agr)
+        exit = gtk.ImageMenuItem(gtk.STOCK_QUIT, self.window.agr)
         key, mod = gtk.accelerator_parse("<Control>Q")
-        exit.add_accelerator("activate", agr, key, mod, gtk.ACCEL_VISIBLE)
+        exit.add_accelerator("activate", self.window.agr, key, mod, gtk.ACCEL_VISIBLE)
         exit.connect("activate", gtk.main_quit)
-        fileMenu.append(exit)
+        self.window.Menubar.elementsArray['fileMenu'].append(exit)
 
         ############# End of Menu #############
         #self.fixed = gtk.Fixed()
@@ -1798,7 +1809,7 @@ class SubGet:
         
         vbox = gtk.VBox(False, 0)
         vbox.set_border_width(0)
-        vbox.pack_start(mb, False, False, 0)
+        vbox.pack_start(self.window.Menubar, False, False, 0)
         vbox.pack_start(scrolled_window, True, True, 0)
         buttonsAlligned = gtk.Alignment(0, 1, 0, 0)
         #vbox.pack_start(self.fixed, False, False, 0)
@@ -1819,7 +1830,7 @@ class SubGet:
         try:
             self.Hooking.executeHooks(self.Hooking.getAllHooks("onGTKWindowOpen"))
         except Exception as e:
-            self.Logging.output(_("Error")+": "+_("Cannot execute hook")+"; GTKWindowOpen", "warning", True)
+            self.Logging.output(_("Error")+": "+_("Cannot execute hook")+"; GTKWindowOpen; "+str(e), "warning", True)
 
         #else:
             #    print(_("Sorry, GUI mode is not fully available yet."))

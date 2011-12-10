@@ -246,3 +246,6 @@ msgstr "Nie można wykonać zaczepionej funkcji"
 msgid "icon file not found"
 msgstr "- plik ikony nie został odnaleziony"
 
+msgid "Console"
+msgstr "Konsola"
+

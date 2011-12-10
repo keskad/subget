@@ -53,7 +53,8 @@ class PluginMain(subgetcore.SubgetPlugin):
 
         #if self.Subget.configGetKey("daemonize", "active") == "True":
             #self.Subget.Logging.output("Going to background...", "", False)
-        self.daemonize()
+        if os.name != "nt":
+            self.daemonize()
 
     def _pluginDestroy(self):
         """ Unload plugin """

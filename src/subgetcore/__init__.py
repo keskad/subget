@@ -12,8 +12,11 @@ class Logging:
     # 2 = Debug messages
 
     loggingLevel = 1 
+    session = ""
+    parent = None
 
-    def __init__(self):
+    def __init__(self, Parent):
+        self.parent = Parent
         self.initializeLogger()
 
     def convertMessage(self, message, stackPosition):
@@ -64,6 +67,19 @@ class Logging:
                 self.logger.critical(message)
 
             print(message)
+
+        # save all messages to show in messages console
+        self.session += message + "\n"
+
+        # update console for example
+        try:
+            Hooks = self.parent.Hooking.getAllHooks("onLogChange")
+
+            if Hooks != False:
+                self.parent.Hooking.executeHooks(Hooks, self.session)
+
+        except Exception as e:
+            self.parent.Logging.output(_("Error")+": "+_("Cannot execute hook")+"; onLogChange; "+str(e), "warning", True)
 
 # fixes episode or season number for TV series eg. 1x3 => 01x03
 def addZero(number):
@@ -156,6 +172,17 @@ class Hooking:
 
         self.Hooks[name].append(method)
 
+    def removeHook(self, name, method):
+        if not name in self.Hooks:
+            return True
+
+        self.Hooks[name].remove(method)
+
+        if len(self.Hooks[name]) == 0:
+            del self.Hooks[name]
+
+        return True 
+
     def getAllHooks(self, name):
         """ Get all hooked methods to execute them """
 
@@ -164,12 +191,12 @@ class Hooking:
 
         return False
 
-    def executeHooks(self, hooks):
+    def executeHooks(self, hooks, data=True):
         """ Executes all functions from list. Takes self.getAllHooks as hooks """
 
         if not hooks == False:
             for Hook in hooks:
-                Hook(True)
+                Hook(data)
 
             return True
 

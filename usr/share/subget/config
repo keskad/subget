@@ -4,7 +4,11 @@ gnome = False
 kde4 = True
 
 [logging]
-level = 1
+level = 3
+
+[trayicon]
+hide_at_startup = True
+remember_window_position = True
 
 [afterdownload]
 defaultplayer = 0
@@ -13,5 +17,5 @@ playmovie = False
 [plugins]
 timeout = 10
 order = napiprojekt,napisy_info,napisy24,allsubs,opensubtitles
+disabled = daemonize,trayicon
 list_ordering = True
-
