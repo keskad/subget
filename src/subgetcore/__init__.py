@@ -39,7 +39,7 @@ class Logging:
         self.logger = None
         return True
 
-    def output(self, message, utype='', savetoLogs=True):
+    def output(self, message, utype='', savetoLogs=True, execHook=True):
         """ Output to log file and to console """
 
         message = self.convertMessage(message, inspect.stack()[1][3])
@@ -79,7 +79,11 @@ class Logging:
                 self.parent.Hooking.executeHooks(Hooks, self.session)
 
         except Exception as e:
-            self.parent.Logging.output(_("Error")+": "+_("Cannot execute hook")+"; onLogChange; "+str(e), "warning", True)
+            if execHook == True:
+                self.parent.Logging.output(self.parent._("Error")+": "+self.parent._("Cannot execute hook")+"; onLogChange; "+str(e), "warning", True, False)
+            else:
+                print(self.parent._("Error")+": "+self.parent._("Cannot execute hook")+"; onLogChange; "+str(e))
+                
 
 # fixes episode or season number for TV series eg. 1x3 => 01x03
 def addZero(number):

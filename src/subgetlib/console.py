@@ -1,4 +1,4 @@
-import subgetcore, gtk, sys
+import subgetcore, gtk, sys, time
 
 ####
 PluginInfo = {'Requirements' : { 'OS' : 'All'}, 'API': 2, 'Authors': 'webnull', 'domain': '', 'type': 'extension', 'isPlugin': False}
@@ -39,6 +39,12 @@ class PluginMain(subgetcore.SubgetPlugin):
         self.Subget.window.Menubar.elementsArray['toolsMenu'].append(self.consolePosition)
         self.Subget.window.show_all()
 
+
+    def errorLevel_Scale(self, x):
+        newLevel = (int(x.value)-2)
+        self.Subget.configSetKey("logging", "level", str(newLevel))
+        self.Subget.Logging.loggingLevel = newLevel
+
     def _settingsTab(self, Data):
         Startup = gtk.CheckButton(self.Subget._("Show console on Subget startup"))
         Startup.connect("pressed", self.Subget.configSetButton, 'console', 'open_at_startup', Startup, True)
@@ -46,12 +52,42 @@ class PluginMain(subgetcore.SubgetPlugin):
         if not self.Subget.configGetKey("console", "open_at_startup") == False:
             Startup.set_active(1)
 
+        confSize = gtk.CheckButton(self.Subget._("Remeber window size"))
+        confSize.connect("pressed", self.Subget.configSetButton, 'console', 'remember_size', confSize, True)
+
+        if not self.Subget.configGetKey("console", "remember_size") == False:
+            confSize.set_active(1)
+
+        confPosition = gtk.CheckButton(self.Subget._("Remember window position"))
+        confPosition.connect("pressed", self.Subget.configSetButton, 'console', 'remember_position', confPosition, True)
+
+        if not self.Subget.configGetKey("console", "remember_position") == False:
+            confPosition.set_active(1)
+
+
+        Label2 = gtk.Label(self.Subget._("Errorlevel outside of internal console:"))
+        adj = gtk.Adjustment(1.0, 1.0, 5.0, 1.0, 1.0, 1.0)
+
+        adj.connect("value_changed", self.errorLevel_Scale)
+        scale = gtk.HScale(adj)
+        scale.set_digits(0)
+        scale.set_size_request(230, 40)
+        scaleValue = int(self.Subget.configGetKey('logging', 'level'))+2
+
+
+        if not scaleValue == False and scaleValue > 0 and scaleValue <= 30:
+            adj.set_value(scaleValue)
+
         Vbox = gtk.VBox(False, 0)
         Hbox = gtk.HBox(False, 0)
-        Hbox.pack_start(Startup, False, False, 10)
-        Vbox.pack_start(Hbox, False, False, 8)
+        Vbox.pack_start(Startup, False, False, 2)
+        Vbox.pack_start(confSize, False, False, 2)
+        Vbox.pack_start(confPosition, False, False, 2)
+        Vbox.pack_start(Label2, False, False, 2)
+        Vbox.pack_start(scale, False, False, 2)
+        Hbox.pack_start(Vbox, False, False, 8)
 
-        self.Subget.createTab(self.Subget.winPreferences.notebook, self.Subget._("Console"), Vbox)
+        self.Subget.createTab(self.Subget.winPreferences.notebook, self.Subget._("Console"), Hbox)
         self.Subget.winPreferences.show_all()
             
 
@@ -62,19 +98,37 @@ class PluginMain(subgetcore.SubgetPlugin):
             self.consoleWindow.textarea.set_text(text)
 
 
-
     def openConsole(self, x):
         """ Open the console window """
 
         if self.consoleState == True:
             return False
 
-        self.consoleState = True
-
         self.consoleWindow = gtk.Window()
         self.consoleWindow.set_resizable(True)
         self.consoleWindow.set_title(self.Subget._("Console")+" - Subget")
         self.consoleWindow.set_size_request(450, 240)
+
+        # TEXTAREA INSIDE OF FRAME
+        self.consoleWindow.textarea = gtk.Label(self.Subget.Logging.session)
+        self.consoleWindow.textarea.set_alignment (0, 0)
+
+        self.consoleState = True
+
+        if not self.Subget.configGetKey("console", "remember_size") == False:
+            try:
+                x = str(self.Subget.configGetKey("console", "sizex"))
+                y = str(self.Subget.configGetKey("console", "sizey"))
+
+                if x != "False" and y != "False":
+                    x = int(x)
+                    y = int(y)
+                    self.Subget.Logging.output("Restoring console size: "+str(x)+"x"+str(y), "debug", False)
+                    self.consoleWindow.set_size_request(x, y)
+                    self.consoleWindow.set_resizable(True)
+
+            except Exception as e:
+                print(e)
 
         try:
             self.consoleWindow.set_icon_from_file(self.Subget.getPath("/usr/share/subget/icons/terminal.png"))
@@ -86,10 +140,6 @@ class PluginMain(subgetcore.SubgetPlugin):
         self.consoleWindow.gframe.set_border_width(0) 
         #self.consoleWindow.gframe.set_size_request(100, 240)
         self.consoleWindow.gframe.set_shadow_type(gtk.SHADOW_ETCHED_OUT)
-
-        # TEXTAREA INSIDE OF FRAME
-        self.consoleWindow.textarea = gtk.Label(self.Subget.Logging.session)
-        self.consoleWindow.textarea.set_alignment (0, 0)
 
         # SCROLL
         self.consoleWindow.gscroll = gtk.ScrolledWindow()
@@ -109,14 +159,45 @@ class PluginMain(subgetcore.SubgetPlugin):
         # PUT ALL TOGETHER AND SHOW
         self.consoleWindow.add(self.consoleWindow.vbox)
         self.consoleWindow.show_all()
-        self.consoleWindow.connect("delete_event", self.windowDeleteEvent)
+        self.consoleWindow.set_size_request(450, 240)
 
+        if not self.Subget.configGetKey("console", "remember_position") == False:
+            try:
+                x = str(self.Subget.configGetKey("console", "posx"))
+                y = str(self.Subget.configGetKey("console", "posy"))
+
+                if x != "False" and y != "False":
+                    x = int(x)
+                    y = int(y)
+                    self.Subget.Logging.output("Restoring console at "+str(x)+"x"+str(y), "debug", False)
+                    self.consoleWindow.set_uposition(x, y)
+
+            except Exception as e:
+                print(e)
+
+        self.consoleWindow.connect("delete_event", self.windowDeleteEvent)
 
 
 
 
     def windowDeleteEvent(self, widget, event, data=None):
         self.consoleState = False
+
+        if not self.Subget.configGetKey("console", "remember_position") == False:
+            pos = self.consoleWindow.get_position()
+            self.Subget.configSetKey("console", "posx", pos[0])
+            self.Subget.configSetKey("console", "posy", pos[1])
+            self.Subget.Logging.output("Saving console position at "+str(pos[0])+"x"+str(pos[1]), "debug", False)
+
+        if not self.Subget.configGetKey("console", "remember_size") == False:
+            size = self.consoleWindow.get_size()
+            self.Subget.configSetKey("console", "sizex", size[0])
+            self.Subget.configSetKey("console", "sizey", size[1])
+            self.Subget.Logging.output("Saving console size: "+str(size[0])+"x"+str(size[1]), "debug", False)
+
+        if not self.Subget.configGetKey("console", "remember_size") == False or not self.Subget.configGetKey("console", "remember_size") == False:
+            self.Subget.saveConfiguration()
+
         del self.consoleWindow
         self.consoleWindow = None
         return False

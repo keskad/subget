@@ -252,3 +252,14 @@ msgstr "Konsola"
 msgid "Show console on Subget startup"
 msgstr "Otwórz okno konsoli przy starcie programu Subget"
 
+msgid "Remeber window size"
+msgstr "Zapamiętaj rozmiar okna"
+
+msgid "Remeber window position"
+msgstr "Zapamiętaj pozycję"
+
+msgid "Setting config values"
+msgstr "Ustawiam wartości konfiguracyjne"
+
+msgid "Errorlevel outside of internal console:"
+msgstr "Pokazuj błędy o poniższym poziomie poza wewnętrzną konsolą:"
