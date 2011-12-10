@@ -249,3 +249,6 @@ msgstr "- plik ikony nie został odnaleziony"
 msgid "Console"
 msgstr "Konsola"
 
+msgid "Show console on Subget startup"
+msgstr "Otwórz okno konsoli przy starcie programu Subget"
+

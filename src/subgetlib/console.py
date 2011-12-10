@@ -12,6 +12,7 @@ class PluginMain(subgetcore.SubgetPlugin):
 
         self.Subget.Hooking.connectHook("onGTKWindowOpen", self._onGTKLoopEnd)
         self.Subget.Hooking.connectHook("onLogChange", self._updateConsole)
+        self.Subget.Hooking.connectHook("onPreferencesOpen", self._settingsTab)
 
         if "window" in dir(self.Subget):
             self._onGTKLoopEnd(False)
@@ -37,6 +38,21 @@ class PluginMain(subgetcore.SubgetPlugin):
 
         self.Subget.window.Menubar.elementsArray['toolsMenu'].append(self.consolePosition)
         self.Subget.window.show_all()
+
+    def _settingsTab(self, Data):
+        Startup = gtk.CheckButton(self.Subget._("Show console on Subget startup"))
+        Startup.connect("pressed", self.Subget.configSetButton, 'console', 'open_at_startup', Startup, True)
+
+        if not self.Subget.configGetKey("console", "open_at_startup") == False:
+            Startup.set_active(1)
+
+        Vbox = gtk.VBox(False, 0)
+        Hbox = gtk.HBox(False, 0)
+        Hbox.pack_start(Startup, False, False, 10)
+        Vbox.pack_start(Hbox, False, False, 8)
+
+        self.Subget.createTab(self.Subget.winPreferences.notebook, self.Subget._("Console"), Vbox)
+        self.Subget.winPreferences.show_all()
             
 
     def _updateConsole(self, text):
@@ -111,6 +127,7 @@ class PluginMain(subgetcore.SubgetPlugin):
         """ Unload plugin """
         self.Subget.Hooking.removeHook("onGTKWindowOpen", self._onGTKLoopEnd)
         self.Subget.Hooking.removeHook("onLogChange", self._updateConsole)
+        self.Subget.Hooking.removeHook("onPreferencesOpen", self._settingsTab)
 
         self.Subget.window.Menubar.elementsArray['toolsMenu'].remove(self.consolePosition)
         self.consoleWindow.destroy()

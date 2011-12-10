@@ -1308,6 +1308,12 @@ class SubGet:
         self.winPreferences.fixed.put(self.winPreferences.CloseButton, 490, 350)
         self.winPreferences.add(self.winPreferences.fixed)
         self.winPreferences.show_all()
+
+        try:
+            self.Hooking.executeHooks(self.Hooking.getAllHooks("onPreferencesOpen"))
+        except Exception as e:
+            self.Logging.output(_("Error")+": "+_("Cannot execute hook")+"; onPreferencesOpen; "+str(e), "warning", True)
+
         return True
 
     def configSetButton(self, Type, Section, Option, Value, revert=False):
@@ -1319,6 +1325,7 @@ class SubGet:
 
         try:
             self.Config[Section][Option] = Value
+            self.Logging.output(_("Setting config values: ")+ Section+"->"+Option+" = \""+str(Value)+"\"", "debug", False)
             #print("SET to "+str(Value))
         except Exception as e:
             self.Logging.output(_("Error setting configuration variable:")+" "+Section+"->"+Option+" = \""+str(Value)+"\". "+_("Error")+": "+str(e), "warning", True)

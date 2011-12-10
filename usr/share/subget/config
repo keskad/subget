@@ -3,6 +3,12 @@ kde = False
 gnome = False
 kde4 = True
 
+[console]
+open_at_startup = False
+
+[daemonize]
+active = True
+
 [logging]
 level = 3
 
