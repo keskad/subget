@@ -255,7 +255,7 @@ msgstr "Otwórz okno konsoli przy starcie programu Subget"
 msgid "Remeber window size"
 msgstr "Zapamiętaj rozmiar okna"
 
-msgid "Remeber window position"
+msgid "Remember window position"
 msgstr "Zapamiętaj pozycję"
 
 msgid "Setting config values"
