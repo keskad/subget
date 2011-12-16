@@ -3,12 +3,10 @@
 import os
 
 def Spawn(Subget, VideoFile, Subtitles):
-    DefaultPlayer = int(Subget.Config['afterdownload']['defaultplayer'])
+    DefaultPlayer = int(Subget.configGetKey('afterdownload', 'defaultplayer'))
     Command = ""
 
-    if DefaultPlayer == 0:
-        Command = "/usr/bin/xdg-open \""+VideoFile+"\" > /dev/null 2> /dev/null &"
-    elif DefaultPlayer == 1: # MPlayer
+    if DefaultPlayer == 1: # MPlayer
         Command = "/usr/bin/mplayer \""+VideoFile+"\" -sub \""+Subtitles+"\" > /dev/null 2> /dev/null &"
     elif DefaultPlayer == 2: # SMPlayer
         Command = "/usr/bin/smplayer \""+VideoFile+"\" -sub \""+Subtitles+"\" > /dev/null 2> /dev/null &"
@@ -28,7 +26,9 @@ def Spawn(Subget, VideoFile, Subtitles):
         Command = "/usr/bin/rhythmbox \""+VideoFile+"\" > /dev/null 2> /dev/null &"
     elif DefaultPlayer == 10: # UMPlayer
         Command = "/usr/bin/umplayer \""+VideoFile+"\" -sub \""+Subtitles+"\" > /dev/null 2> /dev/null &"
+    else:
+        Command = "/usr/bin/xdg-open \""+VideoFile+"\" > /dev/null 2> /dev/null &"
 
     if not Command == "":
-        print("Executing: "+Command)
+        Subget.Logging.output("Executing: "+Command, "debug", False)
         os.system(Command)

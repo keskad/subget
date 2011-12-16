@@ -9,7 +9,7 @@ def Nautilus(Widget, Subget, Path):
 
     # check if Nautilus is installed
     if not os.path.isdir(Path+"/.gnome2/nautilus-scripts/"):
-        print("Nautilus is not installed, disabling checkButton.")
+        Subget.Logging.output("Nautilus is not installed, disabling checkButton.", "debug", False)
         Widget.set_sensitive(0)
         #Widget.set_active(0)
         return False
@@ -23,10 +23,10 @@ def Nautilus(Widget, Subget, Path):
 
             os.system("chmod +x \""+theFile+"\"")
             Subget.Config['filemanagers']['gnome'] = True
-            print("GNOME integration active.")
+            Subget.Logging.output("GNOME integration active.", "debug", False)
         except Exception as e:
             Widget.set_sensitive(0)
-            print("Cannot create "+theFile+", error message: "+str(e))
+            Subget.Logging.output("Cannot create "+theFile+", error message: "+str(e), "warning", True)
     else:
         try:
             if Subget.configGetKey('watch_with_subtitles', 'enabled') == "True":
@@ -37,7 +37,7 @@ def Nautilus(Widget, Subget, Path):
             Subget.Config['filemanagers']['gnome'] = False
         except Exception as e:
             Widget.set_sensitive(0)
-            print("Cannot remove "+theFile+", error message: "+str(e))
+            Subget.Logging.output("Cannot remove "+theFile+", error message: "+str(e), "debug", False)
 
 def KDEService(Widget, Subget, Path):
     """ Subget integration with Dolphin and Konqueror (KDE Service) """
@@ -46,7 +46,7 @@ def KDEService(Widget, Subget, Path):
 
     # check if KDE4 is installed
     if not os.path.isdir(Path+"/.kde4/share/kde4/services/"):
-        print("KDE is not installed, disabling checkButton.")
+        Subget.Logging.output("KDE is not installed, disabling checkButton.", "debug", False)
         Widget.set_sensitive(0)
         #Widget.set_active(0)
         return False
@@ -60,10 +60,10 @@ def KDEService(Widget, Subget, Path):
 
             os.system("chmod +x \""+theFile+"\"")
             Subget.Config['filemanagers']['kde'] = True
-            print("KDE4 integration active.")
+            Subget.Logging.output("KDE4 integration active.", "debug", False)
         except Exception as e:
             Widget.set_active(0)
-            print("Cannot create "+theFile+", error message: "+str(e))
+            Subget.Logging.output("Cannot create "+theFile+", error message: "+str(e), "warning", True)
     else:
         try:
 
@@ -75,7 +75,7 @@ def KDEService(Widget, Subget, Path):
             Subget.Config['filemanagers']['kde'] = False
         except Exception:
             Widget.set_sensitive(0)
-            print("Cannot remove "+theFile+", error message: "+str(e))
+            Subget.Logging.output("Cannot remove "+theFile+", error message: "+str(e), "warning", True)
 
 thunarLock = False
 
@@ -92,7 +92,7 @@ def ThunarUCA(Widget, Subget, Path):
 
     # check if KDE4 is installed
     if not os.path.isfile(Path+"/.config/Thunar/uca.xml"):
-        print("Cannot find "+Path+"/.config/Thunar/uca.xml - disabling thunar integration.")
+        Subget.Logging.output("Cannot find "+Path+"/.config/Thunar/uca.xml - disabling thunar integration.", "warning", True)
         Widget.set_sensitive(0)
         #Widget.set_active(0)
         return False
@@ -107,7 +107,7 @@ def ThunarUCA(Widget, Subget, Path):
         dom = xml.dom.minidom.parseString(fpContents)
         Actions = dom.getElementsByTagName("action")
     except Exception as e:
-        print("[thunar] Cannot open XML file at "+Path+"/.config/Thunar/uca.xm, exception: "+str(e))
+        Subget.Logging.output("[thunar] Cannot open XML file at "+Path+"/.config/Thunar/uca.xm, exception: "+str(e), "warning", True)
         widget.set_sensitive(0)
         return False
 
@@ -126,7 +126,7 @@ def ThunarUCA(Widget, Subget, Path):
     XML = dom.toxml()
 
     if Found == True:
-        print("[thunar] Integration inactive")
+        Subget.Logging.output("[thunar] Integration inactive", "debug", False)
         Subget.Config['filemanagers']['xfce'] = False
 
     else:
@@ -141,14 +141,14 @@ def ThunarUCA(Widget, Subget, Path):
         else:
             XML = XML.replace('</actions>', '<action><icon>text-plain</icon><name>'+Subget._("Download subtitles")+'</name><command>/usr/bin/subget %F</command><description></description><patterns>*</patterns><startup-notify/><video-files/></action></actions>')
 
-        print("[thunar] Integration active")
+        Subget.Logging.output("[thunar] Integration active", "debug", False)
 
     try:
         fp = open(Path+"/.config/Thunar/uca.xml", "wb")
         fp.write(XML)
         fp.close()
     except Exception as e:
-        print("[thunar] Cannot write to "+Path+"/.config/Thunar/uca.xml, is it writable?")
+        Subget.Logging.output("[thunar] Cannot write to "+Path+"/.config/Thunar/uca.xml, is it writable?", "warning", True)
         widget.set_sensitive(0)
         return False
 
