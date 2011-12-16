@@ -19,6 +19,11 @@ Video Player option allows easily play movie using favorite media player right a
 Requirements: GTK+, Python 2.6/2.7/3.0/3.1/3.2, X11, PyGTK, python-dbus, python-gettext, p7zip (Gentoo: app-arch/p7zip, Debian/Ubuntu: p7zip-full)
 
 * Changelog:
+16.12.2011 (v.1.0.0.0) <webnull.www@gmail.com>:
+    + Added toolbar in main window
+    + Added Subget.interfaceAddIcon() function, it provides easy interface for adding new icons to toolbars and menus
+    - Cleaned up the code
+
 10.12.2011 (v.0.9.9.9) <webnull.www@gmail.com>:
     + Error level can be now set settings menu of console plugin
 
