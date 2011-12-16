@@ -22,22 +22,27 @@ class PluginMain(subgetcore.SubgetPlugin):
     def _onGTKLoopEnd(self, Data):
         """ Start when GTK window appears """
 
-        self.consolePosition = gtk.ImageMenuItem(self.Subget._("Console"))
-        self.consolePosition.connect("activate", self.openConsole)
+        iconFile = self.Subget.getPath("/usr/share/subget/icons/terminal.png")
 
         try:
-            image = gtk.Image()
-            image.set_from_file(self.Subget.getPath("/usr/share/subget/icons/terminal.png"))
-            self.consolePosition.set_image(image)
-        except Exception as e:
-            print(e)
-            True
+            self.Subget.interfaceAddIcon(self.Subget._("Console"), self.openConsole, "toolsMenu", "console", iconFile, '<Control>L', True, True, False)
+        except Exception:
+            self.consolePosition = gtk.ImageMenuItem(self.Subget._("Console"))
+            self.consolePosition.connect("activate", self.openConsole)
 
-        if self.Subget.configGetKey("console", "open_at_startup") == "True":
-            self.openConsole(False)
+            try:
+                image = gtk.Image()
+                image.set_from_file(iconFile)
+                self.consolePosition.set_image(image)
+            except Exception as e:
+                print(e)
+                True
 
-        self.Subget.window.Menubar.elementsArray['toolsMenu'].append(self.consolePosition)
-        self.Subget.window.show_all()
+            if self.Subget.configGetKey("console", "open_at_startup") == "True":
+                self.openConsole(False)
+
+            self.Subget.window.Menubar.elementsArray['toolsMenu'].append(self.consolePosition)
+            self.Subget.window.show_all()
 
 
     def errorLevel_Scale(self, x):

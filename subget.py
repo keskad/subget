@@ -1186,7 +1186,7 @@ class SubGet:
             self.sm.show_all()
             return True
 
-    def cleanUpResults(self):
+    def cleanUpResults(self, arg=''):
         self.liststore.clear()
         self.subtitlesList = list()
 
@@ -1602,6 +1602,60 @@ class SubGet:
         if str(Event.type.value_name) == "GDK_2BUTTON_PRESS":
             self.GTKDownloadSubtitles()
 
+    def createImage(self, icon):
+        image = gtk.Image()
+
+        try:
+            if type(icon).__name__ == "Pixbuf":
+                image.set_from_pixbuf(icon)
+            elif icon[0:3] == "gtk":
+                image.set_from_stock(icon, 2)
+            else:
+                image.set_from_file(icon)
+        except Exception:
+            pass
+
+        return image
+
+    def interfaceAddIcon(self, title, onActivate, menuItem, itemName='', icon='', shortkey='', isMenu=False, isToolbar=False, iconOnlyToolbar=False):
+        """ Adds icon to toolbar and/or menu of main window """
+
+        if isMenu != False:
+            if menuItem in self.window.Menubar.elementsArray:
+                menu = gtk.ImageMenuItem(title, self.window.agr)
+
+                if shortkey != '':
+                    key, mod = gtk.accelerator_parse(shortkey)
+                    menu.add_accelerator("activate", self.window.agr, key, mod, gtk.ACCEL_VISIBLE)
+
+                menu.connect("activate", onActivate)
+
+                if icon != '' and iconOnlyToolbar != True:
+                    try:
+                        image = self.createImage(icon)
+                        menu.set_image(image)
+                    except gobject.GError as exc:
+                        pass
+
+                self.window.Menubar.elementsArray[menuItem].append(menu)
+                self.window.Menubar.show_all()
+
+        if isToolbar != False:
+            self.window.toolbar.elements[itemName] = gtk.ToolButton(title)
+
+            if icon != '':
+                try:
+                    image = self.createImage(icon)
+                    self.window.toolbar.elements[itemName].set_icon_widget(image)
+                except gobject.GError as exc:
+                    pass
+
+                self.window.toolbar.elements[itemName].connect("clicked", onActivate)
+                self.window.toolbar.insert(self.window.toolbar.elements[itemName], -1)
+
+        self.window.toolbar.show_all()
+            
+            
 
     def gtkMainScreen(self,files):
         """ Main GTK screen of the application """
@@ -1672,61 +1726,29 @@ class SubGet:
 
         self.window.Menubar.elementsArray['toolsMenu'].append(pluginMenu)
 
-        # "About"
-        infoMenu = gtk.ImageMenuItem(_("About Subget"), self.window.agr) # gtk.STOCK_CDROM
-        key, mod = gtk.accelerator_parse("<Control>I")
-        infoMenu.add_accelerator("activate", self.window.agr, key,mod, gtk.ACCEL_VISIBLE)
-        infoMenu.connect("activate", self.gtkAboutMenu)
-
-        try:
-            pixbuf = icon_theme.load_icon("dialog-information", 16, 0)
-            image = gtk.Image()
-            image.set_from_pixbuf(pixbuf)
-            infoMenu.set_image(image)
-        except gobject.GError as exc:
-            True
-
-        self.window.Menubar.elementsArray['toolsMenu'].append(infoMenu)
+        # Toolbars
+        self.window.toolbar = gtk.Toolbar()
+        #self.window.toolbar.set_style(gtk.TOOLBAR_ICONS)
+        self.window.toolbar.set_icon_size(gtk.ICON_SIZE_SMALL_TOOLBAR)
+        self.window.toolbar.elements = dict()
+        self.interfaceAddIcon(gtk.STOCK_ADD, self.gtkSelectVideo, "fileMenu", "add", gtk.STOCK_ADD, '<Control>O', True, True, True)
+        self.interfaceAddIcon(gtk.STOCK_FIND, self.gtkSearchMenu, "fileMenu", "search", gtk.STOCK_FIND, '<Control>F', True, True, True)
+        self.window.toolbar.set_tooltips(True)
 
         # "Clear"
-        clearMenu = gtk.ImageMenuItem(_("Clear list"))
-        clearMenu.connect("activate", lambda b: self.cleanUpResults())
-
         try:
-            image = gtk.Image()
-            image.set_from_stock(gtk.STOCK_CLEAR, 2)
-            clearMenu.set_image(image)
-        except gobject.GError as exc:
-            True
+            pixbuf = icon_theme.load_icon("dialog-information", 16, 0)
+        except Exception:
+            pixbuf = ''
 
+        self.interfaceAddIcon(_("About Subget"), self.gtkAboutMenu, "toolsMenu", "about", pixbuf, '', True, True, False)
+        self.interfaceAddIcon(_("Clear list"), self.cleanUpResults, "toolsMenu", "clear", gtk.STOCK_CLEAR, '<Control>L', True, True, False)
 
-        self.window.Menubar.elementsArray['toolsMenu'].append(clearMenu)
-
-        # Adding files to query
-        settingsMenu = gtk.ImageMenuItem(gtk.STOCK_PREFERENCES)
-        settingsMenu.connect("activate", self.gtkPreferences)
-        self.window.Menubar.elementsArray['toolsMenu'].append(settingsMenu)
-
-        # Adding files to query
-        openMenu = gtk.ImageMenuItem(gtk.STOCK_ADD, self.window.agr)
-        key, mod = gtk.accelerator_parse("<Control>O")
-        openMenu.add_accelerator("activate", self.window.agr, key,mod, gtk.ACCEL_VISIBLE)
-        openMenu.connect("activate", self.gtkSelectVideo)
-        self.window.Menubar.elementsArray['fileMenu'].append(openMenu)
-
-        # Search
-        find = gtk.ImageMenuItem(gtk.STOCK_FIND, self.window.agr)
-        key, mod = gtk.accelerator_parse("<Control>F")
-        find.add_accelerator("activate", self.window.agr, key, mod, gtk.ACCEL_VISIBLE)
-        find.connect("activate", self.gtkSearchMenu)
-        self.window.Menubar.elementsArray['fileMenu'].append(find)
+        # Preferences
+        self.interfaceAddIcon(gtk.STOCK_PREFERENCES, self.gtkPreferences, "toolsMenu", "preferences", gtk.STOCK_PREFERENCES, '<Control>P', True, True, True)
 
         # Exit position in menu
-        exit = gtk.ImageMenuItem(gtk.STOCK_QUIT, self.window.agr)
-        key, mod = gtk.accelerator_parse("<Control>Q")
-        exit.add_accelerator("activate", self.window.agr, key, mod, gtk.ACCEL_VISIBLE)
-        exit.connect("activate", gtk.main_quit)
-        self.window.Menubar.elementsArray['fileMenu'].append(exit)
+        self.interfaceAddIcon(gtk.STOCK_QUIT, gtk.main_quit, "fileMenu", "quit", gtk.STOCK_FIND, '<Control>Q', True, False, True)
 
         ############# End of Menu #############
         #self.fixed = gtk.Fixed()
@@ -1817,6 +1839,7 @@ class SubGet:
         vbox = gtk.VBox(False, 0)
         vbox.set_border_width(0)
         vbox.pack_start(self.window.Menubar, False, False, 0)
+        vbox.pack_start(self.window.toolbar, False, False, 0)
         vbox.pack_start(scrolled_window, True, True, 0)
         buttonsAlligned = gtk.Alignment(0, 1, 0, 0)
         #vbox.pack_start(self.fixed, False, False, 0)
