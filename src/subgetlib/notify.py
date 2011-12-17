@@ -38,10 +38,15 @@ class PluginMain(subgetcore.SubgetPlugin):
             self.Subget.Logging.output(self.Subget._("Cannot identify system notification"), "warning", True)
             return True
 
-        if self.notifyType == "knotify":
+        self.Subget.Logging.output(self.notifyType+" -> "+title+": "+text, "debug", False)
+
+        if self.notifyType == "knotify": # knotify (throught dbus interface on kde)
             self._knotifySend(text, title)
 
-        elif self.notifyType == "command":
+        elif self.notifyType == "libnotify": # libnotify (pynotify)
+            self._libnotifySend(text, title)
+
+        elif self.notifyType == "command": # /usr/bin/notify-send (libnotify-bin)
             os.system(self.notifyData.replace("%title%", title).replace("%text%", text))
 
 
@@ -60,6 +65,12 @@ class PluginMain(subgetcore.SubgetPlugin):
             self.Subget.Logging.output(self.Subget._("Error")+": "+str(e), "error", True)
             pass
 
+    def _libnotifySend(self, message, title=''):
+        try:
+            notification = self.libnotify.Notification(title, message, self.subgetIcon)
+            notification.show()
+        except Exception as e:
+            self.Subget.Logging.output("libnotify failed, "+str(e), "warning", True)
 
     def selectNotify(self):
         """ Detects installed notify systems and select first one """
@@ -68,8 +79,18 @@ class PluginMain(subgetcore.SubgetPlugin):
         output, errors = p.communicate()
 
         if "gnome-settings-daemon" in output:
-            self.notifyType = "command"
-            self.notifyData = "/usr/bin/notify-send -u normal -i /usr/share/subget/icons/Subget-logo.png \"%title%\" \"%text%\""
+            if os.path.isfile("/usr/bin/notify-send"):
+                self.notifyType = "command"
+                self.notifyData = "/usr/bin/notify-send -u normal -i /usr/share/subget/icons/Subget-logo.png \"%title%\" \"%text%\""
+            else:
+                # libnotify
+                try:
+                    import pynotify
+                    self.notifyType = "libnotify"
+                    self.libnotify = pynotify
+                except Exception as e:
+                    pass
+
             return True
 
         # knotify
@@ -80,7 +101,7 @@ class PluginMain(subgetcore.SubgetPlugin):
             return True
 
         except dbus.exceptions.DBusException as e:
-            self.Subget.Logging.output(self.Subget._("%s not found", "knotify"), "debug", False)
+            self.Subget.Logging.output("knotify "+self.Subget._("not found"), "debug", False)
 
         # notify-send command
         if os.path.isfile("/usr/bin/notify-send"):
