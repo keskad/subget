@@ -1,5 +1,5 @@
 #-*- coding: utf-8 -*-
-import subgetcore, dbus, sys, os
+import subgetcore, dbus, sys, os, subprocess
 
 ####
 PluginInfo = {'Requirements' : { 'OS' : 'Unix, Linux'}, 'API': 2, 'Authors': 'webnull', 'domain': '', 'type': 'extension', 'isPlugin': False}
@@ -55,7 +55,7 @@ class PluginMain(subgetcore.SubgetPlugin):
                 self.iconContents = w.read()
                 w.close()
 
-            self.notifyData.event("warning", "kde", [], title, message, bytearray(self.iconContents), [], 120.0, 0, dbus_interface="org.kde.KNotify")
+            self.notifyData.event("warning", "kde", [], title, message, bytearray(self.iconContents), [], 16000, 0, dbus_interface="org.kde.KNotify")
         except Exception as e:
             self.Subget.Logging.output(self.Subget._("Error")+": "+str(e), "error", True)
             pass
@@ -63,6 +63,14 @@ class PluginMain(subgetcore.SubgetPlugin):
 
     def selectNotify(self):
         """ Detects installed notify systems and select first one """
+
+        p = subprocess.Popen(['/bin/ps', 'aux'],stdout=subprocess.PIPE,stderr=subprocess.PIPE)
+        output, errors = p.communicate()
+
+        if "gnome-settings-daemon" in output:
+            self.notifyType = "command"
+            self.notifyData = "/usr/bin/notify-send -u normal -i /usr/share/subget/icons/Subget-logo.png \"%title%\" \"%text%\""
+            return True
 
         # knotify
         try:
