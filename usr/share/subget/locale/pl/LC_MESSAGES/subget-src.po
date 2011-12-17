@@ -263,3 +263,30 @@ msgstr "Ustawiam wartości konfiguracyjne"
 
 msgid "Errorlevel outside of internal console:"
 msgstr "Pokazuj błędy o poniższym poziomie poza wewnętrzną konsolą:"
+
+msgid "Subtitles cannot be downloaded, see console for details"
+msgstr "Napisy mogły zostać pobrane, proszę sprawdzić konsolę aby zobaczyć szczegóły"
+
+msgid "Downloaded subtitles for file"
+msgstr "Pobrano napisy dla pliku"
+
+msgid "Subtitles downloaded"
+msgstr "Napisy zostały pobrane"
+
+msgid "Cannot identify system notification"
+msgstr "Nie można zidentyfikować interfejsu powiadomień, zostaną one wyłączone"
+
+msgid "Have a nice time watching the movie!"
+msgstr "Miłego oglądania!"
+
+msgid "One of plugins cannot finish its job, cancelling."
+msgstr "Jedna z wtyczek nie może poprawnie zakończyć działania, anulowanie."
+
+msgid "Downloading to"
+msgstr "Pobieranie do"
+
+msgid "No subtitles found for file"
+msgstr "Nie odnaleziono pasujących napisów dla pliku"
+
+msgid "Error trying to get list of subtitles from"
+msgstr "Wystąpił błąd podczas próby uzyskania listy napisów z wtyczki"

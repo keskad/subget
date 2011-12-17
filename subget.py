@@ -87,6 +87,7 @@ class SubGet:
     disabledPlugins = list()
     versioning = None
     Hooking = None
+    finishedJobs = list()
 
     def __init__(self):
         # initialize hooking and logging
@@ -315,9 +316,12 @@ class SubGet:
 
             for Sub in Result:
                 try:
+                    if Sub == "errInfo":
+                        continue
+
                     self.subtitlesList.append({'language': Sub['lang'], 'name': Sub['title'], 'data': Sub['data'], 'extension': Plugin, 'file': Sub['file']})
                 except Exception as e:
-                    self.Logging.output("[textModeDL] Error trying to get list of subtitles from "+Plugin+" plugin, exception details: "+str(e))
+                    self.Logging.output("[textModeDL] "+self._("Error trying to get list of subtitles from")+" "+Plugin+", "+str(e))
 
         self.queueCount = (self.queueCount - 1)
 
@@ -331,13 +335,16 @@ class SubGet:
         while True:
             time.sleep(0.2)
             Sleept += 0.2
-
+            
             if self.queueCount <= 0:
                 break
 
+            if Sleept == 30.0 or Sleept == 60.0 or Sleept == 90.0 or Sleept == 120.0:
+                self.Logging.output("[textModeWait] "+str(Sleept)+"s sleep", "debug", False)
+
             # if waited too many time
             if Sleept > 180:
-                self.Logging.output("[textmodeWait]" + _("One of plugins cannot finish its job, cancelling."), "warning")
+                self.Logging.output("[textmodeWait] "+_("One of plugins cannot finish its job, cancelling."), "warning")
                 return False
 
         self.reorderTreeview(False) # Reorder list without using GTK
@@ -368,9 +375,11 @@ class SubGet:
                     current.setDaemon(False)
                     current.start()
 
+
     def textmodeDLSub(self, Job):
-        self.Logging.output("[textmodeWait]" + _("Downloading to") + " "+Job['data']['file']+".txt")
-        return self.plugins[Job['extension']].download_by_data(Job['data'], Job['data']['file']+".txt")
+        self.Logging.output("[textmodeWait] " + _("Downloading to") + " "+Job['data']['file']+".txt")
+        Result = self.plugins[Job['extension']].download_by_data(Job['data'], Job['data']['file']+".txt")
+        return Result
 
 
     def watchWithSubtitles(self, args):
@@ -384,7 +393,12 @@ class SubGet:
             sys.exit(1)
 
         # subtitlesList
-        self.queueCount = len(self.pluginsList)
+        self.queueCount = 0
+
+        # Upgraded to API v2
+        for plugin in self.plugins:
+            if self.isPlugin(plugin):
+                self.queueCount += 1
 
         for Plugin in self.pluginsList:
             if not self.isPlugin(Plugin):
@@ -416,6 +430,21 @@ class SubGet:
                 if Found == False:
                     self.Logging.output(_("No subtitles found for file") + " "+args[0], "warning")
                     self.sendCriticAlert(_("No subtitles found for file") + " "+args[0])
+
+                    try:
+                        self.Hooking.executeHooks(self.Hooking.getAllHooks("onSubtitlesDownload"), [False, False, False, False])
+                    except Exception as e:
+                        self.Logging.output(_("Error")+": "+_("Cannot execute hook")+"; onSubtitlesDownload; "+str(e), "warning", True)
+                else:
+                    try:
+                        self.Hooking.executeHooks(self.Hooking.getAllHooks("onSubtitlesDownload"), [self.configGetKey('watch_with_subtitles', 'download_only'), File+".txt", File, True])
+                    except Exception as e:
+                        self.Logging.output(_("Error")+": "+_("Cannot execute hook")+"; onSubtitlesDownload; "+str(e), "warning", True)
+        else:
+            try:
+                self.Hooking.executeHooks(self.Hooking.getAllHooks("onSubtitlesDownload"), [False, False, False, True])
+            except Exception as e:
+                self.Logging.output(_("Error")+": "+_("Cannot execute hook")+"; onSubtitlesDownload; "+str(e), "warning", True)
 
         return True
 
@@ -650,6 +679,19 @@ class SubGet:
                     Results = self.plugins[Plugin].download_by_data(self.subtitlesList[SelectID]['data'], filename)
                  elif self.plugins[Plugin].PluginInfo['API'] == 2:
                     Results = self.plugins[Plugin].instance.download_by_data(self.subtitlesList[SelectID]['data'], filename)
+
+                 if Results != language and Results != '':
+                    try:
+                        self.Hooking.executeHooks(self.Hooking.getAllHooks("onSubtitlesDownload"), [self.VideoPlayer.get_active(), Results, self.dictGetKey(self.subtitlesList[SelectID]['data'], 'file'), True])
+                    except Exception as e:
+                        self.Logging.output(_("Error")+": "+_("Cannot execute hook")+"; onSubtitlesDownload; "+str(e), "warning", True)
+
+                 else:
+                    try:
+                        self.Hooking.executeHooks(self.Hooking.getAllHooks("onSubtitlesDownload"), [False, False, False, False])
+                    except Exception as e:
+                        self.Logging.output(_("Error")+": "+_("Cannot execute hook")+"; onSubtitlesDownload; "+str(e), "warning", True)
+
 
                  if self.VideoPlayer.get_active() == True:
                     VideoFile = self.dictGetKey(self.subtitlesList[SelectID]['data'], 'file')
