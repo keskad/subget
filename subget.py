@@ -251,6 +251,7 @@ class SubGet:
                 action="watch"
 
         self.loadConfig()
+
         try:
             level = int(self.configGetKey("logging", "level"))
             self.Logging.loggingLevel = level
@@ -259,13 +260,25 @@ class SubGet:
 
         if consoleMode == False and not os.name == "nt":
             try:
+                cwd = os.getcwd()
+                if cwd[:-1] != "/":
+                    cwd += "/"
+
+                newarg = list()
+
+                for arg in args:
+                    if os.path.isfile(cwd+arg):
+                        newarg.append(cwd+arg)
+                    else:
+                        newarg.append(arg)
+
                 bus = dbus.SessionBus()
                 SubgetServiceObj = bus.get_object('org.freedesktop.subget', '/org/freedesktop/subget')
                 ping = SubgetServiceObj.get_dbus_method('ping', 'org.freedesktop.subget')
 
                 if len(args) > 0:
                     addLinks = SubgetServiceObj.get_dbus_method('addLinks', 'org.freedesktop.subget')
-                    addLinks(str.join('\n', args), False)
+                    addLinks(str.join('\n', newarg), False)
                     self.Logging.output(_("Added new files to existing list."), "", False)
                 else:
                     self.Logging.output(_("Only one instance (graphical window) of Subget can be running at once by one user."), "", False) # only one instance of Subget can be running at once
