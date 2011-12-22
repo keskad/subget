@@ -1417,26 +1417,28 @@ class SubGet:
 
         # ==== Dolphin, Konqueror
         Dolphin = gtk.CheckButton("Dolphin, Konqueror (KDE)")
-        self.Dolphin = Dolphin
+        Found = subgetcore.filemanagers.checkKDEService(Dolphin, self, Path)
         Dolphin.connect("pressed", subgetcore.filemanagers.KDEService, self, Path)
         Dolphin.set_sensitive(True)
 
-        if not self.dictGetKey(self.Config['filemanagers'], 'kde') == False:
+        if not Found == False:
             Dolphin.set_active(1)
 
         # ==== Nautilus
         Nautilus = gtk.CheckButton("Nautilus (GNOME)")
+        Found = subgetcore.filemanagers.checkNautilus(Nautilus, self, Path)
         Nautilus.connect("pressed", subgetcore.filemanagers.Nautilus, self, Path)
         Nautilus.set_sensitive(True)
 
-        if not self.dictGetKey(self.Config['filemanagers'], 'gnome') == False:
+        if not Found == False:
             Nautilus.set_active(1)
 
         # ==== Thunar
         Thunar = gtk.CheckButton("Thunar (XFCE)")
-        Thunar.connect("pressed", subgetcore.filemanagers.ThunarUCA, self, Path)
+        dom, Found = subgetcore.filemanagers.checkThunar(Thunar, self, Path)
+        Thunar.connect("pressed", subgetcore.filemanagers.ThunarUCA, self, Path, dom, Found)
 
-        if not self.dictGetKey(self.Config['filemanagers'], 'xfce') == False:
+        if not Found == False:
             Thunar.set_active(1)
 
         # ==== PCManFM
@@ -1866,7 +1868,7 @@ class SubGet:
 
         # Videoplayer checkbutton
         self.VideoPlayer = gtk.CheckButton(_("Start video player"))
-        if not self.dictGetKey(self.Config['afterdownload'], 'playmovie') == False: # TRUE, playmovie active
+        if not self.configGetKey('afterdownload', 'playmovie') == False: # TRUE, playmovie active
             self.VideoPlayer.set_active(1)
         else:
             self.VideoPlayer.set_active(0)
@@ -1879,6 +1881,17 @@ class SubGet:
         self.CancelButton.set_size_request(90, 40)
         self.CancelButton.connect('clicked', lambda b: gtk.main_quit())
         #self.fixed.put(self.CancelButton, 390, 205) # put on fixed
+
+        # Spinner "Progress indicator"
+        #self.window.spinner = gtk.Spinner()
+        #lalign = gtk.Alignment(0, 0, 0, 0)
+
+        spinnerHbox = gtk.HBox(False, 5)
+        spinnerHbox.pack_start(self.window.Menubar, False, False, 5)
+        #spinnerHbox.pack_start(gtk.Button("test"), False, False, 5)
+        #spinnerHbox.pack_start(self.window.spinner, False, False, 5)
+        #spinnerHbox.pack_start(gtk.Button("asd"), False, False, 5)
+
 
         # scrollbars
         scrolled_window = gtk.ScrolledWindow()
@@ -1893,7 +1906,7 @@ class SubGet:
         
         vbox = gtk.VBox(False, 0)
         vbox.set_border_width(0)
-        vbox.pack_start(self.window.Menubar, False, False, 0)
+        vbox.pack_start(spinnerHbox, False, False, 0)
         vbox.pack_start(self.window.toolbar, False, False, 0)
         vbox.pack_start(scrolled_window, True, True, 0)
         buttonsAlligned = gtk.Alignment(0, 1, 0, 0)
