@@ -1294,8 +1294,6 @@ class SubGet:
                         Results = self.plugins[Plugin].instance.search_by_keywords(query) # query the plugin for results
                         Results = Results[0]
 
-                    print Results
-
                     if Results == None:
                         return
 
