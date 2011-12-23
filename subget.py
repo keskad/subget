@@ -1284,7 +1284,7 @@ class SubGet:
                     except AttributeError:
                        True # Plugin does not support searching by keywords
             else:
-                if 1==1:#try:
+                try:
                     Plugin = self.sm.plugins[plugin]
                     self.plugins[Plugin].language = language
 
@@ -1305,9 +1305,9 @@ class SubGet:
 
                         self.addSubtitlesRow(Result['lang'], Result['title'], Result['domain'], Result['data'], plugin, Result['file'])
 
-                #except AttributeError as errno:
-                #    self.Logging.output("[plugin:"+self.sm.plugins[plugin]+"] "+_("Searching by keywords is not supported by this plugin"), "info", True)
-                #    True # Plugin does not support searching by keywords
+                except AttributeError as errno:
+                    self.Logging.output("[plugin:"+self.sm.plugins[plugin]+"] "+_("Searching by keywords is not supported by this plugin"), "info", True)
+
     def gtkPreferencesQuit(self):
         self.winPreferences.destroy()
         self.Windows['preferences'] = False
