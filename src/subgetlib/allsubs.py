@@ -38,7 +38,9 @@ class PluginMain(subgetcore.SubgetPlugin):
         return True
 
     def search_by_keywords(self, Keywords):
-        return self.check_exists(Keywords)
+        results = subgetcore.SubtitlesList()
+        self.check_exists(Keywords, results)
+        return results.output()
 
     def check_exists(self, File, results):
         global subgetObject

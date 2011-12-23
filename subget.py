@@ -1171,7 +1171,7 @@ class SubGet:
 
             self.sm = gtk.Window(gtk.WINDOW_TOPLEVEL)
             self.sm.set_title(_("Search"))
-            self.sm.set_size_request(350, 180)
+            self.sm.set_size_request(450, 180)
             self.sm.set_resizable(False)
             self.sm.set_icon_from_file(self.subgetOSPath+"/usr/share/subget/icons/Subget-logo.png")
             self.sm.connect("delete_event", self.closeWindow, self.sm, 'gtkSearchMenu')
@@ -1184,7 +1184,7 @@ class SubGet:
             # text query
             self.sm.entry = gtk.Entry()
             self.sm.entry.set_max_length(50)
-            self.sm.entry.set_size_request(190, 26)
+            self.sm.entry.set_size_request(290, 26)
             self.sm.entry.show()
 
             # combo box with plugin selection
@@ -1232,10 +1232,10 @@ class SubGet:
 
             self.sm.fixed.put(self.sm.label, 10, 8)
             self.sm.fixed.put(self.sm.entry, 10, 60)
-            self.sm.fixed.put(self.sm.cb, 210, 59)
+            self.sm.fixed.put(self.sm.cb, 310, 59)
             self.sm.fixed.put(self.sm.clearCB, 20, 90)
-            self.sm.fixed.put(self.sm.searchButton, 250, 128)
-            self.sm.fixed.put(self.sm.cancelButton, 165, 128)
+            self.sm.fixed.put(self.sm.searchButton, 350, 128)
+            self.sm.fixed.put(self.sm.cancelButton, 265, 128)
 
             self.sm.add(self.sm.fixed)
             self.sm.show_all()
@@ -1266,7 +1266,11 @@ class SubGet:
                             continue
 
                         self.plugins[Plugin].language = language
-                        Results = self.plugins[Plugin].search_by_keywords(query) # query the plugin for results
+
+                        if self.plugins[Plugin].PluginInfo['API'] == 1:
+                            Results = self.plugins[Plugin].search_by_keywords(query) # query the plugin for results
+                        elif self.plugins[Plugin].PluginInfo['API'] == 2:
+                            Results = self.plugins[Plugin].instance.search_by_keywords(query) # query the plugin for results
 
                         if Results == None or Results == False:
                             return
@@ -1280,9 +1284,17 @@ class SubGet:
                     except AttributeError:
                        True # Plugin does not support searching by keywords
             else:
-                try:
-                    self.plugins[self.sm.plugins[plugin]].language = language
-                    Results = self.plugins[self.sm.plugins[plugin]].search_by_keywords(query) # query the plugin for results
+                if 1==1:#try:
+                    Plugin = self.sm.plugins[plugin]
+                    self.plugins[Plugin].language = language
+
+                    if self.plugins[Plugin].PluginInfo['API'] == 1:
+                        Results = self.plugins[Plugin].search_by_keywords(query) # query the plugin for results
+                    elif self.plugins[Plugin].PluginInfo['API'] == 2:
+                        Results = self.plugins[Plugin].instance.search_by_keywords(query) # query the plugin for results
+                        Results = Results[0]
+
+                    print Results
 
                     if Results == None:
                         return
@@ -1293,9 +1305,9 @@ class SubGet:
 
                         self.addSubtitlesRow(Result['lang'], Result['title'], Result['domain'], Result['data'], plugin, Result['file'])
 
-                except AttributeError as errno:
-                    self.Logging.output("[plugin:"+self.sm.plugins[plugin]+"] "+_("Searching by keywords is not supported by this plugin"), "", True)
-                    True # Plugin does not support searching by keywords
+                #except AttributeError as errno:
+                #    self.Logging.output("[plugin:"+self.sm.plugins[plugin]+"] "+_("Searching by keywords is not supported by this plugin"), "info", True)
+                #    True # Plugin does not support searching by keywords
     def gtkPreferencesQuit(self):
         self.winPreferences.destroy()
         self.Windows['preferences'] = False
