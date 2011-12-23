@@ -19,6 +19,9 @@ Video Player option allows easily play movie using favorite media player right a
 Requirements: GTK+, Python 2.6/2.7/3.0/3.1/3.2, X11, PyGTK, python-dbus, python-gettext, p7zip (Gentoo: app-arch/p7zip, Debian/Ubuntu: p7zip-full)
 
 * Changelog:
+23.12.2011 (v.1.0.3) <webnull.www@gmail.com>:
+    * Moved all flag icons to /usr/share/subget/icons/flags
+
 22.12.2011 (v.1.0.2) <webnull.www@gmail.com>:
     * Fixed integrations with Thunar, Nautilus and Dolphin/Konqueror, now it works
 

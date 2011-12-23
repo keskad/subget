@@ -475,10 +475,10 @@ class SubGet:
             
             self.subtitlesList.append({'language': language, 'name': release_name, 'server': server, 'data': download_data, 'extension': extension, 'file': File})
 
-            pixbuf_path = self.subgetOSPath+'/usr/share/subget/icons/'+language+'.xpm'
+            pixbuf_path = self.getPath('/usr/share/subget/icons/flags/'+language+'.xpm')
 
             if not os.path.isfile(pixbuf_path):
-                pixbuf_path = self.subgetOSPath+'/usr/share/subget/icons/unknown.xpm'
+                pixbuf_path = self.getPath('/usr/share/subget/icons/flags/unknown.xpm')
                 self.Logging.output("[addSubtitlesRow] "+language+".xpm "+_("icon does not exists, using unknown.xpm"), "warning", False)
 
             try:
@@ -1536,7 +1536,7 @@ class SubGet:
         Label2 = gtk.Label(_("Preferred language:"))
 
         liststore = gtk.ListStore(gtk.gdk.Pixbuf, str)
-        languages = os.listdir("/usr/share/subget/icons/")
+        languages = os.listdir(self.getPath("/usr/share/subget/icons/flags"))
 
         preferred_language = gtk.ComboBox(liststore)
         preferred_language.set_wrap_width(4)
@@ -1552,7 +1552,7 @@ class SubGet:
             if extension == ".xpm":
                 i+=1
 
-                pixbuf = gtk.gdk.pixbuf_new_from_file("/usr/share/subget/icons/"+basename+".xpm")
+                pixbuf = gtk.gdk.pixbuf_new_from_file(self.getPath("/usr/share/subget/icons/flags/"+basename+".xpm"))
                 liststore.append([pixbuf, str(basename)])
                 if basename == preferred_language_conf:
                     fi=i
