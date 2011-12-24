@@ -16,7 +16,6 @@ def Nautilus(Widget, Subget, Path):
                 shutil.copyfile("/usr/share/subget/fm-integration/gnome-wws.sh",  Path+"/.gnome2/nautilus-scripts/"+Subget._("Watch with subtitles"))
 
             os.system("chmod +x \""+theFile+"\"")
-            Subget.Config['filemanagers']['gnome'] = True
             Subget.Logging.output(Subget._("Integration active"), "debug", False)
         except Exception as e:
             Widget.set_sensitive(0)
@@ -29,7 +28,6 @@ def Nautilus(Widget, Subget, Path):
                     Subget.Logging.output(Subget._("Integration inactive"), "debug", False)
 
             os.remove(theFile)
-            Subget.Config['filemanagers']['gnome'] = False
         except Exception as e:
             Widget.set_sensitive(0)
             Subget.Logging.output("Cannot remove "+theFile+", error message: "+str(e), "debug", False)
@@ -40,7 +38,7 @@ def checkNautilus(self, Subget, Path):
         Subget.Logging.output("Nautilus is not installed, disabling checkButton.", "debug", False)
         Widget.set_sensitive(0)
         #Widget.set_active(0)
-        return False
+        return False, False
 
     theFile = Path+"/.gnome2/nautilus-scripts/"+Subget._("Download subtitles")
 
@@ -81,7 +79,6 @@ def KDEService(Widget, Subget, Path):
                 shutil.copyfile("/usr/share/subget/fm-integration/kde4-wws.desktop",  Path+"/.kde4/share/kde4/services/subget-wws.desktop")
 
             os.system("chmod +x \""+theFile+"\"")
-            Subget.Config['filemanagers']['kde'] = True
             Subget.Logging.output(Subget._("Integration active"), "debug", False)
         except Exception as e:
             Widget.set_active(0)
@@ -95,7 +92,6 @@ def KDEService(Widget, Subget, Path):
                     Subget.Logging.output(Subget._("Integration inactive"), "debug", False)
 
             os.remove(theFile)
-            Subget.Config['filemanagers']['kde'] = False
         except Exception:
             Widget.set_sensitive(0)
             Subget.Logging.output("Cannot remove "+theFile+", error message: "+str(e), "warning", True)
