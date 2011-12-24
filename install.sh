@@ -9,7 +9,6 @@ then
     cp -r ./* /tmp/subget/
 
     export FTP_PASSIVE_MODE=1
-    export IN_BSD_SCRIPT=1
 
     echo "Installing python 2.6..."
     pkg_add -rv python26
