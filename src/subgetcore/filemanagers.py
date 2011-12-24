@@ -109,7 +109,7 @@ def checkThunar(Widget, Subget, Path):
         Subget.Logging.output("Cannot find "+Path+"/.config/Thunar/uca.xml - disabling thunar integration.", "warning", True)
         Widget.set_sensitive(0)
         #Widget.set_active(0)
-        return False
+        return False, False
 
     try:
         if not os.path.isdir(Path+"/.config/Thunar"):
