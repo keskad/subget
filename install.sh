@@ -50,7 +50,7 @@ then
     python ./setup.py install
     cp -r usr /
     msgfmt usr/share/subget/locale/pl/LC_MESSAGES/subget-src.po -o usr/share/subget/locale/pl/LC_MESSAGES/subget.mo
-    cp subget.py /usr/bin/local/subget
+    cp subget.py /usr/local/bin/subget
     chmod +x /usr/local/bin/subget
     echo "Installation done."
 
