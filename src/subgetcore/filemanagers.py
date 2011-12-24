@@ -101,8 +101,8 @@ def KDEService(Widget, Subget, Path):
 def checkThunar(Widget, Subget, Path):
     """ Check status of Thunar integration with Subget """
 
-    if not os.path.isfile("/usr/bin/thunar"):
-        Subget.Logging.output("Cannot find "+Path+"/.config/Thunar/uca.xml - disabling thunar integration.", "warning", True)
+    if Subget.getFile(["/usr/bin/thunar", "/usr/local/bin/thunar"]) == False:
+        Subget.Logging.output("Cannot find thunar installation", "debug", False)
         Widget.set_sensitive(0)
         #Widget.set_active(0)
         return False, False
@@ -167,10 +167,12 @@ def ThunarUCA(Widget, Subget, Path, dom, Found):
     if Widget.get_active() == True:
         Subget.Logging.output(Subget._("Integration inactive"), "debug", False)
     else:
+        subgetBin = Subget.getFile(["/usr/bin/subget", "/usr/local/bin/subget"])
+
         if Subget.configGetKey('watch_with_subtitles', 'enabled') == "True":
-            XML = XML.replace('</actions>', '<action><icon>text-plain</icon><name>'+Subget._("Download subtitles")+'</name><command>/usr/bin/subget %F</command><description></description><patterns>*</patterns><startup-notify/><video-files/></action><action><icon>text-plain</icon><name>'+Subget._("Watch with subtitles")+'</name><command>/usr/bin/subget -w %F</command><description></description><patterns>*</patterns><startup-notify/><video-files/></action></actions>')
+            XML = XML.replace('</actions>', '<action><icon>text-plain</icon><name>'+Subget._("Download subtitles")+'</name><command>/usr/bin/subget %F</command><description></description><patterns>*</patterns><startup-notify/><video-files/></action><action><icon>text-plain</icon><name>'+Subget._("Watch with subtitles")+'</name><command>'+subgetBin+' -w %F</command><description></description><patterns>*</patterns><startup-notify/><video-files/></action></actions>')
         else:
-            XML = XML.replace('</actions>', '<action><icon>text-plain</icon><name>'+Subget._("Download subtitles")+'</name><command>/usr/bin/subget %F</command><description></description><patterns>*</patterns><startup-notify/><video-files/></action></actions>')
+            XML = XML.replace('</actions>', '<action><icon>text-plain</icon><name>'+Subget._("Download subtitles")+'</name><command>'+subgetBin+' %F</command><description></description><patterns>*</patterns><startup-notify/><video-files/></action></actions>')
 
         Subget.Logging.output(Subget._("Integration active"), "debug", False)
 

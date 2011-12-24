@@ -149,7 +149,7 @@ def download_by_data(File, SavePath):
         if os.name == "nt":
             subprocess.call("\""+subgetObject.subgetOSPath.replace("/", "\\")+"/7za.exe\" x -y -so -piBlm8NTigvru0Jr0 \""+File+".7z\" > \""+File+".txt\"", shell=True, bufsize=1)
         else:
-            os.system("/usr/bin/7z x -y -so -piBlm8NTigvru0Jr0 \""+File+".7z\" 2>/dev/null > \""+File+".txt\"")
+            os.system(subgetObject.getFile("/usr/bin/7z", "/usr/local/bin/7z")+" x -y -so -piBlm8NTigvru0Jr0 \""+File+".7z\" 2>/dev/null > \""+File+".txt\"")
 
         os.remove(File+".7z")
         return SavePath

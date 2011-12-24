@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 #-*- coding: utf-8 -*-
 import getopt, sys, os, re, glob, gtk, gobject, time, operator, gettext, locale, xml.dom.minidom
 import glib
@@ -93,6 +93,15 @@ class SubGet:
         # initialize hooking and logging
         self.Hooking = subgetcore.Hooking()
         self.Logging = subgetcore.Logging(self)
+
+    def getFile(self, kwargs):
+        """ Usage: /usr/bin/subget /usr/local/bin/subget - it will find first working path and return it """
+
+        for key in kwargs:
+            if os.path.isfile(key):
+                return key
+
+        return False
 
     def getPath(self, path):
         userPath = os.path.expanduser("~")+path
@@ -808,6 +817,16 @@ class SubGet:
     def pluginInfo(self, x, Plugin):
         print("Feature not implemented.")
 
+    def osName(self):
+        if os.name == "nt":
+            return "Windows"
+        elif sys.platform[0:5] == "linux":
+            return "Linux"
+        elif sys.platform[0:7] == "freebsd":
+            return "FreeBSD"
+        else:
+            return "Unknown operating system"
+
     def pluginTreeviewEvent(self, treeview, event, liststore):
         menu = gtk.Menu() 
 
@@ -1111,7 +1130,7 @@ class SubGet:
                 if self.versioning == False or self.versioning == None:
                     self.gtkAddTab(notebook, _("Version"), _("Version information can't be read because there was a problem parsing file /usr/share/subget/version.xml"))
                 else:
-                    self.gtkAddTab(notebook, _("Version"), _("Version")+": "+self.versioning['version']+"\n\n"+_("Supported platforms")+":\n"+self.versioning['platforms']+"\n"+_("Project developers")+":\n "+self.versioning['developers']+"\n"+_("Contact")+":\n"+self.versioning['contact'])
+                    self.gtkAddTab(notebook, _("Version"), _("Version")+": "+self.versioning['version']+", "+self.osName()+"\n\n"+_("Supported platforms")+":\n"+self.versioning['platforms']+"\n"+_("Project developers")+":\n "+self.versioning['developers']+"\n"+_("Contact")+":\n"+self.versioning['contact'])
 
             fixed.put(notebook, 12, 160)
 

@@ -1,4 +1,3 @@
-#!/usr/bin/python2
 import httplib, urllib, time, os, hashlib, re, zipfile, time
 from xml.dom import minidom
 

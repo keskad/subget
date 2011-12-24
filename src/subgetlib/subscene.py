@@ -137,10 +137,12 @@ def download_by_data(File, SavePath):
 
     if os.path.isfile(TMPName):
         if Type == "rar":
-            if os.path.isfile("/usr/bin/unrar"):
-                os.system("cd "+os.path.dirname(SavePath)+";/usr/bin/unrar e "+TMPName)
+            unrar = subgetObject.getFile("/usr/bin/unrar", "/usr/local/bin/unrar")
+
+            if unrar != False:
+                os.system("cd "+os.path.dirname(SavePath)+";"+unrar+" e "+TMPName)
             else:
-                print("[plugin:subscene] Cannot find /usr/bin/unrar, unpacking of RAR file failed, moving to directory containing movie")
+                print("[plugin:subscene] Cannot find unrar, unpacking of RAR file failed, moving to directory containing movie")
                 os.system("mv "+TMPName+" "+SavePath+".rar")
         elif Type == "zip":
             try:

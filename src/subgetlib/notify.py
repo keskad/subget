@@ -78,10 +78,12 @@ class PluginMain(subgetcore.SubgetPlugin):
         p = subprocess.Popen(['/bin/ps', 'aux'],stdout=subprocess.PIPE,stderr=subprocess.PIPE)
         output, errors = p.communicate()
 
+        notifySend = self.Subget.getFile("/usr/bin/notify-send", "/usr/local/bin/notify-send")
+
         if "gnome-settings-daemon" in output:
-            if os.path.isfile("/usr/bin/notify-send"):
+            if notifySend != False:
                 self.notifyType = "command"
-                self.notifyData = "/usr/bin/notify-send -u normal -i /usr/share/subget/icons/Subget-logo.png \"%title%\" \"%text%\""
+                self.notifyData = notifySend+" -u normal -i /usr/share/subget/icons/Subget-logo.png \"%title%\" \"%text%\""
             else:
                 # libnotify
                 try:
@@ -104,9 +106,9 @@ class PluginMain(subgetcore.SubgetPlugin):
             self.Subget.Logging.output("knotify "+self.Subget._("not found"), "debug", False)
 
         # notify-send command
-        if os.path.isfile("/usr/bin/notify-send"):
+        if notifySend != False:
             self.notifyType = "command"
-            self.notifyData = "/usr/bin/notify-send -u normal -i /usr/share/subget/icons/Subget-logo.png \"%title%\" \"%text%\""
+            self.notifyData = notifySend+" -u normal -i /usr/share/subget/icons/Subget-logo.png \"%title%\" \"%text%\""
             return True
 
         self.notifyType = ""
