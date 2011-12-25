@@ -94,7 +94,7 @@ class SubGet:
         self.Hooking = subgetcore.Hooking()
         self.Logging = subgetcore.Logging(self)
 
-    def getFile(self, kwargs):
+    def getFile(self, kwargs, x=''):
         """ Usage: /usr/bin/subget /usr/local/bin/subget - it will find first working path and return it """
 
         for key in kwargs:

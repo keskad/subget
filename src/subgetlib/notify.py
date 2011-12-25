@@ -78,7 +78,7 @@ class PluginMain(subgetcore.SubgetPlugin):
         p = subprocess.Popen(['/bin/ps', 'aux'],stdout=subprocess.PIPE,stderr=subprocess.PIPE)
         output, errors = p.communicate()
 
-        notifySend = self.Subget.getFile("/usr/bin/notify-send", "/usr/local/bin/notify-send")
+        notifySend = self.Subget.getFile(["/usr/bin/notify-send", "/usr/local/bin/notify-send"])
 
         if "gnome-settings-daemon" in output:
             if notifySend != False:
