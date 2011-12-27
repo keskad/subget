@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 #-*- coding: utf-8 -*-
-import getopt, sys, os, re, glob, gtk, gobject, time, operator, gettext, locale, xml.dom.minidom
+import getopt, sys, os, glob, gtk, gobject, time, operator, gettext, locale, xml.dom.minidom
 import glib
 from threading import Thread
 from distutils.sysconfig import get_python_lib
@@ -352,6 +352,7 @@ class SubGet:
     def textmodeWait(self):
         """ Wait util jobs not done, after that sort all results and download subtitles """
 
+        self.workingState(True)
         Sleept = 0.0
 
         while True:
@@ -367,6 +368,7 @@ class SubGet:
             # if waited too many time
             if Sleept > 180:
                 self.Logging.output("[textmodeWait] "+_("One of plugins cannot finish its job, cancelling."), "warning")
+                self.workingState(False)
                 return False
 
         self.reorderTreeview(False) # Reorder list without using GTK
@@ -396,6 +398,8 @@ class SubGet:
                     current = Thread(target=self.textmodeDLSub, args=(Job,))
                     current.setDaemon(False)
                     current.start()
+
+        self.workingState(False)
 
 
     def textmodeDLSub(self, Job):
@@ -505,6 +509,7 @@ class SubGet:
             return False
 
         self.locks['reorder'] = True
+        self.workingState(True)
 
         if "plugins" in self.Config:
             if self.dictGetKey(self.Config['plugins'], 'list_ordering') == False:
@@ -521,6 +526,7 @@ class SubGet:
         #print("QUEUE COUNT: "+str(self.queueCount))
 
         if self.queueCount == 0:
+            self.workingState(False)
             newList = list()
 
             for Item in self.subtitlesList:
@@ -604,8 +610,8 @@ class SubGet:
 
             # mark job as done
             self.queueCount = (self.queueCount - 1)
-                
-            
+
+
     def dictGetKey(self, Array, Key):
         """ Return key from dictionary, if not exists returns false """
 
@@ -933,11 +939,10 @@ class SubGet:
 
             window = gtk.Window(gtk.WINDOW_TOPLEVEL)
             window.set_title(_("Plugins"))
-            window.set_resizable(False)
+            window.set_resizable(True)
             window.set_size_request(700, 290)
             window.set_icon_from_file(self.subgetOSPath+"/usr/share/subget/icons/plugin.png")
             window.connect("delete_event", self.closeWindow, window, 'gtkPluginMenu')
-            fixed = gtk.Fixed()
 
             liststore = gtk.ListStore(gtk.gdk.Pixbuf, str, str, str, str)
             treeview = gtk.TreeView(liststore)
@@ -989,19 +994,26 @@ class SubGet:
                 tvcolumn3.set_sort_column_id(3)
 
             scrolled_window = gtk.ScrolledWindow()
+            scrolled_window.set_shadow_type(gtk.SHADOW_ETCHED_IN)
             scrolled_window.set_border_width(0)
             scrolled_window.set_size_request(700, 230)
             scrolled_window.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_ALWAYS)
-            scrolled_window.add_with_viewport(treeview)
+            scrolled_window.add(treeview)
 
             # Cancel button
             CancelButton = gtk.Button(stock=gtk.STOCK_CLOSE)
             CancelButton.set_size_request(90, 40)
             CancelButton.connect('clicked', self.closePluginsMenu, liststore, window)
-            fixed.put(CancelButton, 600, 240) # put on fixed
 
-            fixed.put(scrolled_window, 0, 0)
-            window.add(fixed)
+            vbox = gtk.VBox(False, 0)
+            vbox.set_border_width(0)
+            vbox.pack_start(scrolled_window, True, True, 0)
+
+            hbox = gtk.HBox(False, 5)
+            hbox.pack_end(CancelButton, False, False, 8)
+            vbox.pack_start(hbox, False, False, 8)
+
+            window.add(vbox)
             window.show_all()
 
 
@@ -1141,24 +1153,24 @@ class SubGet:
             about.show_all()
 
     def gtkAddTab(self, notebook, label, text):
-            authorsFrame = gtk.Frame("")
-            authorsFrame.set_border_width(0) 
-            authorsFrame.set_size_request(100, 75)
-            authorsFrame.set_shadow_type(gtk.SHADOW_ETCHED_OUT)
+        authorsFrame = gtk.Frame("")
+        authorsFrame.set_border_width(0) 
+        authorsFrame.set_size_request(100, 75)
+        authorsFrame.set_shadow_type(gtk.SHADOW_ETCHED_OUT)
 
-            authorsFrameContent = gtk.Label(text)
-            authorsFrameContent.set_alignment (0, 0)
+        authorsFrameContent = gtk.Label(text)
+        authorsFrameContent.set_alignment (0, 0)
 
-            # Scrollbars
-            scrolled_window = gtk.ScrolledWindow()
-            scrolled_window.set_border_width(0)
-            scrolled_window.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
-            scrolled_window.add_with_viewport(authorsFrameContent)
+        # Scrollbars
+        scrolled_window = gtk.ScrolledWindow()
+        scrolled_window.set_border_width(0)
+        scrolled_window.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
+        scrolled_window.add_with_viewport(authorsFrameContent)
 
-            authorsFrame.add(scrolled_window)
+        authorsFrame.add(scrolled_window)
 
-            authorsLabel = gtk.Label(label)
-            notebook.prepend_page(authorsFrame, authorsLabel)
+        authorsLabel = gtk.Label(label)
+        notebook.prepend_page(authorsFrame, authorsLabel)
 
     def closeWindow(self, Event, X, Window, ID):
         Window.destroy()
@@ -1909,17 +1921,13 @@ class SubGet:
         self.CancelButton = gtk.Button(stock=gtk.STOCK_CLOSE)
         self.CancelButton.set_size_request(90, 40)
         self.CancelButton.connect('clicked', lambda b: gtk.main_quit())
-        #self.fixed.put(self.CancelButton, 390, 205) # put on fixed
 
         # Spinner "Progress indicator"
-        #self.window.spinner = gtk.Spinner()
-        #lalign = gtk.Alignment(0, 0, 0, 0)
+        self.window.spinner = gtk.Spinner()
 
-        spinnerHbox = gtk.HBox(False, 5)
-        spinnerHbox.pack_start(self.window.Menubar, False, False, 5)
-        #spinnerHbox.pack_start(gtk.Button("test"), False, False, 5)
-        #spinnerHbox.pack_start(self.window.spinner, False, False, 5)
-        #spinnerHbox.pack_start(gtk.Button("asd"), False, False, 5)
+        spinnerHbox = gtk.HBox(False, 0)
+        spinnerHbox.pack_start(self.window.Menubar, False, True, 0)
+        spinnerHbox.pack_end(self.window.spinner, False, False, 5)
 
 
         # scrollbars
@@ -1938,14 +1946,11 @@ class SubGet:
         vbox.pack_start(spinnerHbox, False, False, 0)
         vbox.pack_start(self.window.toolbar, False, False, 0)
         vbox.pack_start(scrolled_window, True, True, 0)
-        buttonsAlligned = gtk.Alignment(0, 1, 0, 0)
-        #vbox.pack_start(self.fixed, False, False, 0)
 
         hbox = gtk.HBox(False, 5)
-        hbox.pack_start(buttonsAlligned)
-        hbox.pack_start(self.VideoPlayer, False, False, 5)
-        hbox.pack_start(self.CancelButton, False, False, 5)
         hbox.pack_end(self.DownloadButton, False, False, 5)
+        hbox.pack_end(self.CancelButton, False, False, 0)
+        hbox.pack_end(self.VideoPlayer, False, False, 10)
         vbox.pack_start(hbox, False, False, 8)
 
         self.window.add(vbox)
@@ -1953,6 +1958,7 @@ class SubGet:
         
 
         self.window.show_all()
+        self.workingState(False)
         
         try:
             self.Hooking.executeHooks(self.Hooking.getAllHooks("onGTKWindowOpen"))
@@ -1961,6 +1967,17 @@ class SubGet:
 
         #else:
             #    print(_("Sorry, GUI mode is not fully available yet."))
+
+
+    def workingState(self, state):
+        if state == True:
+            self.window.spinner.show()
+            self.window.spinner.start()
+            return True
+        else:
+            self.window.spinner.stop()
+            self.window.spinner.hide()
+            return False
 
     ##### DRAG & DROP SUPPORT #####
     def motion_cb(self, wid, context, x, y, time):
