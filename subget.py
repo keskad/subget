@@ -1160,6 +1160,7 @@ class SubGet:
 
         authorsFrameContent = gtk.Label(text)
         authorsFrameContent.set_alignment (0, 0)
+        authorsFrameContent.set_selectable(True)
 
         # Scrollbars
         scrolled_window = gtk.ScrolledWindow()
