@@ -116,6 +116,7 @@ class PluginMain(subgetcore.SubgetPlugin):
 
         # TEXTAREA INSIDE OF FRAME
         self.consoleWindow.textarea = gtk.Label(self.Subget.Logging.session)
+        self.consoleWindow.textarea.set_selectable(True)
         self.consoleWindow.textarea.set_alignment (0, 0)
 
         self.consoleState = True
