@@ -1,13 +1,14 @@
 #!/usr/bin/env python
 #-*- coding: utf-8 -*-
-import getopt, sys, os, glob, gtk, gobject, time, operator, gettext, locale, xml.dom.minidom
+import getopt, sys, os, glob, gtk, gobject, time, operator, gettext, locale, xml.dom.minidom, pygtk
 import glib
 from threading import Thread
 from distutils.sysconfig import get_python_lib
 import subgetcore # libraries
 from pango import FontDescription
 
-gtk.gdk.threads_init()
+if os.name != "nt":
+    gtk.gdk.threads_init()
 
 if sys.version_info[0] >= 3:
     import configparser
@@ -19,7 +20,7 @@ else:
 winSubget = ""
 
 if os.name == "nt":
-    winSubget = str(os.path.dirname(sys.path[0])) 
+    winSubget = str(os.path.dirname(sys.path[0]+"/")).replace("subget.exe", "") 
 else:
     # dbus
     import dbus
@@ -140,6 +141,8 @@ class SubGet:
             try:
                 self.disabledPlugins.index(Plugin)
                 self.plugins[Plugin] = 'Disabled'
+                self.Logging.output("Disabling "+Plugin, "debug", False)
+
                 continue
             except ValueError:
                 self.togglePlugin(False, Plugin, 'activate')
@@ -202,9 +205,8 @@ class SubGet:
 
         configPath = os.path.expanduser("~/.subget/config")
         if not os.path.isfile(configPath):
-            configPath = "/usr/share/subget/config"
+            configPath = self.subgetOSPath+"/usr/share/subget/config"
 
-        
         if os.path.isfile(configPath):
             Parser = configparser.ConfigParser()
             try:
@@ -267,6 +269,8 @@ class SubGet:
         except Exception:
             self.Logging.loggingLevel = 1
 
+        self.Logging.output("Logging level: "+str(self.Logging.loggingLevel), "debug", False)
+
         if consoleMode == False and not os.name == "nt":
             try:
                 cwd = os.getcwd()
@@ -295,6 +299,7 @@ class SubGet:
             except dbus.exceptions.DBusException as e:
                 True
 
+        self.Logging.output("Loading plugins...", "debug", False)
         self.doPluginsLoad(args)
 
         if consoleMode == True:
@@ -308,6 +313,8 @@ class SubGet:
                     # run DBUS Service within GUI to serve interface for other applications/self
                     self.DBUS = subgetcore.subgetbus.SubgetService()
                     self.DBUS.subget = self
+                else:
+                    self.Logging.output("Disabling dbus on Windows NT", "debug", False)
 
                 self.graphicalMode(args)
 
@@ -546,39 +553,6 @@ class SubGet:
                     self.subtitlesList.append({'language': Item['language'], 'name': Item['name'], 'server': Item['extension'], 'data': Item['data'], 'extension': Item['extension'], 'file': Item['file']})
 
         self.locks['reorder'] = False
-        
-
-
-    # UPDATE THE TREEVIEW LIST
-    def TreeViewUpdate(self):
-            """ Refresh TreeView, run all plugins to parse files """
-
-            if len(self.files) == 0:
-                return
-
-            # increase queue
-            self.queueCount = (self.queueCount + len(self.pluginsList))
-
-            for Plugin in self.pluginsList:
-                if not self.isPlugin(Plugin):
-                    continue
-
-                current = Thread(target=self.GTKCheckForSubtitles, args=(Plugin,))
-                current.setDaemon(True)
-                current.start()
-
-            current = Thread(target=self.reorderTreeview)
-            current.setDaemon(True)
-            current.start()
-            #    current = SubtitleThread(Plugin, self)
-            #    current.setDaemon(True)
-            #    subThreads.append(current)
-            #    current.start()
-
-            #for sThread in subThreads:
-            #    sThread.join()
-            #self.sObject.GTKCheckForSubtitles(self.Plugin)   
-
 
     def GTKCheckForSubtitles(self, Plugin):
             State = self.plugins[Plugin]
@@ -767,6 +741,8 @@ class SubGet:
 
     def togglePlugin(self, x, Plugin, Action, liststore=None):
         if Action == 'activate':
+            self.Logging.output("Activating "+Plugin, "debug", False)
+
             # load the plugin
             try:
                 exec("import subgetlib."+Plugin)
@@ -803,6 +779,7 @@ class SubGet:
                 return False
 
         elif Action == 'deactivate':
+            self.Logging.output("Deactivating "+Plugin, "debug", False)
             if self.plugins[Plugin] == 'disabled':
                 return True
 
@@ -1098,12 +1075,12 @@ class SubGet:
             self.gtkAddTab(notebook, _("Translating"), "English:\n WebNuLL <http://webnull.kablownia.org>\n\nPolski:\n WebNuLL <http://webnull.kablownia.org>")
 
 
-            if not os.path.isfile("/usr/share/subget/version.xml"):
+            if not os.path.isfile(self.subgetOSPath+"/usr/share/subget/version.xml"):
                 self.gtkAddTab(notebook, _("Version"), _("Version information can't be read because file /usr/share/subget/version.xml is missing."))
             else:
                 if self.versioning == None:
                     try:
-                        dom = xml.dom.minidom.parse("/usr/share/subget/version.xml")
+                        dom = xml.dom.minidom.parse(self.subgetOSPath+"/usr/share/subget/version.xml")
 
                         self.versioning = {'version': dom.getElementsByTagName('version')[0].childNodes[0].data, 'platforms': '', 'mirrors': '', 'developers': '', 'contact': ''}
 
@@ -1459,25 +1436,45 @@ class SubGet:
 
         # ==== Dolphin, Konqueror
         Dolphin = gtk.CheckButton("Dolphin, Konqueror (KDE)")
-        Found = subgetcore.filemanagers.checkKDEService(Dolphin, self, Path)
+
+        if os.name == "nt":
+            dom = False
+            Found = False
+            Dolphin.set_sensitive(False)
+        else:
+            Found = subgetcore.filemanagers.checkKDEService(Dolphin, self, Path)
+            Dolphin.set_sensitive(True)
+
         Dolphin.connect("pressed", subgetcore.filemanagers.KDEService, self, Path)
-        Dolphin.set_sensitive(True)
 
         if not Found == False:
             Dolphin.set_active(1)
 
         # ==== Nautilus
         Nautilus = gtk.CheckButton("Nautilus (GNOME)")
-        Found = subgetcore.filemanagers.checkNautilus(Nautilus, self, Path)
+        if os.name == "nt":
+            dom = False
+            Found = False
+            Nautilus.set_sensitive(False)
+        else:
+            Found = subgetcore.filemanagers.checkNautilus(Nautilus, self, Path)
+            Nautilus.set_sensitive(True)
+
+
         Nautilus.connect("pressed", subgetcore.filemanagers.Nautilus, self, Path)
-        Nautilus.set_sensitive(True)
 
         if not Found == False:
             Nautilus.set_active(1)
 
         # ==== Thunar
         Thunar = gtk.CheckButton("Thunar (XFCE)")
-        dom, Found = subgetcore.filemanagers.checkThunar(Thunar, self, Path)
+
+        if os.name == "nt":
+            dom = False
+            Found = False
+            Thunar.set_sensitive(False)
+        else:
+            dom, Found = subgetcore.filemanagers.checkThunar(Thunar, self, Path)
         Thunar.connect("pressed", subgetcore.filemanagers.ThunarUCA, self, Path, dom, Found)
 
         if not Found == False:
@@ -1487,9 +1484,6 @@ class SubGet:
         #Thunar.set_sensitive(False)
         PCManFM = gtk.CheckButton("PCManFM (LXDE)")
         PCManFM.connect("pressed", self.configSetButton, "filemanagers", "lxde", PCManFM)
-        if not self.dictGetKey(self.Config['filemanagers'], 'lxde') == False:
-            PCmanFM.set_active(1)
-
         PCManFM.set_sensitive(False)
 
         GeneralPreferences.put(Label1, 10, 8)
@@ -1941,7 +1935,6 @@ class SubGet:
 
         #self.fixed.put(scrolled_window, 0, 0)
         #self.fixed.set_border_width(0)
-        
         vbox = gtk.VBox(False, 0)
         vbox.set_border_width(0)
         vbox.pack_start(spinnerHbox, False, False, 0)
@@ -1960,15 +1953,11 @@ class SubGet:
 
         self.window.show_all()
         self.workingState(False)
-        
+
         try:
             self.Hooking.executeHooks(self.Hooking.getAllHooks("onGTKWindowOpen"))
         except Exception as e:
             self.Logging.output(_("Error")+": "+_("Cannot execute hook")+"; GTKWindowOpen; "+str(e), "warning", True)
-
-        #else:
-            #    print(_("Sorry, GUI mode is not fully available yet."))
-
 
     def workingState(self, state):
         if state == True:
@@ -2009,16 +1998,40 @@ class SubGet:
             self.TreeViewUpdate()
                 
         
-
     ##### END OF DRAG & DROP SUPPORT #####
 
-    def graphicalMode(self, files):
-            """ Detects operating system and load GTK GUI """
-            self.files = files
+    # UPDATE THE TREEVIEW LIST
+    def TreeViewUpdate(self):
+        """ Refresh TreeView, run all plugins to parse files """
 
-            self.gtkMainScreen(files)
-            gobject.timeout_add(50, self.TreeViewUpdate)
-            gtk.main()
+        if len(self.files) == 0:
+            return
+
+        # increase queue
+        self.queueCount = (self.queueCount + len(self.pluginsList))
+
+        for Plugin in self.pluginsList:
+            if not self.isPlugin(Plugin):
+                continue
+
+            current = Thread(target=self.GTKCheckForSubtitles, args=(Plugin,))
+            current.setDaemon(True)
+            current.start()
+
+        current = Thread(target=self.reorderTreeview)
+        current.setDaemon(True)
+        current.start()
+
+
+
+    def graphicalMode(self, files):
+        """ Detects operating system and load GTK GUI """
+        self.files = files
+
+        self.Logging.output("Preparing GTK interface...", "debug", False)
+        self.gtkMainScreen(files)
+        gobject.timeout_add(50, self.TreeViewUpdate)
+        gtk.mainloop()
 
     def shellMode(self, files):
         """ Works in shell mode, searching, downloading etc..."""

@@ -24,7 +24,7 @@ class Logging:
 
     def initializeLogger(self):
         try:
-            self.logger = logging.getLogger('logdetect')
+            self.logger = logging.getLogger('subget')
             handler = logging.FileHandler(os.path.expanduser("~/.subget/subget.log"))
             self.logger.addHandler(handler)
             self.logger.setLevel(logging.INFO)

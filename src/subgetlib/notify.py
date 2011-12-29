@@ -1,5 +1,10 @@
 #-*- coding: utf-8 -*-
-import subgetcore, dbus, sys, os, subprocess
+import subgetcore, sys, os, subprocess
+
+try:
+    import dbus
+except ImportError:
+    pass
 
 ####
 PluginInfo = {'Requirements' : { 'OS' : 'Unix, Linux'}, 'API': 2, 'Authors': 'webnull', 'domain': '', 'type': 'extension', 'isPlugin': False}
@@ -75,41 +80,42 @@ class PluginMain(subgetcore.SubgetPlugin):
     def selectNotify(self):
         """ Detects installed notify systems and select first one """
 
-        p = subprocess.Popen(['/bin/ps', 'aux'],stdout=subprocess.PIPE,stderr=subprocess.PIPE)
-        output, errors = p.communicate()
+        if os.name != "nt":
+            p = subprocess.Popen(['/bin/ps', 'aux'],stdout=subprocess.PIPE,stderr=subprocess.PIPE)
+            output, errors = p.communicate()
 
-        notifySend = self.Subget.getFile(["/usr/bin/notify-send", "/usr/local/bin/notify-send"])
+            notifySend = self.Subget.getFile(["/usr/bin/notify-send", "/usr/local/bin/notify-send"])
 
-        if "gnome-settings-daemon" in output:
+            if "gnome-settings-daemon" in output:
+                if notifySend != False:
+                    self.notifyType = "command"
+                    self.notifyData = notifySend+" -u normal -i /usr/share/subget/icons/Subget-logo.png \"%title%\" \"%text%\""
+                else:
+                    # libnotify
+                    try:
+                        import pynotify
+                        self.notifyType = "libnotify"
+                        self.libnotify = pynotify
+                    except Exception as e:
+                        pass
+
+                return True
+
+            # knotify
+            try:
+                knotify = dbus.SessionBus().get_object("org.kde.knotify", "/Notify")
+                self.notifyType = "knotify"
+                self.notifyData = knotify
+                return True
+
+            except dbus.exceptions.DBusException as e:
+                self.Subget.Logging.output("knotify "+self.Subget._("not found"), "debug", False)
+
+            # notify-send command
             if notifySend != False:
                 self.notifyType = "command"
                 self.notifyData = notifySend+" -u normal -i /usr/share/subget/icons/Subget-logo.png \"%title%\" \"%text%\""
-            else:
-                # libnotify
-                try:
-                    import pynotify
-                    self.notifyType = "libnotify"
-                    self.libnotify = pynotify
-                except Exception as e:
-                    pass
-
-            return True
-
-        # knotify
-        try:
-            knotify = dbus.SessionBus().get_object("org.kde.knotify", "/Notify")
-            self.notifyType = "knotify"
-            self.notifyData = knotify
-            return True
-
-        except dbus.exceptions.DBusException as e:
-            self.Subget.Logging.output("knotify "+self.Subget._("not found"), "debug", False)
-
-        # notify-send command
-        if notifySend != False:
-            self.notifyType = "command"
-            self.notifyData = notifySend+" -u normal -i /usr/share/subget/icons/Subget-logo.png \"%title%\" \"%text%\""
-            return True
+                return True
 
         self.notifyType = ""
 

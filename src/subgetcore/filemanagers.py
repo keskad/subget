@@ -32,7 +32,7 @@ def Nautilus(Widget, Subget, Path):
             Widget.set_sensitive(0)
             Subget.Logging.output("Cannot remove "+theFile+", error message: "+str(e), "debug", False)
 
-def checkNautilus(self, Subget, Path):
+def checkNautilus(Widget, Subget, Path):
     # check if Nautilus is installed
     if not os.path.isdir(Path+"/.gnome2/nautilus-scripts/"):
         Subget.Logging.output("Nautilus is not installed, disabling checkButton.", "debug", False)
@@ -92,7 +92,7 @@ def KDEService(Widget, Subget, Path):
                     Subget.Logging.output(Subget._("Integration inactive"), "debug", False)
 
             os.remove(theFile)
-        except Exception:
+        except Exception as e:
             Widget.set_sensitive(0)
             Subget.Logging.output("Cannot remove "+theFile+", error message: "+str(e), "warning", True)
 
