@@ -19,7 +19,7 @@ Video Player option allows easily play movie using favorite media player right a
 Requirements: GTK+, Python 2.6/2.7/3.0/3.1/3.2, X11, PyGTK, python-dbus, python-gettext, p7zip (Gentoo: app-arch/p7zip, Debian/Ubuntu: p7zip-full)
 
 * Changelog:
-28.02.2011 (v.1.2) <webnull.www@gmail.com>:
+28.02.2012 (v.1.2) <webnull.www@gmail.com>:
     * Fixed console plugin destruction object
     + Embedded python console inside of console plugin
     + Subgetcore.Logging can skip printing date if last argument is True
