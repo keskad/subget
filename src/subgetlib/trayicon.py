@@ -6,6 +6,7 @@ PluginInfo = {'Requirements' : { 'OS' : 'All'}, 'API': 2, 'Authors': 'webnull', 
 class PluginMain(subgetcore.SubgetPlugin):
     iconInitialized = False
     lastWindowPosition = None # Remember window's last position
+    contextMenu = list()
 
     def _onGTKLoopEnd(self, Data):
         """ Start when GTK window appears """

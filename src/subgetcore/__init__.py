@@ -39,10 +39,11 @@ class Logging:
         self.logger = None
         return True
 
-    def output(self, message, utype='', savetoLogs=True, execHook=True):
+    def output(self, message, utype='', savetoLogs=True, execHook=True, skipDate=False):
         """ Output to log file and to console """
 
-        message = self.convertMessage(message, inspect.stack()[1][3])
+        if skipDate == False:
+            message = self.convertMessage(message, inspect.stack()[1][3])
         
         if utype == "debug" and self.loggingLevel > 1:
             if self.logger != None and savetoLogs == True:
@@ -210,6 +211,7 @@ class Hooking:
 class SubgetPlugin:
     Subget = None
     HTTPTimeout = 3
+    contextMenu = list()
 
     def removeNonAscii(s): 
         """ Removes non-ascii characters from a string """
@@ -235,6 +237,19 @@ class SubgetPlugin:
             self.check_exists(File, results)
 
         return results
+
+    def customPluginContextMenu(self):
+        """ Returns list of custom items in plugin context menu """
+        return self.contextMenu
+
+    def contextMenuAdd(self, title, hookedFunction, params):
+        if not type(title).__name__ == 'str':
+            return False
+
+        if not type(self.contextMenu).__name__ == 'list':
+            self.contextMenu = list()
+
+        self.contextMenu.append([title, hookedFunction, params])
 
 
     def search_by_keywords(self, Keywords):

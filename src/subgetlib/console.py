@@ -1,4 +1,5 @@
-import subgetcore, gtk, sys, time
+import subgetcore, gtk, sys, time, sys, traceback, os
+from StringIO import StringIO
 
 ####
 PluginInfo = {'Requirements' : { 'OS' : 'All'}, 'API': 2, 'Authors': 'webnull', 'domain': '', 'type': 'extension', 'isPlugin': False}
@@ -6,6 +7,9 @@ PluginInfo = {'Requirements' : { 'OS' : 'All'}, 'API': 2, 'Authors': 'webnull', 
 class PluginMain(subgetcore.SubgetPlugin):
     consoleState = False # Closed
     consoleWindow = None
+    commands = None
+    envCache = dict()
+    contextMenu = list()
 
     def _pluginInit(self):
         """ Initialize plugin """
@@ -14,10 +18,13 @@ class PluginMain(subgetcore.SubgetPlugin):
         self.Subget.Hooking.connectHook("onLogChange", self._updateConsole)
         self.Subget.Hooking.connectHook("onPreferencesOpen", self._settingsTab)
 
+        # Add option to context menu in plugins list
+        self.contextMenuAdd(self.Subget._("Show console"), self.openConsole, "")
+
         if "window" in dir(self.Subget):
             self._onGTKLoopEnd(False)
 
-
+        self.commands = Commands(self)
 
     def _onGTKLoopEnd(self, Data):
         """ Start when GTK window appears """
@@ -25,7 +32,7 @@ class PluginMain(subgetcore.SubgetPlugin):
         iconFile = self.Subget.getPath("/usr/share/subget/icons/terminal.png")
 
         try:
-            self.Subget.interfaceAddIcon(self.Subget._("Console"), self.openConsole, "toolsMenu", "console", iconFile, '<Control>L', True, True, False)
+            self.consolePosition = self.Subget.interfaceAddIcon(self.Subget._("Console"), self.openConsole, "toolsMenu", "console", iconFile, '<Control>L', True, True, False)
         except Exception:
             self.consolePosition = gtk.ImageMenuItem(self.Subget._("Console"))
             self.consolePosition.connect("activate", self.openConsole)
@@ -102,8 +109,72 @@ class PluginMain(subgetcore.SubgetPlugin):
         if self.consoleState == True:
             self.consoleWindow.textarea.set_text(text)
 
+    def sendCommand(self, x):
+        """ Executes python code from GUI - just a python shell inside of a console 
+            Captures stdout and stderr.
+        """
 
-    def openConsole(self, x):
+        cmd = self.consoleWindow.gText.get_text()
+        self.consoleWindow.gText.set_text("")
+
+        if cmd == "" or cmd == " ":
+            return False
+
+        cmdLine = cmd.split(" ")
+
+        self.Subget.Logging.output("> "+cmd, "debug", False, True, True)
+
+        # create string buffer to capture stdout
+        buffer = StringIO()
+        sys.stdout = buffer
+
+        if cmdLine[0] in dir(self.commands):
+            self.commands.send(cmdLine)
+            return False
+
+        # Environment
+        for envVar in self.envCache:
+            try:
+                exec(str(envVar)+" = self.envCache[envVar]")
+                #print str(envVar)+" = self.envCache[envVar]"
+            except Exception:
+                pass
+
+        subget = self.Subget
+        _ = self.Subget._
+        logging = self.Subget.Logging
+
+        #for moduleName in self.commands.imported:
+        #    exec(moduleName+" = self.commands.imported[moduleName]")
+
+        try:
+            exec(cmd)
+        except Exception as e:
+            traceback.print_exc(file=sys.stdout)
+
+        #self.Subget.Logging.output(bufferErr.getvalue(), "debug", False, True, True)
+        self.Subget.Logging.output(buffer.getvalue(), "debug", False, True, True)
+
+        # restore original stdout
+        sys.stdout = sys.__stdout__
+
+        env = dir()
+
+        for envVar in env:
+            if envVar == "self" or envVar == "buffer" or envVar == "logging" or envVar == "cmd" or envVar == "cmdline":
+                continue
+
+            value = eval(envVar)
+            self.envCache[envVar] = value
+
+    def gscrollMove(self, x, y):
+        """ Moves scroll to bottom if console window was updated """
+
+        vadjustment = self.consoleWindow.gscroll.get_vadjustment()
+        vadjustment.value = (vadjustment.upper - vadjustment.page_size)
+
+
+    def openConsole(self, x='', y=''):
         """ Open the console window """
 
         if self.consoleState == True:
@@ -152,6 +223,7 @@ class PluginMain(subgetcore.SubgetPlugin):
         self.consoleWindow.gscroll.set_border_width(0)
         self.consoleWindow.gscroll.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
         self.consoleWindow.gscroll.add_with_viewport(self.consoleWindow.textarea)
+        self.consoleWindow.gscroll.connect("size-allocate", self.gscrollMove)
         self.consoleWindow.gframe.add(self.consoleWindow.gscroll)
 
         # CONTAINERS
@@ -162,7 +234,21 @@ class PluginMain(subgetcore.SubgetPlugin):
         self.consoleWindow.vbox.set_border_width(0)
         self.consoleWindow.vbox.pack_start(self.consoleWindow.hbox, True, True, 0)
 
+        # TEXT-AREA
+        self.consoleWindow.gText = gtk.Entry()
+        self.consoleWindow.gText.set_max_length(4086)
+        #self.consoleWindow.gText.set_size_request(20, 20)
+        self.consoleWindow.button = gtk.Button(self.Subget._("Send"))
+
+        # Down part (textbox and button)
+        self.consoleWindow.texthBox = gtk.HBox(False, 10)
+        self.consoleWindow.texthBox.pack_start(self.consoleWindow.gText, True, True, 0)
+        self.consoleWindow.texthBox.pack_start(self.consoleWindow.button, False, False, 0)
+        self.consoleWindow.gText.connect("activate", self.sendCommand)
+        self.consoleWindow.button.connect("pressed", self.sendCommand)
+
         # PUT ALL TOGETHER AND SHOW
+        self.consoleWindow.vbox.pack_start(self.consoleWindow.texthBox, False, False, 0)
         self.consoleWindow.add(self.consoleWindow.vbox)
         self.consoleWindow.show_all()
         self.consoleWindow.set_size_request(450, 240)
@@ -212,12 +298,76 @@ class PluginMain(subgetcore.SubgetPlugin):
 
     def _pluginDestroy(self):
         """ Unload plugin """
+
+        self.contextMenu = list()
         self.Subget.Hooking.removeHook("onGTKWindowOpen", self._onGTKLoopEnd)
         self.Subget.Hooking.removeHook("onLogChange", self._updateConsole)
         self.Subget.Hooking.removeHook("onPreferencesOpen", self._settingsTab)
-
-        self.Subget.window.Menubar.elementsArray['toolsMenu'].remove(self.consolePosition)
+        menu, toolbar =  self.consolePosition
+        self.Subget.window.Menubar.remove(menu)
+        self.Subget.window.toolbar.remove(toolbar)
+        self.Subget.window.Menubar.elementsArray['toolsMenu'].remove(menu)
+        self.Subget.window.show_all()
         self.consoleWindow.destroy()
         del self.consoleWindow
         del self
+
+class Commands:
+    console = None
+    #imported = dict()
+    nav = os.path.expanduser("~")
+
+    def __init__(self, console):
+        self.console = console
+
+    def output(self, message):
+        self.console.Subget.Logging.output(message, "debug", False, True, True)
+
+    def send(self, cmdLine):
+        if cmdLine[0] == "send" or cmdLine[0] == "output" or cmdLine[0] == "__init__":
+            return False
+
+        if cmdLine[0] in dir(self):
+            cmd = cmdLine[0]
+            cmdLine.remove(cmd)
+
+            exec("self."+cmd+"(cmdLine)")
+
+    def help(self, params):
+        self.output("List: subget, _, logging, subgetcore, load\nImporting libraries: load subgetlib (not accepting commas)")
+
+    def clear(self, params):
+        self.output("\n\n\n\n\n\n\n\n\n\n")
+
+    #def load(self, params):
+    #    if len(params) == 0:
+    #        self.output("Usage: load [module1] [module2]\nExample: load subgetlib subgetcore")
+
+    #    for param in params:
+    #        name = param
+
+    #        try:
+    #            objParam = None
+    #            exec("import "+param+" as objParam")
+    #            self.imported[name] = objParam
+
+    #        except Exception as e:
+    #            self.output("Cannot import "+param+", exception: "+str(e))
+    #            traceback.print_exc(file=sys.stdout)
+
+    def cd(self, location):
+        if len(location) == 0:
+            self.nav = os.path.expanduser("~")
+        if os.path.isdir(location[0]):
+            self.nav = location[0]
+        elif os.path.isdir(self.nav+"/"+location[0]):
+            self.nav = self.nav+"/"+location[0]
+
+    def pwd(self, args):
+        self.output(self.nav)
+
+    def ls(self, args):
+        self.output(str(os.listdir(self.nav)))
+
+
 

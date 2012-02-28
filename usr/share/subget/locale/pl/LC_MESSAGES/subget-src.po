@@ -290,3 +290,12 @@ msgstr "Nie odnaleziono pasujących napisów dla pliku"
 
 msgid "Error trying to get list of subtitles from"
 msgstr "Wystąpił błąd podczas próby uzyskania listy napisów z wtyczki"
+
+msgid "Show console"
+msgstr "Pokaż konsolę"
+
+msgid "Send"
+msgstr "Wyślij"
+
+msgid "Cannot add custom menu"
+msgstr "Nie można dodać menu wtyczki"

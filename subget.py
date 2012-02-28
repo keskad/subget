@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 #-*- coding: utf-8 -*-
-import getopt, sys, os, glob, gtk, gobject, time, operator, gettext, locale, xml.dom.minidom, pygtk
+import getopt, sys, os, glob, gtk, gobject, time, gettext, locale, xml.dom.minidom, pygtk
 import glib
 from threading import Thread
 from distutils.sysconfig import get_python_lib
@@ -785,6 +785,7 @@ class SubGet:
 
             try:
                 self.plugins[Plugin].instance._pluginDestroy()
+                del self.plugins[Plugin].instance
             except Exception:
                 pass
 
@@ -811,9 +812,7 @@ class SubGet:
             return "Unknown operating system"
 
     def pluginTreeviewEvent(self, treeview, event, liststore):
-        menu = gtk.Menu() 
-
-        if event.button == 3:
+        if event.button == 3 or event.type == gtk.gdk._2BUTTON_PRESS:
             x = int(event.x)
             y = int(event.y)
             time = event.time
@@ -827,25 +826,39 @@ class SubGet:
 
                 # items
                 Info = None
-
                 Plugin = liststore[pthinfo[0][0]][1]
+
+
+        if event.button == 3:
+                if event.type == gtk.gdk.BUTTON_PRESS:
+                    menu = gtk.Menu() 
+
+                    if self.plugins[Plugin] == 'Disabled':
+                        Deactivate = gtk.MenuItem(_("Activate plugin"))
+                        Deactivate.connect("activate", self.togglePlugin, Plugin, 'activate', liststore)
+                    else:
+                        Deactivate = gtk.MenuItem(_("Deactivate plugin"))
+                        Deactivate.connect("activate", self.togglePlugin, Plugin, 'deactivate', liststore)
+
+                        if self.plugins[Plugin].PluginInfo['API'] > 1:
+                            customMenu = self.plugins[Plugin].instance.customPluginContextMenu()
+
+                            for option in customMenu:
+                                try:
+                                    customItem = gtk.MenuItem(str(option[0]))
+                                    customItem.connect("activate", option[1], option[2])
+                                    menu.append(customItem)
+                                except Exception as e:
+                                    self.Logging.output(_("Cannot add custom menu")+". "+_("plugin")+": "+plugin+", "+_("exception")+": "+str(e))
+
+                    menu.append(Deactivate)
+                    menu.show_all()
+                    menu.popup( None, None, None, event.button, time)
+        elif event.type == gtk.gdk._2BUTTON_PRESS:
                 if self.plugins[Plugin] == 'Disabled':
-                    Deactivate = gtk.MenuItem(_("Activate plugin"))
-                    Deactivate.connect("activate", self.togglePlugin, Plugin, 'activate', liststore)
+                    self.togglePlugin(False, Plugin, "activate", liststore)
                 else:
-                    #Info = gtk.MenuItem('Informacje')
-                    #Info.connect("activate", self.pluginInfo, Plugin)
-                    Deactivate = gtk.MenuItem(_("Deactivate plugin"))
-                    Deactivate.connect("activate", self.togglePlugin, Plugin, 'deactivate', liststore)
-
-                #if not Info == None:
-                #    menu.append(Info)
-
-                menu.append(Deactivate)
-                menu.show_all()
-                menu.popup( None, None, None, event.button, time)
-
-            return True
+                    self.togglePlugin(False, Plugin, "deactivate", liststore)
 
     def pluginsListing(self, liststore):
             for Plugin in self.pluginsList:
@@ -1713,6 +1726,9 @@ class SubGet:
     def interfaceAddIcon(self, title, onActivate, menuItem, itemName='', icon='', shortkey='', isMenu=False, isToolbar=False, iconOnlyToolbar=False):
         """ Adds icon to toolbar and/or menu of main window """
 
+        toolbar = None
+        menu = None
+
         if isMenu != False:
             if menuItem in self.window.Menubar.elementsArray:
                 menu = gtk.ImageMenuItem(title, self.window.agr)
@@ -1746,7 +1762,10 @@ class SubGet:
                 self.window.toolbar.elements[itemName].connect("clicked", onActivate)
                 self.window.toolbar.insert(self.window.toolbar.elements[itemName], -1)
 
-        self.window.toolbar.show_all()
+                toolbar = self.window.toolbar.elements[itemName]
+                self.window.toolbar.show_all()
+
+        return menu, toolbar
             
             
 
