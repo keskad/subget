@@ -1937,11 +1937,16 @@ class SubGet:
         self.CancelButton.connect('clicked', lambda b: gtk.main_quit())
 
         # Spinner "Progress indicator"
-        self.window.spinner = gtk.Spinner()
+        try:
+            self.window.spinner = gtk.Spinner()
+        except Exception:
+            self.window.spinner = None
 
         spinnerHbox = gtk.HBox(False, 0)
         spinnerHbox.pack_start(self.window.Menubar, False, True, 0)
-        spinnerHbox.pack_end(self.window.spinner, False, False, 5)
+
+        if self.window.spinner != None:
+            spinnerHbox.pack_end(self.window.spinner, False, False, 5)
 
 
         # scrollbars
@@ -1979,14 +1984,15 @@ class SubGet:
             self.Logging.output(_("Error")+": "+_("Cannot execute hook")+"; GTKWindowOpen; "+str(e), "warning", True)
 
     def workingState(self, state):
-        if state == True:
-            self.window.spinner.show()
-            self.window.spinner.start()
-            return True
-        else:
-            self.window.spinner.stop()
-            self.window.spinner.hide()
-            return False
+        if self.window.spinner != None:
+            if state == True:
+                self.window.spinner.show()
+                self.window.spinner.start()
+                return True
+            else:
+                self.window.spinner.stop()
+                self.window.spinner.hide()
+                return False
 
     ##### DRAG & DROP SUPPORT #####
     def motion_cb(self, wid, context, x, y, time):
