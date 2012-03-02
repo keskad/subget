@@ -45,11 +45,11 @@ class PluginMain(subgetcore.SubgetPlugin):
                 print(e)
                 True
 
-            if self.Subget.configGetKey("console", "open_at_startup") == "True":
-                self.openConsole(False)
-
             self.Subget.window.Menubar.elementsArray['toolsMenu'].append(self.consolePosition)
             self.Subget.window.show_all()
+
+        if self.Subget.configGetKey("console", "open_at_startup") == "True":
+            self.openConsole(False)
 
 
     def errorLevel_Scale(self, x):
