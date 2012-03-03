@@ -611,7 +611,7 @@ class SubGet:
 
 
     # DOWNLOAD DIALOG
-    def GTKDownloadSubtitles(self):
+    def GTKDownloadSubtitles(self, a='', b=''):
             """ Dialog with file name chooser to save subtitles to """
             #print "TEST: CLICKED, LETS GO DOWNLOAD!"
 
