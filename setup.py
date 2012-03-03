@@ -2,7 +2,7 @@
 from distutils.core import setup
 
 setup(name='subget',
-      version='1.0.4',
+      version='1.2.3',
       package_dir={'': 'src'},      
       packages=['subgetlib', 'subgetcore']
      )

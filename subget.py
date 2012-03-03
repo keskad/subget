@@ -1384,6 +1384,7 @@ class SubGet:
         self.gtkPreferencesIntegration()
         self.gtkPreferencesPlugins()
         self.gtkPreferencesWWS()
+        self.gtkPreferencesInterface()
 
         # Close button
         self.winPreferences.CloseButton = gtk.Button(stock=gtk.STOCK_CLOSE)
@@ -1554,7 +1555,22 @@ class SubGet:
         """ Sets preferred language for Watch with subtitles feature """
         self.configSetKey('watch_with_subtitles', 'preferred_language', str(liststore[checkbox.get_active()][1]))
         
+    def gtkPreferencesInterface(self):
+        """ Makes settings tab for subget's interface """
 
+        Toolbar = gtk.CheckButton(self._("Show toolbar")+" ("+self._("requires restart")+")")
+        Toolbar.connect("pressed", self.configSetButton, 'interface', 'toolbar', Toolbar, True)
+
+        if not str(self.configGetKey("interface", "toolbar")) == "False":
+            Toolbar.set_active(1)
+
+        Vbox = gtk.VBox(False, 0)
+        Hbox = gtk.HBox(False, 0)
+        Vbox.pack_start(Toolbar, False, False, 2)
+        Hbox.pack_start(Vbox, False, False, 8)
+
+        self.createTab(self.winPreferences.notebook, self._("Interface"), Hbox)
+        self.winPreferences.show_all()
 
     def gtkPreferencesWWS(self):
         """ Watch with subtitles preferences """
@@ -1749,7 +1765,7 @@ class SubGet:
                 self.window.Menubar.elementsArray[menuItem].append(menu)
                 self.window.Menubar.show_all()
 
-        if isToolbar != False:
+        if isToolbar != False and self.window.toolbar != None:
             self.window.toolbar.elements[itemName] = gtk.ToolButton(title)
 
             if icon != '':
@@ -1839,13 +1855,14 @@ class SubGet:
         self.window.Menubar.elementsArray['toolsMenu'].append(pluginMenu)
 
         # Toolbars
-        self.window.toolbar = gtk.Toolbar()
-        #self.window.toolbar.set_style(gtk.TOOLBAR_ICONS)
-        self.window.toolbar.set_icon_size(gtk.ICON_SIZE_SMALL_TOOLBAR)
-        self.window.toolbar.elements = dict()
-        self.interfaceAddIcon(gtk.STOCK_ADD, self.gtkSelectVideo, "fileMenu", "add", gtk.STOCK_ADD, '<Control>O', True, True, True)
-        self.interfaceAddIcon(gtk.STOCK_FIND, self.gtkSearchMenu, "fileMenu", "search", gtk.STOCK_FIND, '<Control>F', True, True, True)
-        self.window.toolbar.set_tooltips(True)
+        if self.configGetKey("interface", "toolbar") != "False":
+            self.window.toolbar = gtk.Toolbar()
+            #self.window.toolbar.set_style(gtk.TOOLBAR_ICONS)
+            self.window.toolbar.set_icon_size(gtk.ICON_SIZE_SMALL_TOOLBAR)
+            self.window.toolbar.elements = dict()
+            self.interfaceAddIcon(gtk.STOCK_ADD, self.gtkSelectVideo, "fileMenu", "add", gtk.STOCK_ADD, '<Control>O', True, True, True)
+            self.interfaceAddIcon(gtk.STOCK_FIND, self.gtkSearchMenu, "fileMenu", "search", gtk.STOCK_FIND, '<Control>F', True, True, True)
+            self.window.toolbar.set_tooltips(True)
 
         # "Clear"
         try:
@@ -1962,7 +1979,10 @@ class SubGet:
         vbox = gtk.VBox(False, 0)
         vbox.set_border_width(0)
         vbox.pack_start(spinnerHbox, False, False, 0)
-        vbox.pack_start(self.window.toolbar, False, False, 0)
+
+        if str(self.configGetKey("interface", "toolbar")) != "False":
+            vbox.pack_start(self.window.toolbar, False, False, 0)
+
         vbox.pack_start(scrolled_window, True, True, 0)
 
         hbox = gtk.HBox(False, 5)

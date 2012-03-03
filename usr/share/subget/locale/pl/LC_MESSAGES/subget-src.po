@@ -299,3 +299,12 @@ msgstr "Wyślij"
 
 msgid "Cannot add custom menu"
 msgstr "Nie można dodać menu wtyczki"
+
+msgid "Interface"
+msgstr "Interfejs"
+
+msgid "Show toolbar"
+msgstr "Pokaż pasek narzędziowy"
+
+msgid "requires restart"
+msgstr "wymagany restart"
