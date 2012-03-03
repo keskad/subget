@@ -1042,7 +1042,7 @@ class SubGet:
             self.closeWindow(False, False, window, 'gtkPluginMenu')
             self.reorderTreeview()
 
-    def gtkAboutMenu(self, arg):
+    def gtkAboutMenu(self, arg=''):
             """ Shows about dialog """
 
             if self.dictGetKey(self.Windows, 'gtkAboutMenu') == False:
@@ -1354,7 +1354,7 @@ class SubGet:
         except Exception as e:
             self.Logging.output(_("Error, cannot save to")+" ~/.subget/config, "+str(e), "critical", True)
 
-    def gtkPreferences(self, aid):
+    def gtkPreferences(self, aid=''):
         #self.sendCriticAlert("Sorry, this feature is not implemented yet.")
         #return
         if self.Windows['preferences'] == True:

@@ -308,3 +308,15 @@ msgstr "Pokaż pasek narzędziowy"
 
 msgid "requires restart"
 msgstr "wymagany restart"
+
+msgid "About"
+msgstr "O programie"
+
+msgid "Select file"
+msgstr "Wybierz plik"
+
+msgid "Show main window"
+msgstr "Pokaż główne okno"
+
+msgid "Hide main window"
+msgstr "Ukryj główne okno"

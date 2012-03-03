@@ -26,10 +26,47 @@ class PluginMain(subgetcore.SubgetPlugin):
         self.iconInitialized = True
         self.statusicon = gtk.StatusIcon()
         self.statusicon.set_from_file(self.Subget.subgetOSPath+"/usr/share/subget/icons/Subget-logo.png")
-        self.statusicon.connect('activate', self.status_clicked )
+        self.statusicon.connect('activate', self.status_clicked)
         self.statusicon.set_tooltip("Subget")
+        self.statusicon.connect("popup-menu", self.right_click_event)
 
-    def status_clicked(self,status):
+
+    def right_click_event(self, icon, button, time):
+        """ Popup menu """
+        self.menu = gtk.Menu()
+
+        show = gtk.ImageMenuItem(gtk.STOCK_YES)
+        if self.Subget.window.get_visible() == False:
+            show.set_label(self.Subget._("Show main window"))
+        else:
+            show.set_label(self.Subget._("Hide main window"))
+
+        show.connect("activate", self.status_clicked)
+        self.menu.append(show)
+
+        select = gtk.ImageMenuItem(gtk.STOCK_ADD)
+        select.set_label(self.Subget._("Select file"))
+        select.connect("activate", self.Subget.GTKDownloadSubtitles)
+        self.menu.append(select)
+
+        preferences = gtk.ImageMenuItem(gtk.STOCK_PREFERENCES)
+        preferences.connect("activate", self.Subget.gtkPreferences)
+        self.menu.append(preferences)
+
+        about = gtk.ImageMenuItem(gtk.STOCK_INFO)
+        about.set_label(self.Subget._("About"))
+        about.connect("activate", self.Subget.gtkAboutMenu)
+        self.menu.append(about)
+
+        quit = gtk.ImageMenuItem(gtk.STOCK_QUIT)
+        quit.connect("activate", gtk.main_quit)
+        self.menu.append(quit)
+
+
+        self.menu.show_all()
+        self.menu.popup(None, None, None, 3, time) 
+
+    def status_clicked(self,status=''):
         """ Show/Hide a window """
 
         visible = self.Subget.window.get_visible()

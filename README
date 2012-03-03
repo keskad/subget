@@ -19,6 +19,9 @@ Video Player option allows easily play movie using favorite media player right a
 Requirements: GTK+, Python 2.6/2.7/3.0/3.1/3.2, X11, PyGTK, python-dbus, python-gettext, p7zip (Gentoo: app-arch/p7zip, Debian/Ubuntu: p7zip-full)
 
 * Changelog:
+03.02.2012 (v.1.2.4) <webnull.www@gmail.com>:
+    + Trayicon have popup now
+
 03.02.2012 (v.1.2.3) <webnull.www@gmail.com>:
     + Toolbar can be hidden now
     + New tab "Interface" in settings menu
