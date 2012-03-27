@@ -2004,15 +2004,18 @@ class SubGet:
             self.Logging.output(_("Error")+": "+_("Cannot execute hook")+"; GTKWindowOpen; "+str(e), "warning", True)
 
     def workingState(self, state):
-        if self.window.spinner != None:
-            if state == True:
-                self.window.spinner.show()
-                self.window.spinner.start()
-                return True
-            else:
-                self.window.spinner.stop()
-                self.window.spinner.hide()
-                return False
+        try:
+            if self.window.spinner != None:
+                if state == True:
+                    self.window.spinner.show()
+                    self.window.spinner.start()
+                    return True
+                else:
+                    self.window.spinner.stop()
+                    self.window.spinner.hide()
+                    return False
+        except Exception:
+            pass
 
     ##### DRAG & DROP SUPPORT #####
     def motion_cb(self, wid, context, x, y, time):
