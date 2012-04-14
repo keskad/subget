@@ -24,14 +24,14 @@ class PluginMain(subgetcore.SubgetPlugin):
 
         if Data[3] == False:
             self.sendEvent("subget:", "<b>"+self.Subget._("Subtitles cannot be downloaded, see console for details")+".</b>")
-            return False
+            return Data
 
         if os.path.isfile(str(Data[2])):
             self.sendEvent("subget:", "<b>"+self.Subget._("Downloaded subtitles for file")+":<br/> "+os.path.basename(str(Data[2]))+"</b><br/>"+self.Subget._("Have a nice time watching the movie!"))
         else:
             self.sendEvent("subget:", "<b>"+self.Subget._("Subtitles downloaded")+".</b>")
 
-        return True
+        return Data
 
     def sendEvent(self, title, text):
         """ Sends notification """

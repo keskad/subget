@@ -1,6 +1,6 @@
 """ Subget core library """
 
-import filemanagers, videoplayers, subgetbus, os, re, httplib, logging, inspect
+import filemanagers, subgetbus, os, re, httplib, logging, inspect
 from time import strftime, localtime
 
 class Logging:
@@ -201,11 +201,9 @@ class Hooking:
 
         if not hooks == False:
             for Hook in hooks:
-                Hook(data)
+                data = Hook(data)
 
-            return True
-
-        return False        
+        return data       
 
 
 class SubgetPlugin:

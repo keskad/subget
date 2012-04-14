@@ -1,11 +1,12 @@
 #!/usr/bin/env python
 #-*- coding: utf-8 -*-
-import getopt, sys, os, glob, gtk, gobject, time, gettext, locale, xml.dom.minidom, pygtk
+import getopt, sys, os, glob, gtk, gobject, time, gettext, locale, xml.dom.minidom, traceback
 import glib
 from threading import Thread
 from distutils.sysconfig import get_python_lib
 import subgetcore # libraries
 from pango import FontDescription
+from StringIO import StringIO
 
 if os.name != "nt":
     gtk.gdk.threads_init()
@@ -296,8 +297,8 @@ class SubGet:
                 else:
                     self.Logging.output(_("Only one instance (graphical window) of Subget can be running at once by one user."), "", False) # only one instance of Subget can be running at once
                 sys.exit(0)
-            except dbus.exceptions.DBusException as e:
-                True
+            except Exception as e:
+                self.Logging.output(_("DBus error")+": "+str(e), "", False)
 
         self.Logging.output("Loading plugins...", "debug", False)
         self.doPluginsLoad(args)
@@ -455,8 +456,6 @@ class SubGet:
                 Found = False
 
                 for File in self.finishedJobs:
-                    subgetcore.videoplayers.Spawn(self, File, File+".txt")
-
                     Found = True
                     break
 
@@ -684,22 +683,16 @@ class SubGet:
 
                  if Results != language and Results != '':
                     try:
-                        self.Hooking.executeHooks(self.Hooking.getAllHooks("onSubtitlesDownload"), [self.VideoPlayer.get_active(), Results, self.dictGetKey(self.subtitlesList[SelectID]['data'], 'file'), True])
+                        self.Hooking.executeHooks(self.Hooking.getAllHooks("onSubtitlesDownload"), [False, Results, self.dictGetKey(self.subtitlesList[SelectID]['data'], 'file'), True])
                     except Exception as e:
                         self.Logging.output(_("Error")+": "+_("Cannot execute hook")+"; onSubtitlesDownload; "+str(e), "warning", True)
+                        traceback.print_exc(file=sys.stdout)
 
                  else:
                     try:
                         self.Hooking.executeHooks(self.Hooking.getAllHooks("onSubtitlesDownload"), [False, False, False, False])
                     except Exception as e:
                         self.Logging.output(_("Error")+": "+_("Cannot execute hook")+"; onSubtitlesDownload; "+str(e), "warning", True)
-
-
-                 if self.VideoPlayer.get_active() == True:
-                    VideoFile = self.dictGetKey(self.subtitlesList[SelectID]['data'], 'file')
-
-                    if not VideoFile == False:
-                        subgetcore.videoplayers.Spawn(self, VideoFile, filename)
 
                  w.destroy()
 
@@ -775,7 +768,13 @@ class SubGet:
 
             except Exception as errno:
                 self.plugins[Plugin] = str(errno)
-                self.Logging.output(_("ERROR: Cannot import")+" "+Plugin+" ("+str(errno)+")", "warning", True)
+            
+                # traceback
+                buffer = StringIO()
+                traceback.print_exc(file=buffer)
+
+                self.Logging.output(_("ERROR: Cannot import")+" "+Plugin+" ("+str(errno)+")\n"+buffer.getvalue(), "warning", True)
+                
                 return False
 
         elif Action == 'deactivate':
@@ -1424,7 +1423,37 @@ class SubGet:
         else:
             return False
 
+    def configGetSection(self, Section):
+        """ Returns section as dictionary 
+
+            Args:
+              Section - name of section of ini file ([section] header)
+
+            Returns:
+              Dictionary - on success
+              False - on false
+
+        """
+
+        if Section in self.Config:
+            return self.Config[Section]
+
+        return False
+
+
     def configGetKey(self, Section, Key):
+        """ Returns value of Section->Value configuration variable
+
+            Args:
+              Section - name of section of ini file ([section] header)
+              Key - variable name
+
+            Returns:
+              False - when section or key does not exists
+              False - when value of variable is "false" or "False" or just False
+              string value - value of variable
+        """
+
         if not Section in self.Config:
             return False
 
@@ -1441,7 +1470,6 @@ class SubGet:
         # "General" preferences
         Path = os.path.expanduser("~/")
 
-        GeneralPreferences = gtk.Fixed()
         Label1 = gtk.Label(_("File managers popup menu integration"))
         Label1.set_alignment (0, 0)
         Label1.show()
@@ -1500,50 +1528,20 @@ class SubGet:
         PCManFM.connect("pressed", self.configSetButton, "filemanagers", "lxde", PCManFM)
         PCManFM.set_sensitive(False)
 
-        GeneralPreferences.put(Label1, 10, 8)
-        GeneralPreferences.put(Dolphin, 10, 26)
-        GeneralPreferences.put(Nautilus, 10, 45)
-        GeneralPreferences.put(Thunar, 10, 64)
-        GeneralPreferences.put(PCManFM, 10, 83)
+        GeneralPreferences = gtk.VBox(False, 0)
+        GeneralPreferences.pack_start(Label1, False, False, 4)
+        GeneralPreferences.pack_start(Dolphin, False, False, 2)
+        GeneralPreferences.pack_start(Nautilus, False, False, 2)
+        GeneralPreferences.pack_start(Thunar, False, False, 2)
+        GeneralPreferences.pack_start(PCManFM, False, False, 2)
 
-        # Video player integration
-        Label2 = gtk.Label(_("Video Player settings"))
-        SelectPlayer = gtk.combo_box_new_text()
-        SelectPlayer.append_text(_("System's default"))
-        SelectPlayer.append_text("MPlayer")
-        SelectPlayer.append_text("SMPlayer")
-        SelectPlayer.append_text("VLC")
-        SelectPlayer.append_text("Totem")
-        SelectPlayer.append_text("MPlayer2")
-        SelectPlayer.append_text("KMPlayer")
-        SelectPlayer.append_text("GMPlayer")
-        SelectPlayer.append_text("GNOME Mplayer")
-        SelectPlayer.append_text("Rhythmbox")
-        SelectPlayer.append_text("UMPlayer")
-        SelectPlayer.connect("changed", self.defaultPlayerSelection)
+        GeneralPreferences = self.Hooking.executeHooks(self.Hooking.getAllHooks("prefsIntegrationBox"), GeneralPreferences)
 
+        # create margin
+        hbox = gtk.HBox(False, 0)
+        hbox.pack_start(GeneralPreferences, False, False, 8)
 
-        DefaultPlayer = self.dictGetKey(self.Config['afterdownload'], 'defaultplayer')
-
-        if DefaultPlayer == False:
-            SelectPlayer.set_active(0)
-        else:
-            DefaultPlayer = int(DefaultPlayer)
-            if DefaultPlayer > -1 and DefaultPlayer < 11:
-                SelectPlayer.set_active(DefaultPlayer)
-
-        EnableVideoPlayer = gtk.CheckButton(_("Start automaticaly when program runs"))
-        EnableVideoPlayer.connect("toggled", self.gtkPreferencesIntegrationPlayMovie)
-
-        if not self.dictGetKey(self.Config['afterdownload'], 'playmovie') == False:
-            EnableVideoPlayer.set_active(1)
-        
-
-        GeneralPreferences.put(Label2, 10, 118)
-        GeneralPreferences.put(EnableVideoPlayer, 10, 138)
-        GeneralPreferences.put(SelectPlayer, 10, 163)
-        
-        self.createTab(self.winPreferences.notebook, _("System integration"), GeneralPreferences)
+        self.createTab(self.winPreferences.notebook, _("System integration"), hbox)
 
     def configSetKey(self, Section, Option, Value):
         if not Section in self.Config:
@@ -1692,20 +1690,6 @@ class SubGet:
 
         self.createTab(self.winPreferences.notebook, _("Plugins"), g)
 
-
-    def defaultPlayerSelection(self, widget):
-        """ Select default external video playing program """
-        self.Config['afterdownload']['defaultplayer'] = widget.get_active()
-
-
-    def gtkPreferencesIntegrationPlayMovie(self, Widget):
-        Value = Widget.get_active()
-        self.Config['afterdownload']['playmovie'] = Value
-
-        if Value == True:
-            self.VideoPlayer.set_active(1)
-        else:
-            self.VideoPlayer.set_active(0)
 
 
     def createTab(self, widget, title, inside):
@@ -1938,16 +1922,6 @@ class SubGet:
 
         self.DownloadButton.connect('clicked', lambda b: self.GTKDownloadSubtitles())
 
-        # Videoplayer checkbutton
-        self.VideoPlayer = gtk.CheckButton(_("Start video player"))
-        if not self.configGetKey('afterdownload', 'playmovie') == False: # TRUE, playmovie active
-            self.VideoPlayer.set_active(1)
-        else:
-            self.VideoPlayer.set_active(0)
-            self.VideoPlayer.hide()
-
-        #self.fixed.put(self.VideoPlayer, 10, 205)
-
         # Cancel button
         self.CancelButton = gtk.Button(stock=gtk.STOCK_CLOSE)
         self.CancelButton.set_size_request(90, 40)
@@ -1976,32 +1950,32 @@ class SubGet:
 
         #self.fixed.put(scrolled_window, 0, 0)
         #self.fixed.set_border_width(0)
-        vbox = gtk.VBox(False, 0)
-        vbox.set_border_width(0)
-        vbox.pack_start(spinnerHbox, False, False, 0)
+        self.window.vbox = gtk.VBox(False, 0)
+        self.window.vbox.set_border_width(0)
+        self.window.vbox.pack_start(spinnerHbox, False, False, 0)
 
         if str(self.configGetKey("interface", "toolbar")) != "False":
-            vbox.pack_start(self.window.toolbar, False, False, 0)
+            self.window.vbox.pack_start(self.window.toolbar, False, False, 0)
 
-        vbox.pack_start(scrolled_window, True, True, 0)
+        self.window.vbox.pack_start(scrolled_window, True, True, 0)
 
-        hbox = gtk.HBox(False, 5)
-        hbox.pack_end(self.DownloadButton, False, False, 5)
-        hbox.pack_end(self.CancelButton, False, False, 0)
-        hbox.pack_end(self.VideoPlayer, False, False, 10)
-        vbox.pack_start(hbox, False, False, 8)
+        self.window.hbox = gtk.HBox(False, 5)
+        self.window.hbox.pack_end(self.DownloadButton, False, False, 5)
+        self.window.hbox.pack_end(self.CancelButton, False, False, 0)
+        self.window.vbox.pack_start(self.window.hbox, False, False, 8)
 
-        self.window.add(vbox)
-        # create a TreeStore with one string column to use as the model
-        
-
-        self.window.show_all()
+        # spinner status
         self.workingState(False)
+
+        self.window.add(self.window.vbox)
 
         try:
             self.Hooking.executeHooks(self.Hooking.getAllHooks("onGTKWindowOpen"))
         except Exception as e:
             self.Logging.output(_("Error")+": "+_("Cannot execute hook")+"; GTKWindowOpen; "+str(e), "warning", True)
+        
+
+        self.window.show_all()
 
     def workingState(self, state):
         try:

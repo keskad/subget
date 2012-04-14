@@ -1,7 +1,17 @@
 [filemanagers]
 kde = False
 gnome = False
-kde4 = True
+kde4 = False
+
+[watch_with_subtitles]
+download_only = False
+only_preferred_language = True
+enabled = True
+preferred_language = pl
+
+[afterdownload]
+defaultplayer = VLC
+playmovie = True
 
 [console]
 open_at_startup = False
@@ -23,5 +33,15 @@ playmovie = False
 [plugins]
 timeout = 10
 order = napiprojekt,napisy_info,napisy24,allsubs,opensubtitles
-disabled = daemonize,trayicon
+disabled = daemonize
 list_ordering = True
+
+[interface]
+toolbar = True
+
+[logging]
+level = 2
+
+[plugin:thesubdb]
+search_method = deeply
+sleep = 0.2
