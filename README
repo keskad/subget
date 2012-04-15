@@ -20,6 +20,9 @@ Video Player option allows easily play movie using favorite media player right a
 Requirements: GTK+, Python 2.6/2.7/3.0/3.1/3.2, X11, PyGTK, python-dbus, python-gettext, p7zip (Gentoo: app-arch/p7zip, Debian/Ubuntu: p7zip-full)
 
 * Changelog:
+15.04.2012 (v.1.3.1) <webnull.www@gmail.com>:
+    * videoplayer plugin was unloading incorrectly (without removing hooks)
+
 14.04.2012 (v.1.3) <webnull.www@gmail.com>:
     * Fixed dbus error handling
     * Rewrited video players support, now it has own manager/api, elastic and accessible from plugins, configurable

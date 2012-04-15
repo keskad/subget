@@ -124,6 +124,10 @@ class PluginMain(subgetcore.SubgetPlugin):
     def _pluginDestroy(self):
         """ Unload plugin """
 
+        self.Subget.Hooking.removeHook("onSubtitlesDownload", self._onSubtitlesDownload)
+        self.Subget.Hooking.removeHook("onGTKWindowOpen", self._onGTKLoopEnd)
+        self.Subget.Hooking.removeHook("prefsIntegrationBox", self._prefsIntegrationBox)
+
         self.Subget.window.hbox.remove(self.VPButton)
         self.Subget.window.show_all()
 
