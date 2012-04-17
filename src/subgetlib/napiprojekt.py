@@ -105,7 +105,7 @@ def get_subtitle(File):
 
         # use 7zip to unpack subtitles
         if os.name == "nt":
-            subprocess.call("\""+subgetObject.subgetOSPath.replace("/", "\\")+"/7za.exe\" x -y -so -piBlm8NTigvru0Jr0 \""+File+".7z\" > \""+File+".txt\"", shell=True, bufsize=1)
+            subprocess.call("\""+subgetObject.subgetOSPath.replace("/", "\\")+"7za.exe\" x -y -so -piBlm8NTigvru0Jr0 \""+File+".7z\" > \""+File+".txt\"", shell=True, bufsize=1)
         else:
             os.system(subgetObject.getFile(["/usr/bin/7z", "/usr/local/bin/7z"])+" x -y -so -piBlm8NTigvru0Jr0 \""+File+".7z\" 2>/dev/null > \""+File+".txt\"")
 
@@ -147,7 +147,7 @@ def download_by_data(File, SavePath):
 
         # use 7zip to unpack subtitles
         if os.name == "nt":
-            subprocess.call("\""+subgetObject.subgetOSPath.replace("/", "\\")+"/7za.exe\" x -y -so -piBlm8NTigvru0Jr0 \""+File+".7z\" > \""+File+".txt\"", shell=True, bufsize=1)
+            subprocess.call("\""+subgetObject.subgetOSPath.replace("/", "\\")+"7za.exe\" x -y -so -piBlm8NTigvru0Jr0 \""+File+".7z\" > \""+File+".txt\"", shell=True, bufsize=1)
         else:
             os.system(subgetObject.getFile(["/usr/bin/7z", "/usr/local/bin/7z"])+" x -y -so -piBlm8NTigvru0Jr0 \""+File+".7z\" 2>/dev/null > \""+File+".txt\"")
 

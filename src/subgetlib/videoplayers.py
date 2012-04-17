@@ -45,6 +45,10 @@ class PluginMain(subgetcore.SubgetPlugin):
         self.add("Rhythmbox", "/usr/bin/rhythmbox", "\"%filename%\" > /dev/null 2> /dev/null &")
         self.add("umplayer", "/usr/bin/umplayer", "\"%filename%\" -sub \"%subtitles%\" > /dev/null 2> /dev/null &")
 
+        if os.name == "nt":
+            self.add("Winamp", "c:\\Program\ Files\\Winamp\\Winamp.exe", "\"%filename%\"")
+            self.add(str(self.Subget._("System's default")), "start", "%filename%")
+
         # video players excluded from list
         disabledPlayers = self.Subget.configGetKey("videoplayers", "disabled")
 
@@ -154,6 +158,8 @@ class PluginMain(subgetcore.SubgetPlugin):
             nExecutable = str(self.Subget.getFile(["/usr/bin/"+executable, executable.replace("/usr/bin/", "/usr/local/bin"), executable]))
             if os.path.isfile(nExecutable):
                 executable = nExecutable
+            elif executable == "start" and os.name == "nt":
+                pass
             else:
                 return False # cannot add to list - video player executable does not exists
 
@@ -207,7 +213,7 @@ class PluginMain(subgetcore.SubgetPlugin):
         if not player in self.generatedList:
             return False
 
-        shellString = self.generatedList[player]["exec"]+" "+self.generatedList[player]["params"].replace("%subtitles%", subtitles).replace("%filename%", videofile)
+        shellString = self.generatedList[player]["exec"]+" "+self.generatedList[player]["params"].replace("%subtitles%", str(subtitles)).replace("%filename%", str(videofile))
 
         if execute == True:
             self.Subget.Logging.output("Executing: "+shellString, "debug", False)

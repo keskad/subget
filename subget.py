@@ -1,12 +1,30 @@
 #!/usr/bin/env python
 #-*- coding: utf-8 -*-
-import getopt, sys, os, glob, gtk, gobject, time, gettext, locale, xml.dom.minidom, traceback
-import glib
+import getopt, sys, os, glob, time, gettext, locale, xml.dom.minidom
 from threading import Thread
 from distutils.sysconfig import get_python_lib
 import subgetcore # libraries
 from pango import FontDescription
-from StringIO import StringIO
+
+winSubget = ""
+
+if os.name == "nt":
+    winSubget = str(os.path.dirname(sys.path[0]+"/")).replace("subget.exe", "") 
+    #winSTDOUT = open(winSubget+"/stdout.log", "w")
+    #winSTDERR = open(winSubget+"/stderr.log", "w")
+    #sys.stdout = winSTDOUT
+    #sys.stderr = winSTDERR
+
+    # windows native appearance
+    os.environ['PATH'] += ";gtk/lib;gtk/bin"
+    os.environ['GTK_PATH'] = winSubget+"/windows/runtime/lib/gtk-2.0"
+    os.environ['GTK2_RC_FILES'] = winSubget+"/windows/runtime/share/themes/MS-Windows/gtk-2.0/gtkrc"
+
+else:
+    # dbus
+    import dbus
+
+import gtk, gobject, glib
 
 if os.name != "nt":
     gtk.gdk.threads_init()
@@ -15,16 +33,6 @@ if sys.version_info[0] >= 3:
     import configparser
 else:
     import ConfigParser as configparser
-
-# default we will serve gui, but application will be also usable in shell, just need to use -c or --console parametr
-
-winSubget = ""
-
-if os.name == "nt":
-    winSubget = str(os.path.dirname(sys.path[0]+"/")).replace("subget.exe", "") 
-else:
-    # dbus
-    import dbus
 
 consoleMode=False
 
@@ -90,6 +98,7 @@ class SubGet:
     versioning = None
     Hooking = None
     finishedJobs = list()
+    gtkSettings = None
 
     def __init__(self):
         # initialize hooking and logging
@@ -768,12 +777,7 @@ class SubGet:
 
             except Exception as errno:
                 self.plugins[Plugin] = str(errno)
-            
-                # traceback
-                buffer = StringIO()
-                traceback.print_exc(file=buffer)
-
-                self.Logging.output(_("ERROR: Cannot import")+" "+Plugin+" ("+str(errno)+")\n"+buffer.getvalue(), "warning", True)
+                self.Logging.output(_("ERROR: Cannot import")+" "+Plugin+" ("+str(errno)+")", "warning", True)
                 
                 return False
 
@@ -2051,6 +2055,8 @@ class SubGet:
         self.files = files
 
         self.Logging.output("Preparing GTK interface...", "debug", False)
+
+        #gtk.rc_parse("usr/share/subget/gtkrc")
         self.gtkMainScreen(files)
         gobject.timeout_add(50, self.TreeViewUpdate)
         gtk.mainloop()

@@ -1,0 +1,11 @@
+import os, sys, time
+os.system("c:\\Subget\\windows\\nsi-paths-build.py")
+time.sleep(2)
+os.system("del \"c:\Program Files\\Subget\\*\" /Q")
+os.system("del \"c:\Subget\\setup.exe\" /Q")
+os.system("del \"c:\Subget\\build\\exe.win32-2.7\\*\" /Q")
+os.chdir("c:\\Subget\\")
+os.system("c:\\Subget\\cx_freeze_build_windows.py build")
+os.system('C:\\NSIS\\makensis.exe "c:\\Subget\\windows\\installer.nsi"')
+os.system("c:\\Subget\\setup.exe")
+time.sleep(10)

@@ -83,7 +83,7 @@ def download_by_data(File, SavePath):
     except Exception as e:
         print("[plugin:opensubtitles] Exception: "+str(e))
 
-    return True
+    return SavePath
 
 def search_by_keywords(Keywords):
     searchList = []

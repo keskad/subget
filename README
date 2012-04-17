@@ -20,6 +20,12 @@ Video Player option allows easily play movie using favorite media player right a
 Requirements: GTK+, Python 2.6/2.7/3.0/3.1/3.2, X11, PyGTK, python-dbus, python-gettext, p7zip (Gentoo: app-arch/p7zip, Debian/Ubuntu: p7zip-full)
 
 * Changelog:
+17.04.2012 (v.1.4) <webnull.www@gmail.com>:
+    + Ported GTK theme to Windows
+    * Fixed OpenSubtitles plugin
+    + videoplayers: Support for native "start" command on Windows
+    + videoplayers: Primitive Winamp Support on Windows
+
 15.04.2012 (v.1.3.1) <webnull.www@gmail.com>:
     * videoplayer plugin was unloading incorrectly (without removing hooks)
 

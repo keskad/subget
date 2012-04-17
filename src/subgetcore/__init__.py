@@ -1,7 +1,8 @@
 """ Subget core library """
 
-import filemanagers, subgetbus, os, re, httplib, logging, inspect
+import filemanagers, subgetbus, os, re, httplib, logging, inspect, traceback
 from time import strftime, localtime
+from StringIO import StringIO
 
 class Logging:
     logger = None
@@ -201,7 +202,12 @@ class Hooking:
 
         if not hooks == False:
             for Hook in hooks:
-                data = Hook(data)
+                try:
+                    data = Hook(data)
+                except Exception as e:
+                    buffer = StringIO()
+                    traceback.print_exc(file=buffer)
+                    print(buffer.getvalue())
 
         return data       
 
