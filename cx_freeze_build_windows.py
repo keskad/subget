@@ -3,6 +3,7 @@ import zipfile
 import os, sys
 from socket import _socket
 import subgetcore, subgetlib
+import win32com.server.register, pythoncom, win32com.client
 
 os.system("setup.py install")
 
@@ -32,7 +33,7 @@ exe = Executable(
 includefiles = ['usr', '7za.exe', 'windows']
 includes = ['usr', 'src']
 excludes = []
-packages = ['_socket', 'socket', 'httplib', 'subprocess', 'os', 'time', 'urllib', 'hashlib', 're', 'zipfile', 'xml', 'StringIO', 'struct', 'sys', 'gettext', 'getopt', 'subgetcore', 'subgetlib']
+packages = ['_socket', 'socket', 'httplib', 'subprocess', 'os', 'time', 'urllib', 'hashlib', 're', 'zipfile', 'xml', 'StringIO', 'struct', 'sys', 'gettext', 'getopt', 'subgetcore', 'subgetlib', 'pythoncom', 'win32com', 'win32com.server.register', 'win32com.client']
  
 setup(
     name = "Subget",

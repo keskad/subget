@@ -20,10 +20,6 @@ if os.name == "nt":
     os.environ['GTK_PATH'] = winSubget+"/windows/runtime/lib/gtk-2.0"
     os.environ['GTK2_RC_FILES'] = winSubget+"/windows/runtime/share/themes/MS-Windows/gtk-2.0/gtkrc"
 
-else:
-    # dbus
-    import dbus
-
 import gtk, gobject, glib
 
 if os.name != "nt":
@@ -281,36 +277,22 @@ class SubGet:
 
         self.Logging.output("Logging level: "+str(self.Logging.loggingLevel), "debug", False)
 
-        if consoleMode == False and not os.name == "nt":
-            try:
-                cwd = os.getcwd()
-                if cwd[:-1] != "/":
-                    cwd += "/"
-
-                newarg = list()
-
-                for arg in args:
-                    if os.path.isfile(cwd+arg):
-                        newarg.append(cwd+arg)
-                    else:
-                        newarg.append(arg)
-
-                bus = dbus.SessionBus()
-                SubgetServiceObj = bus.get_object('org.freedesktop.subget', '/org/freedesktop/subget')
-                ping = SubgetServiceObj.get_dbus_method('ping', 'org.freedesktop.subget')
-
-                if len(args) > 0:
-                    addLinks = SubgetServiceObj.get_dbus_method('addLinks', 'org.freedesktop.subget')
-                    addLinks(str.join('\n', newarg), False)
-                    self.Logging.output(_("Added new files to existing list."), "", False)
-                else:
-                    self.Logging.output(_("Only one instance (graphical window) of Subget can be running at once by one user."), "", False) # only one instance of Subget can be running at once
-                sys.exit(0)
-            except Exception as e:
-                self.Logging.output(_("DBus error")+": "+str(e), "", False)
-
         self.Logging.output("Loading plugins...", "debug", False)
         self.doPluginsLoad(args)
+
+        cwd = os.getcwd()
+        if cwd[:-1] != "/":
+            cwd += "/"
+
+        newarg = list()
+
+        for arg in args:
+            if os.path.isfile(cwd+arg):
+                newarg.append(cwd+arg)
+            else:
+                newarg.append(arg)
+
+        self.Hooking.executeHooks(self.Hooking.getAllHooks("onInstanceCheck"), [consoleMode, args, action])
 
         if consoleMode == True:
             self.shellMode(args)
@@ -319,13 +301,6 @@ class SubGet:
             if action == "watch":
                 self.watchWithSubtitles(args)
             else:
-                if not os.name == "nt":
-                    # run DBUS Service within GUI to serve interface for other applications/self
-                    self.DBUS = subgetcore.subgetbus.SubgetService()
-                    self.DBUS.subget = self
-                else:
-                    self.Logging.output("Disabling dbus on Windows NT", "debug", False)
-
                 self.graphicalMode(args)
 
 

@@ -1,6 +1,6 @@
 """ Subget core library """
 
-import filemanagers, subgetbus, os, re, httplib, logging, inspect, traceback
+import filemanagers, os, re, httplib, logging, inspect, traceback
 from time import strftime, localtime
 from StringIO import StringIO
 
