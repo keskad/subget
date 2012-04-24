@@ -1913,7 +1913,7 @@ class SubGet:
             self.window.spinner = None
 
         spinnerHbox = gtk.HBox(False, 0)
-        spinnerHbox.pack_start(self.window.Menubar, False, True, 0)
+        spinnerHbox.pack_start(self.window.Menubar, True, True, 0)
 
         if self.window.spinner != None:
             spinnerHbox.pack_end(self.window.spinner, False, False, 5)
