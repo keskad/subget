@@ -2,7 +2,6 @@
 #-*- coding: utf-8 -*-
 import getopt, sys, os, glob, time, gettext, locale, xml.dom.minidom
 from threading import Thread
-from distutils.sysconfig import get_python_lib
 import subgetcore # libraries
 from pango import FontDescription
 
@@ -24,6 +23,7 @@ import gtk, gobject, glib
 
 if os.name != "nt":
     gtk.gdk.threads_init()
+    from distutils.sysconfig import get_python_lib
 
 if sys.version_info[0] >= 3:
     import configparser
@@ -31,14 +31,6 @@ else:
     import ConfigParser as configparser
 
 consoleMode=False
-
-if os.path.exists(winSubget+"/usr/share/subget/plugins/"):
-    pluginsDir = winSubget+"/usr/share/subget/plugins/"
-elif os.path.exists("usr/share/subget/plugins/"):
-    pluginsDir="usr/share/subget/plugins/"
-else:
-    pluginsDir="/usr/share/subget/plugins/"
-
 action="list"
 language="pl"
 languages=['pl', 'en']
@@ -119,10 +111,15 @@ class SubGet:
             return self.subgetOSPath+path
 
     def doPluginsLoad(self, args):
-        global pluginsDir, plugins
+        global plugins
         debugErrors = ""
 
-        pluginsDir = get_python_lib()+"/subgetlib/"
+        # Windows NT
+        if os.name == "nt":
+            pluginsDir = self.subgetOSPath+"/subgetlib/"
+            sys.path.insert( 0, pluginsDir )
+        else: # Linux, FreeBSD and other Unix systems
+            pluginsDir = get_python_lib()+"/subgetlib/"
 
         # fix for python bug which returns invalid path
         if not os.path.isdir(pluginsDir):

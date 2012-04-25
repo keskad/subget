@@ -205,7 +205,7 @@ class PluginMain(subgetcore.SubgetPlugin):
                 self.bus = win32com.client.Dispatch("Subget")
                 self.bus.setSubgetObject(self.Subget)
             else:
-                self.bus = SubgetService()
+                self.bus = self.SubgetService()
                 self.bus.subget = self.Subget
 
         return Data
