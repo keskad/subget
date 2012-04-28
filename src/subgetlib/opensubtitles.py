@@ -1,7 +1,6 @@
-import httplib, urllib, re, time, struct, os
+import httplib, struct, os
 import gzip
-from xmlrpclib import ServerProxy, Error
-from xml.dom import minidom
+from xmlrpclib import ServerProxy
 
 apiUrl = 'http://api.opensubtitles.org/xml-rpc'
 userAgent = "Subget"
@@ -10,26 +9,27 @@ HTTPTimeout = 2
 server = ServerProxy(apiUrl)
 token = None
 Language = 'eng'
-LanguageTable = dict()
-LanguageTable['eng'] = 'en'
-LanguageTable['pol'] = 'pl'
-LanguageTable['ita'] = 'it'
-LanguageTable['esp'] = 'es'
-LanguageTable['cze'] = 'cz'
-LanguageTable['dut'] = 'de'
-LanguageTable['fre'] = 'fr'
-LanguageTable['rus'] = 'ru'
-LanguageTable['rum'] = 'ro'
-LanguageTable['fin'] = 'fi'
-LanguageTable['swe'] = 'se'
-LanguageTable['dan'] = 'dk'
-LanguageTable['tur'] = 'tr'
-LanguageTable['por'] = 'pt'
-LanguageTable['bra'] = 'br'
-LanguageTable['hun'] = 'hu'
-LanguageTable['bra'] = 'br'
-LanguageTable['hrv'] = 'hr'
-LanguageTable['scc'] = 'sc'
+LanguageTable = {
+    'eng': 'en',
+    'pol': 'pl',
+    'ita': 'it',
+    'esp': 'es',
+    'cze': 'cz',
+    'dut': 'de',
+    'fre': 'fr',
+    'rus': 'ru',
+    'rum': 'ro',
+    'fin': 'fi',
+    'swe': 'se',
+    'dan': 'dk',
+    'tur': 'tr',
+    'por': 'pt',
+    'bra': 'br',
+    'hun': 'hu',
+    'bra': 'br',
+    'hrv': 'hr',
+    'scc': 'sc',
+}
 
 PluginInfo = { 'Requirements' : { 'OS' : 'All' }, 'Authors': 'webnull', 'API': 1, 'domain': 'opensubtitles.org' }
 
@@ -42,10 +42,7 @@ def loadSubgetObject(x):
             HTTPTimeout = subgetObject.Config['plugins']['timeout']
 
 def download_list(files):
-    results = searchSubtitles(files)
-    test = list()
-    test.append(results)
-    return test
+    return searchSubtitles(files)
 
 def download_quick(files):
     return
@@ -110,7 +107,7 @@ def searchSubtitles(Files):
 def parseResults(subtitlesList, fileSizes=False):
     nodes = list()
 
-    if not type(subtitlesList['data']).__name__ == "list":
+    if not isinstance(subtitlesList['data'], list):
         print("[plugin:opensubtitles] Got corrupted data, propably server is overloaded.")
         return False
 
@@ -122,7 +119,7 @@ def parseResults(subtitlesList, fileSizes=False):
             subtitle['SubLanguageID'] = LanguageTable[subtitle['SubLanguageID']]
 
         
-        if fileSizes != False:
+        if fileSizes:
             if not subtitle['MovieByteSize'] in fileSizes:
                 continue
             subtitle['File'] = fileSizes[subtitle['MovieByteSize']]

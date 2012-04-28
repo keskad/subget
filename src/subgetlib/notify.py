@@ -1,9 +1,11 @@
 #-*- coding: utf-8 -*-
-import subgetcore, sys, os, subprocess
+import subgetcore, os, subprocess
 
 try:
     import dbus
 except ImportError:
+    #???: dbus is needed - what if we don't find it? SyntaxError later maybe
+    # add constat like DBUS_ENABLED to check it later if we can use dbus module
     pass
 
 ####
@@ -22,7 +24,7 @@ class PluginMain(subgetcore.SubgetPlugin):
         # 2 => Video file (if any)
         # """
 
-        if Data[3] == False:
+        if not Data[3]:
             self.sendEvent("subget:", "<b>"+self.Subget._("Subtitles cannot be downloaded, see console for details")+".</b>")
             return Data
 
@@ -36,7 +38,7 @@ class PluginMain(subgetcore.SubgetPlugin):
     def sendEvent(self, title, text):
         """ Sends notification """
 
-        if self.notifyType == None:
+        if self.notifyType is None:
             self.selectNotify()
 
         if self.notifyType == "":
@@ -68,7 +70,6 @@ class PluginMain(subgetcore.SubgetPlugin):
             self.notifyData.event("warning", "kde", [], title, message, bytearray(self.iconContents), [], 16000, 0, dbus_interface="org.kde.KNotify")
         except Exception as e:
             self.Subget.Logging.output(self.Subget._("Error")+": "+str(e), "error", True)
-            pass
 
     def _libnotifySend(self, message, title=''):
         try:
@@ -87,7 +88,7 @@ class PluginMain(subgetcore.SubgetPlugin):
             notifySend = self.Subget.getFile(["/usr/bin/notify-send", "/usr/local/bin/notify-send"])
 
             if "gnome-settings-daemon" in output:
-                if notifySend != False:
+                if not notifySend:
                     self.notifyType = "command"
                     self.notifyData = notifySend+" -u normal -i /usr/share/subget/icons/Subget-logo.png \"%title%\" \"%text%\""
                 else:
@@ -112,7 +113,7 @@ class PluginMain(subgetcore.SubgetPlugin):
                 self.Subget.Logging.output("knotify "+self.Subget._("not found"), "debug", False)
 
             # notify-send command
-            if notifySend != False:
+            if not notifySend:
                 self.notifyType = "command"
                 self.notifyData = notifySend+" -u normal -i /usr/share/subget/icons/Subget-logo.png \"%title%\" \"%text%\""
                 return True

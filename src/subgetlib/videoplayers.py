@@ -1,5 +1,4 @@
-import subgetcore, gtk, sys, time, sys, traceback, os
-from StringIO import StringIO
+import subgetcore, gtk, os
 
 ####
 PluginInfo = {'Requirements' : { 'OS' : 'All'}, 'API': 2, 'Authors': 'webnull', 'domain': '', 'type': 'extension', 'isPlugin': False}
@@ -27,7 +26,7 @@ class PluginMain(subgetcore.SubgetPlugin):
         # sets default player
         default = self.Subget.configGetKey("videoplayers", "default")
 
-        if not default == False:
+        if default:
             self.default = default
 
 
@@ -52,7 +51,7 @@ class PluginMain(subgetcore.SubgetPlugin):
         # video players excluded from list
         disabledPlayers = self.Subget.configGetKey("videoplayers", "disabled")
 
-        if not disabledPlayers == False:
+        if disabledPlayers:
             x = disabledPlayers.split(",")
 
             for item in x:
@@ -60,16 +59,16 @@ class PluginMain(subgetcore.SubgetPlugin):
 
         # list of video players added in configuration file
         Config = self.Subget.configGetSection("videoplayers")
-                
 
-        if Config != False:
+
+        if Config:
             for item in Config:
                 if item == "default" or item == "disabled":
                     continue
 
                 s1 = Config[item].split(" ")
 
-                if len(s1) > 0:
+                if s1:
                     self.add(item, s1[0], Config[item].replace(s1[0]+" ", ""))
 
     def _onGTKLoopEnd(self, Data):
@@ -78,7 +77,7 @@ class PluginMain(subgetcore.SubgetPlugin):
         # Videoplayer checkbutton
         self.VPButton = gtk.CheckButton(self.Subget._("Start video player"))
 
-        if not self.Subget.configGetKey('afterdownload', 'playmovie') == False: # TRUE, playmovie active
+        if self.Subget.configGetKey('afterdownload', 'playmovie'): # TRUE, playmovie active
             self.VPButton.set_active(1)
         else:
             self.VPButton.set_active(0)
@@ -103,7 +102,7 @@ class PluginMain(subgetcore.SubgetPlugin):
 
         DefaultPlayer = self.Subget.configGetKey('afterdownload', 'defaultplayer')
 
-        if DefaultPlayer == False:
+        if not DefaultPlayer:
             SelectPlayer.set_active(0)
         else:
             try:
@@ -114,7 +113,7 @@ class PluginMain(subgetcore.SubgetPlugin):
         EnableVideoPlayer = gtk.CheckButton(self.Subget._("Start automaticaly when program runs"))
         EnableVideoPlayer.connect("toggled", self.gtkPreferencesIntegrationPlayMovie)
 
-        if not self.Subget.configGetKey('afterdownload', 'playmovie') == False:
+        if self.Subget.configGetKey('afterdownload', 'playmovie'):
             EnableVideoPlayer.set_active(1)
 
         hbox_v = gtk.HBox(False, 2)
@@ -152,9 +151,7 @@ class PluginMain(subgetcore.SubgetPlugin):
               %filename% - full path to video file
         """
 
-        if os.path.isfile(executable):
-            pass # all is valid
-        else:
+        if not os.path.isfile(executable):
             nExecutable = str(self.Subget.getFile(["/usr/bin/"+executable, executable.replace("/usr/bin/", "/usr/local/bin"), executable]))
             if os.path.isfile(nExecutable):
                 executable = nExecutable
@@ -163,10 +160,11 @@ class PluginMain(subgetcore.SubgetPlugin):
             else:
                 return False # cannot add to list - video player executable does not exists
 
-        self.generatedList[name] = dict()
-        self.generatedList[name]['name'] = name
-        self.generatedList[name]['exec'] = executable
-        self.generatedList[name]['params'] = params
+        self.generatedList[name] = {
+            'name': name,
+            'exec': executable,
+            'params': params,
+        }
         self.indexList.append(name)
 
         return True
@@ -192,9 +190,7 @@ class PluginMain(subgetcore.SubgetPlugin):
               i - index of application
 
         """
-
-        if i in self.indexList:
-            return self.indexList[i]
+        return self.indexList.get(i, None)
 
     def getShellCommand(self, videofile, subtitles, player, execute=False):
         """ Returns a shell command to execute 
@@ -207,15 +203,15 @@ class PluginMain(subgetcore.SubgetPlugin):
         """
 
         # if int specified
-        if type(player).__name__ == "int":
+        if isinstance(player, int):
             player = self.nameByIndex(player)
 
-        if not player in self.generatedList:
+        if player not in self.generatedList:
             return False
 
         shellString = self.generatedList[player]["exec"]+" "+self.generatedList[player]["params"].replace("%subtitles%", str(subtitles)).replace("%filename%", str(videofile))
 
-        if execute == True:
+        if execute:
             self.Subget.Logging.output("Executing: "+shellString, "debug", False)
             os.system(shellString)
             return True
@@ -224,16 +220,10 @@ class PluginMain(subgetcore.SubgetPlugin):
 
     def listAll(self):
         """ Returns ordered list of applications """
-
-        newList = list()
-
-        for i in self.indexList:
-            newList.append(self.generatedList[i])
-
-        return newList
+        return [self.generatedList[i] for i in self.indexList]
 
     def _onSubtitlesDownload(self, data):
-        if self.VPButton.get_active() == True:
+        if self.VPButton.get_active():
             self.getShellCommand(data[2], data[1], str(self.Subget.configGetKey('afterdownload', 'defaultplayer')), True)
 
     # MOVED
@@ -241,7 +231,7 @@ class PluginMain(subgetcore.SubgetPlugin):
         Value = Widget.get_active()
         self.Subget.Config['afterdownload']['playmovie'] = Value
 
-        if Value == True:
+        if Value:
             self.VPButton.set_active(1)
         else:
             self.VPButton.set_active(0)

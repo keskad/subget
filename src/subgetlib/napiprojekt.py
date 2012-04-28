@@ -1,4 +1,4 @@
-import httplib, urllib, time, os, hashlib, subprocess
+import httplib, urllib, os, hashlib, subprocess
 
 ####
 PluginInfo = { 'Requirements' : { 'OS' : 'All', 'Packages:' : ( 'p7zip' )}, 'API': 1, 'Authors': 'webnull', 'domain': 'napiprojekt.pl'  }
@@ -36,13 +36,7 @@ def f(z):
     return ''.join(b)
 
 def download_list(files, query=''):
-    results = list()
-
-    for File in files:
-        results.append(check_exists(File))
-
-    return results
-
+    return [check_exists(file_ for file_ in files)]
 
 
 def check_exists(File):
@@ -52,7 +46,8 @@ def check_exists(File):
     d = hashlib.md5(open(File, "rb").read(10485760)).hexdigest()
 
     if os.name == "posix":
-       os.name = "Linux"
+        #!!!: it's not a good idea
+        os.name = "Linux"
     
     # RECEIVE DATA
     subtitleUrl = "?l="+language.upper()+"&f="+d+"&t="+f(d)+"&v=other&kolejka=false&nick=&pass=&napios="+os.name
@@ -67,9 +62,7 @@ def check_exists(File):
        return False
 
     if len(subtitleZipped) > 0 and subtitleZipped != "NPc0":
-        Result = list()
-        Result.append({'lang': language.lower(), 'site' : 'napiprojekt.pl', 'title' : os.path.basename(File)[:-3]+"txt", 'url' : subtitleUrl, 'data': {'file': File, 'lang': language}, 'domain': 'napiprojekt.pl', 'file': File})
-        return Result
+        return ({'lang': language.lower(), 'site' : 'napiprojekt.pl', 'title' : os.path.basename(File)[:-3]+"txt", 'url' : subtitleUrl, 'data': {'file': File, 'lang': language}, 'domain': 'napiprojekt.pl', 'file': File})
     else:
         return {'errInfo': "NOT_FOUND"}
 
@@ -84,7 +77,8 @@ def get_subtitle(File):
         d = hashlib.md5(open(File, "rb").read(10485760, "rb")).hexdigest()
 
         if os.name == "posix":
-          os.name = "Linux"
+        #!!!: it's not a good idea
+            os.name = "Linux"
 
         # RECEIVE DATA
         subtitleUrl = "?l="+language.upper()+"&f="+d+"&t="+f(d)+"&v=other&kolejka=false&nick=&pass=&napios="+os.name
@@ -127,7 +121,8 @@ def download_by_data(File, SavePath):
         d = hashlib.md5(open(File, "rb").read(10485760)).hexdigest()
 
         if os.name == "posix":
-          os.name = "Linux"
+            #!!!: it's not a good idea
+            os.name = "Linux"
 
         # RECEIVE DATA
         try:

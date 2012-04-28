@@ -19,7 +19,7 @@ if os.name == "nt":
     os.environ['GTK_PATH'] = winSubget+"/windows/runtime/lib/gtk-2.0"
     os.environ['GTK2_RC_FILES'] = winSubget+"/windows/runtime/share/themes/MS-Windows/gtk-2.0/gtkrc"
 
-import gtk, gobject, glib
+import gtk, gobject
 
 if os.name != "nt":
     gtk.gdk.threads_init()

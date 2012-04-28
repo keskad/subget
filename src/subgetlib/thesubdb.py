@@ -1,4 +1,4 @@
-import httplib, urllib, re, time, hashlib, os
+import httplib, time, hashlib, os
 
 apiUrl = 'http://api.opensubtitles.org/xml-rpc'
 userAgent = "SubDB/1.0 (Subget/1.0; http://github.com/webnull/subget)"
@@ -60,8 +60,9 @@ def download_by_data(File, SavePath):
     global HTTPTimeout
 
     try:
-        Headers = dict()
-        Headers['User-Agent'] = userAgent
+        Headers = {
+            'User-Agent': userAgent,
+        }
         conn = httplib.HTTPConnection('api.thesubdb.com', 80, timeout=HTTPTimeout)
         conn.request("GET", File['link'], headers=Headers)
         response = conn.getresponse()
@@ -94,11 +95,13 @@ def searchSubtitles(Files):
 def check_exists(File):
     global userAgent, SearchMethod, SleepTime
 
+    #!!!: this var is unused
     URL = "http://api.thesubdb.com/?action=download&hash={hash}&language=en"
     Hash = get_hash(File)
 
-    Headers = dict()
-    Headers['User-Agent'] = userAgent
+    Headers = {
+        'User-Agent': userAgent,
+    }
     langList = [ 'en', 'pl', 'pt', 'ru', 'hu', 'it', 'br', 'cz', 'de' ]
 
     if SearchMethod == 'simple':
@@ -117,10 +120,7 @@ def check_exists(File):
                 Language = k[1].lower()
 
         if Response.status == 200:
-            sublist = list()
-            sublist.append({'lang': Language, 'site' : 'thesubdb.com', 'title' : os.path.basename(File)+" (hash)", 'domain': 'thesubdb.com', 'data': {'file': File, 'link': "/?action=download&hash="+Hash+"&language=pl,en,pt,ru,hu,it,br,cz,de"}, 'file': File})
-
-            return sublist
+            return ({'lang': Language, 'site' : 'thesubdb.com', 'title' : os.path.basename(File)+" (hash)", 'domain': 'thesubdb.com', 'data': {'file': File, 'link': "/?action=download&hash="+Hash+"&language=pl,en,pt,ru,hu,it,br,cz,de"}, 'file': File})
         else:
             print("[plugin:thesubdb] Not found for "+File+" in "+Language+" language.")
             return False
@@ -148,7 +148,7 @@ def check_exists(File):
             else:
                 print("[plugin:thesubdb] Not found for "+File+" in "+lang+" language.")
 
-        if len(sublist) == 0:
+        if not sublist:
             return False
 
         return sublist
@@ -160,6 +160,7 @@ def check_exists(File):
 def get_hash(name):
     readsize = 64 * 1024
     with open(name, 'rb') as f:
+        #!!!: this var is unused
         size = os.path.getsize(name)
         data = f.read(readsize)
         f.seek(-readsize, os.SEEK_END)

@@ -42,7 +42,7 @@ def checkNautilus(Widget, Subget, Path):
 
     theFile = Path+"/.gnome2/nautilus-scripts/"+Subget._("Download subtitles")
 
-    return os.path.isfile(theFile):
+    return os.path.isfile(theFile)
 
 def checkKDEService(Widget, Subget, Path):
     theFile = Path+"/.kde4/share/kde4/services/subget.desktop"
@@ -57,7 +57,7 @@ def checkKDEService(Widget, Subget, Path):
     if not os.path.isdir(Path+"/.kde4/share/kde4/services/"):
         os.system("mkdir -p "+Path+"/.kde4/share/kde4/services/")
 
-    return os.path.isfile(theFile):
+    return os.path.isfile(theFile)
 
 def KDEService(Widget, Subget, Path):
     """ Subget integration with Dolphin and Konqueror (KDE Service) """
@@ -153,6 +153,7 @@ def ThunarUCA(Widget, Subget, Path, dom, Found):
         #patterns = Item.getElementsByTagName('patterns')[0].childNodes[0].data
 
         if "subget" in command:
+            #!!!: Found is unused
             Found = True
             Item.parentNode.removeChild(Item)
 
@@ -176,6 +177,7 @@ def ThunarUCA(Widget, Subget, Path, dom, Found):
         fp.close()
     except Exception as e:
         Subget.Logging.output("[thunar] Cannot write to "+Path+"/.config/Thunar/uca.xml, is it writable?", "warning", True)
+        #!!!: widget is undefined!!!
         widget.set_sensitive(0)
         return False
 

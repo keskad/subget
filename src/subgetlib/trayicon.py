@@ -36,7 +36,7 @@ class PluginMain(subgetcore.SubgetPlugin):
         self.menu = gtk.Menu()
 
         show = gtk.ImageMenuItem(gtk.STOCK_YES)
-        if self.Subget.window.get_visible() == False:
+        if not self.Subget.window.get_visible():
             show.set_label(self.Subget._("Show main window"))
         else:
             show.set_label(self.Subget._("Hide main window"))
@@ -64,32 +64,28 @@ class PluginMain(subgetcore.SubgetPlugin):
 
 
         self.menu.show_all()
-        self.menu.popup(None, None, None, 3, time) 
+        self.menu.popup(None, None, None, 3, time)
 
     def status_clicked(self,status=''):
         """ Show/Hide a window """
 
         visible = self.Subget.window.get_visible()
 
-        if visible == False:
+        if not visible:
             self.Subget.window.set_visible(True)
 
             #### Restore last window position
             remember_window_position = self.Subget.configGetKey('trayicon', 'remember_window_position')
 
-            if remember_window_position == True or remember_window_position == "True":
-                if self.lastWindowPosition != None:
+            if remember_window_position or remember_window_position == "True":
+                if self.lastWindowPosition is not None:
                     self.Subget.window.set_uposition(self.lastWindowPosition[0], self.lastWindowPosition[1])
         else:
             self.lastWindowPosition = self.Subget.window.get_position()
             self.Subget.window.set_visible(False)
-        
-       
-            
 
     def _pluginInit(self):
         """ Initialize plugin """
-
         self.Subget.Hooking.connectHook("onGTKWindowOpen", self._onGTKLoopEnd)
 
         if "window" in dir(self.Subget):

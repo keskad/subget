@@ -9,6 +9,8 @@ if os.name == "posix":
     try:
         import dbus, dbus.service, dbus.glib
     except ImportError:
+        #!!!: when dbus will not be installed all code under this line will
+        # crash
         pass
 
     class SubgetService(dbus.service.Object):
@@ -16,6 +18,7 @@ if os.name == "posix":
 
         def __init__(self):
             bus_name = dbus.service.BusName('org.freedesktop.subget', bus=dbus.SessionBus())
+            #!!!: if dbus.service.Object is a new style clas => use super()
             dbus.service.Object.__init__(self, bus_name, '/org/freedesktop/subget')
 
         @dbus.service.method('org.freedesktop.subget')
@@ -28,34 +31,34 @@ if os.name == "posix":
         def openSearchMenu(self):
             """ Opens search dialog """
 
-            if not self.subget == None:
+            if self.subget is not None:
                 return self.subget.gtkSearchMenu(None) 
 
         @dbus.service.method('org.freedesktop.subget')
         def openPluginsMenu(self):
             """ Opens plugin menu """
 
-            if not self.subget == None:
+            if self.subget is not None:
                 return self.subget.gtkPluginMenu(None)
 
         @dbus.service.method('org.freedesktop.subget')
         def openSelectVideoDialog(self):
             """ Opens Video Selection dialog """
 
-            if not self.subget == None:
+            if self.subget is not None:
                 return self.subget.gtkSelectVideo(None)
 
         @dbus.service.method('org.freedesktop.subget')
         def openAboutDialog(self):
             """ Opens About dialog """
 
-            if not self.subget == None:
+            if self.subget is not None:
                 return self.subget.gtkAboutMenu(None)
 
         @dbus.service.method('org.freedesktop.subget')
         def clearList(self):
             """ Clean up the list """
-            if not self.subget == None:
+            if self.subget is not None:
                 return self.subget.cleanUpResults()
 
         @dbus.service.method('org.freedesktop.subget')
@@ -65,7 +68,7 @@ if os.name == "posix":
                 On errors returns false.
                 Default - Don't wait.
             """
-            if self.subget == None:
+            if self.subget is None:
                 return False
 
             if not str(type(Links).__name__) == "String":
@@ -74,7 +77,7 @@ if os.name == "posix":
             Links = Links.split("\n")
             self.subget.files = Links
 
-            if not Wait == False:
+            if Wait:
                 return self.subget.TreeViewUpdate()
             else:
                 self.subget.TreeViewUpdate()
@@ -100,30 +103,30 @@ else:
         def openSearchMenu(self):
             """ Opens search dialog """
 
-            if not self.subget == None:
+            if self.subget is not None:
                 return self.subget.gtkSearchMenu(None) 
 
         def openPluginsMenu(self):
             """ Opens plugin menu """
 
-            if not self.subget == None:
+            if self.subget is not None:
                 return self.subget.gtkPluginMenu(None)
 
         def openSelectVideoDialog(self):
             """ Opens Video Selection dialog """
 
-            if not self.subget == None:
+            if self.subget is not None:
                 return self.subget.gtkSelectVideo(None)
 
         def openAboutDialog(self):
             """ Opens About dialog """
 
-            if not self.subget == None:
+            if self.subget is not None:
                 return self.subget.gtkAboutMenu(None)
 
         def clearList(self):
             """ Clean up the list """
-            if not self.subget == None:
+            if self.subget is not None:
                 return self.subget.cleanUpResults()
 
         def addLinks(self, Links, Wait=False):
@@ -132,7 +135,7 @@ else:
                 On errors returns false.
                 Default - Don't wait.
             """
-            if self.subget == None:
+            if self.subget is None:
                 return False
 
             if not str(type(Links).__name__) == "String":
@@ -141,7 +144,7 @@ else:
             Links = Links.split("\n")
             self.subget.files = Links
 
-            if not Wait == False:
+            if Wait:
                 return self.subget.TreeViewUpdate()
             else:
                 self.subget.TreeViewUpdate()
@@ -173,7 +176,7 @@ class PluginMain(subgetcore.SubgetPlugin):
 
             time.sleep(0.5)
 
-            if self.bus == None:
+            if self.bus is None:
                 self.thread._Thread__stop()
                 check = False
             else:
@@ -183,6 +186,7 @@ class PluginMain(subgetcore.SubgetPlugin):
             if len(Data[1]) > 0:
 
                 if os.name == "posix":
+                    #!!!: possible crash => SubgetServiceObj is not defined
                     addLinks = SubgetServiceObj.get_dbus_method('addLinks', 'org.freedesktop.subget')
                 else: # Windows NT
                     addLinks = self.bus.addLinks
@@ -233,13 +237,3 @@ class PluginMain(subgetcore.SubgetPlugin):
     def checkCOM(self):
         pythoncom.CoInitialize()
         self.bus = win32com.client.Dispatch("Subget")
-
-
-
-
-
-
-
-
-
-

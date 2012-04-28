@@ -1,5 +1,5 @@
 #-*- coding: utf-8 -*-
-import httplib, urllib, re, time, hashlib, os, gzip, zipfile
+import httplib, urllib, re, os, gzip, zipfile
 
 import subgetcore
 userAgent = "Mozilla/5.0 (X11; Linux i686) AppleWebKit/535.1 (KHTML, like Gecko) Chrome/14.0.835.159 Safari/535.1"
@@ -17,12 +17,7 @@ def loadSubgetObject(x):
             HTTPTimeout = subgetObject.Config['plugins']['timeout']
 
 def download_list(files, query=''):
-    results = list()
-
-    for File in files:
-        results.append(check_exists(File))
-
-    return results
+    return [check_exists(File) for File in files]
 
 def download_quick(files):
     return
@@ -32,15 +27,16 @@ def download_by_data(File, SavePath):
 
     # GET LINK TO ZIP FILE
     try:
-        Headers = dict()
-        Headers['User-Agent'] = userAgent
-        Headers['Host'] = 'subscene.com'
-        Headers['Accept-Encoding'] = 'gzip,deflate,sdch'
-        Headers['Accept-Language'] = 'pl-PL,pl;q=0.8,en-US;q=0.6,en;q=0.4'
-        Headers['Cookie'] = 'subscene_lastsearchwasreleasename=selected; subscene_lastsearchwasfilmtitle=;'
-        Headers['Accept-Charset'] = 'ISO-8859-2,utf-8;q=0.7,*;q=0.3'
-        Headers['Origin'] = 'http://subscene.com'
-        Headers['Cache-Control'] = 'max-age=0'
+        Headers = {
+            'User-Agent': userAgent,
+            'Host': 'subscene.com',
+            'Accept-Encoding': 'gzip,deflate,sdch',
+            'Accept-Language': 'pl-PL,pl;q=0.8,en-US;q=0.6,en;q=0.4',
+            'Cookie': 'subscene_lastsearchwasreleasename=selected; subscene_lastsearchwasfilmtitle=;',
+            'Accept-Charset': 'ISO-8859-2,utf-8;q=0.7,*;q=0.3',
+            'Origin': 'http://subscene.com',
+            'Cache-Control': 'max-age=0',
+        }
 
         conn = httplib.HTTPConnection('www.subscene.com', 80, timeout=HTTPTimeout)
         conn.request("GET", File['link'], headers=Headers)
@@ -72,7 +68,7 @@ def download_by_data(File, SavePath):
 
     FilmID = re.findall("\<input type\=\"hidden\" name\=\"filmId\" value\=\"([0-9]+)\"", data)
     
-    if len(FilmID) == 0:
+    if not FilmID:
         print("[plugin:thesubdb] Cannot get filmId")
         return False
 
@@ -98,19 +94,20 @@ def download_by_data(File, SavePath):
 
     # DOWNLOAD ZIP FILE
     try:
-        Headers = dict()
-        Headers['Host'] = 'subscene.com'
-        Headers['Connection'] = 'keep-alive'
-        Headers['Cache-Control'] = 'max-age=0'
-        Headers['Origin'] = 'http://subscene.com'
-        Headers['User-Agent'] = userAgent
-        Headers['Content-Type'] = 'application/x-www-form-urlencoded'
-        Headers['Accept'] = 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8'
-        Headers['Referer'] = "http://subscene.com"+File['link']
-        Headers['Accept-Encoding'] = 'gzip,deflate,sdch'
-        Headers['Accept-Language'] = 'pl-PL,pl;q=0.8,en-US;q=0.6,en;q=0.4'
-        Headers['Accept-Charset'] = 'ISO-8859-2,utf-8;q=0.7,*;q=0.3'
-        Headers['Cookie'] = Cookies
+        Headers = {
+            'Host': 'subscene.com',
+            'Connection': 'keep-alive',
+            'Cache-Control': 'max-age=0',
+            'Origin': 'http://subscene.com',
+            'User-Agent': userAgent,
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+            'Referer': "http://subscene.com"+File['link'],
+            'Accept-Encoding': 'gzip,deflate,sdch',
+            'Accept-Language': 'pl-PL,pl;q=0.8,en-US;q=0.6,en;q=0.4',
+            'Accept-Charset': 'ISO-8859-2,utf-8;q=0.7,*;q=0.3',
+            'Cookie': Cookies,
+        }
         Params = urllib.urlencode({'__EVENTTARGET': 's$lc$bcr$downloadLink', '__EVENTARGUMENT': '', '__VIEWSTATE': ViewState, '__PREVIOUSPAGE': PreviousPage, 'subtitleId': File['subid'], 'filmId': FilmID, 'typeId': Type})
 
         conn = httplib.HTTPConnection('www.subscene.com', 80, timeout=HTTPTimeout)
@@ -131,7 +128,7 @@ def download_by_data(File, SavePath):
     except Exception as e:
         print("[plugin:subscene] Cannot write zipped file to "+TMPName+", Exception: "+str(e))
 
-    if os.path.getsize(TMPName) == 0:
+    if not os.path.getsize(TMPName):
         print("[plugin:subscene] Temporary filesize is zero, stopping.")
         return False
 
@@ -139,7 +136,7 @@ def download_by_data(File, SavePath):
         if Type == "rar":
             unrar = subgetObject.getFile("/usr/bin/unrar", "/usr/local/bin/unrar")
 
-            if unrar != False:
+            if unrar:
                 os.system("cd "+os.path.dirname(SavePath)+";"+unrar+" e "+TMPName)
             else:
                 print("[plugin:subscene] Cannot find unrar, unpacking of RAR file failed, moving to directory containing movie")
@@ -170,14 +167,17 @@ def convertToQuery(FileName):
 def check_exists(File):
     global userAgent, SearchMethod, SleepTime
 
-    Headers = dict()
-    Headers['User-Agent'] = userAgent
+    Headers = {
+        'User-Agent': userAgent,
+    }
+    #!!!: this var is unused
     langList = [ 'en', 'pl', 'pt', 'ru', 'hu', 'it', 'br', 'cz', 'de' ]
 
     try:
         Connection = httplib.HTTPConnection('subscene.com', 80, timeout=HTTPTimeout)
         Connection.request("GET", "/s.aspx?q="+convertToQuery(subgetcore.getSearchKeywords(File, True)), headers=Headers)
         Response = Connection.getresponse()
+        #!!!: this var is unused
         RespHeaders = Response.getheaders()
     except Exception as e:
         print("[plugin:subscene] Connection timed out, err: "+str(e))
@@ -197,7 +197,7 @@ def check_exists(File):
         subsFound = re.findall("\<a class\=\"a1\" href\=\"\/([a-z-A-Z\-]+)/([A-Za-z\_\-0-9]+)/subtitle-([0-9]+)\.aspx\" title=\"([A-Za-z_\-\ 0-9\&\^\%\$\#\@\!\*\(\)\+\=]+)\"\>", plainResponse)
 
         # No subtitles found!
-        if len(subsFound) == 0:
+        if not subsFound:
             return False
 
         sublist = list()
@@ -210,7 +210,7 @@ def check_exists(File):
 
                 title = re.findall("\<span id\=\"r"+ID+"\"\>([A-Za-z0-9\_\-\&\^\%\$\#\@\!\&\(\)\+\=\:\;\'\\\"\ ĘęÓóĄąŚśŁłŻżŹźĆćŃń\.\,]+)\<\/span\>", plainResponse)
 
-                if len(title) > 0:
+                if title:
                     title = title[0]
                 else:
                     title = LinkName

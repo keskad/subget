@@ -47,7 +47,7 @@ class Logging:
             message = self.convertMessage(message, inspect.stack()[1][3])
         
         if utype == "debug" and self.loggingLevel > 1:
-            if self.logger is not None None and savetoLogs:
+            if self.logger is not None and savetoLogs:
                 self.logger.debug(message)
 
             print(message)
