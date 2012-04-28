@@ -8,7 +8,7 @@ def Nautilus(Widget, Subget, Path):
 
     theFile = Path+"/.gnome2/nautilus-scripts/"+Subget._("Download subtitles")
 
-    if Widget.get_active() == False:
+    if not Widget.get_active():
         try:
             shutil.copyfile("/usr/share/subget/fm-integration/gnome.sh", theFile)
 
@@ -38,14 +38,11 @@ def checkNautilus(Widget, Subget, Path):
         Subget.Logging.output("Nautilus is not installed, disabling checkButton.", "debug", False)
         Widget.set_sensitive(0)
         #Widget.set_active(0)
-        return False, False
+        return False
 
     theFile = Path+"/.gnome2/nautilus-scripts/"+Subget._("Download subtitles")
 
-    if not os.path.isfile(theFile):
-        return False
-    else:
-        return True
+    return os.path.isfile(theFile)
 
 def checkKDEService(Widget, Subget, Path):
     theFile = Path+"/.kde4/share/kde4/services/subget.desktop"
@@ -60,10 +57,7 @@ def checkKDEService(Widget, Subget, Path):
     if not os.path.isdir(Path+"/.kde4/share/kde4/services/"):
         os.system("mkdir -p "+Path+"/.kde4/share/kde4/services/")
 
-    if not os.path.isfile(theFile):
-        return False
-    else:
-        return True
+    return os.path.isfile(theFile)
 
 def KDEService(Widget, Subget, Path):
     """ Subget integration with Dolphin and Konqueror (KDE Service) """
@@ -71,7 +65,7 @@ def KDEService(Widget, Subget, Path):
     theFile = Path+"/.kde4/share/kde4/services/subget.desktop"
 
 
-    if Widget.get_active() == False:
+    if not Widget.get_active():
         try:
             shutil.copyfile("/usr/share/subget/fm-integration/kde4.desktop", theFile)
 
@@ -101,7 +95,7 @@ def KDEService(Widget, Subget, Path):
 def checkThunar(Widget, Subget, Path):
     """ Check status of Thunar integration with Subget """
 
-    if Subget.getFile(["/usr/bin/thunar", "/usr/local/bin/thunar"]) == False:
+    if not Subget.getFile(["/usr/bin/thunar", "/usr/local/bin/thunar"]):
         Subget.Logging.output("Cannot find thunar installation", "debug", False)
         Widget.set_sensitive(0)
         #Widget.set_active(0)
@@ -159,12 +153,13 @@ def ThunarUCA(Widget, Subget, Path, dom, Found):
         #patterns = Item.getElementsByTagName('patterns')[0].childNodes[0].data
 
         if "subget" in command:
+            #!!!: Found is unused
             Found = True
             Item.parentNode.removeChild(Item)
 
     XML = dom.toxml().replace("<actions/>", "<actions></actions>")
 
-    if Widget.get_active() == True:
+    if Widget.get_active():
         Subget.Logging.output(Subget._("Integration inactive"), "debug", False)
     else:
         subgetBin = Subget.getFile(["/usr/bin/subget", "/usr/local/bin/subget"])
@@ -182,6 +177,7 @@ def ThunarUCA(Widget, Subget, Path, dom, Found):
         fp.close()
     except Exception as e:
         Subget.Logging.output("[thunar] Cannot write to "+Path+"/.config/Thunar/uca.xml, is it writable?", "warning", True)
+        #!!!: widget is undefined!!!
         widget.set_sensitive(0)
         return False
 

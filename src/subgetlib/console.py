@@ -1,4 +1,4 @@
-import subgetcore, gtk, sys, time, sys, traceback, os
+import subgetcore, gtk, sys, traceback, os
 from StringIO import StringIO
 
 ####
@@ -43,7 +43,6 @@ class PluginMain(subgetcore.SubgetPlugin):
                 self.consolePosition.set_image(image)
             except Exception as e:
                 print(e)
-                True
 
             self.Subget.window.Menubar.elementsArray['toolsMenu'].append(self.consolePosition)
             self.Subget.window.show_all()
@@ -61,19 +60,19 @@ class PluginMain(subgetcore.SubgetPlugin):
         Startup = gtk.CheckButton(self.Subget._("Show console on Subget startup"))
         Startup.connect("pressed", self.Subget.configSetButton, 'console', 'open_at_startup', Startup, True)
 
-        if not self.Subget.configGetKey("console", "open_at_startup") == False:
+        if self.Subget.configGetKey("console", "open_at_startup"):
             Startup.set_active(1)
 
         confSize = gtk.CheckButton(self.Subget._("Remeber window size"))
         confSize.connect("pressed", self.Subget.configSetButton, 'console', 'remember_size', confSize, True)
 
-        if not self.Subget.configGetKey("console", "remember_size") == False:
+        if self.Subget.configGetKey("console", "remember_size"):
             confSize.set_active(1)
 
         confPosition = gtk.CheckButton(self.Subget._("Remember window position"))
         confPosition.connect("pressed", self.Subget.configSetButton, 'console', 'remember_position', confPosition, True)
 
-        if not self.Subget.configGetKey("console", "remember_position") == False:
+        if self.Subget.configGetKey("console", "remember_position"):
             confPosition.set_active(1)
 
 
@@ -87,7 +86,7 @@ class PluginMain(subgetcore.SubgetPlugin):
         scaleValue = int(self.Subget.configGetKey('logging', 'level'))+2
 
 
-        if not scaleValue == False and scaleValue > 0 and scaleValue <= 30:
+        if scaleValue and scaleValue <= 30:
             adj.set_value(scaleValue)
 
         Vbox = gtk.VBox(False, 0)
@@ -106,7 +105,7 @@ class PluginMain(subgetcore.SubgetPlugin):
     def _updateConsole(self, text):
         """ Dynamic update console event """
 
-        if self.consoleState == True:
+        if self.consoleState:
             self.consoleWindow.textarea.set_text(text)
 
     def sendCommand(self, x):
@@ -117,7 +116,7 @@ class PluginMain(subgetcore.SubgetPlugin):
         cmd = self.consoleWindow.gText.get_text()
         self.consoleWindow.gText.set_text("")
 
-        if cmd == "" or cmd == " ":
+        if not cmd.strip():
             return False
 
         cmdLine = cmd.split(" ")
@@ -140,6 +139,7 @@ class PluginMain(subgetcore.SubgetPlugin):
             except Exception:
                 pass
 
+        #!!!: those vars are not used anuwhere
         subget = self.Subget
         _ = self.Subget._
         logging = self.Subget.Logging
@@ -161,7 +161,7 @@ class PluginMain(subgetcore.SubgetPlugin):
         env = dir()
 
         for envVar in env:
-            if envVar == "self" or envVar == "buffer" or envVar == "logging" or envVar == "cmd" or envVar == "cmdline":
+            if envVar in ("self", "buffer", "logging", "cmd", "cmdline"):
                 continue
 
             value = eval(envVar)
@@ -177,7 +177,7 @@ class PluginMain(subgetcore.SubgetPlugin):
     def openConsole(self, x='', y=''):
         """ Open the console window """
 
-        if self.consoleState == True:
+        if self.consoleState:
             return False
 
         self.consoleWindow = gtk.Window()
@@ -192,7 +192,7 @@ class PluginMain(subgetcore.SubgetPlugin):
 
         self.consoleState = True
 
-        if not self.Subget.configGetKey("console", "remember_size") == False:
+        if self.Subget.configGetKey("console", "remember_size"):
             try:
                 x = str(self.Subget.configGetKey("console", "sizex"))
                 y = str(self.Subget.configGetKey("console", "sizey"))
@@ -253,7 +253,7 @@ class PluginMain(subgetcore.SubgetPlugin):
         self.consoleWindow.show_all()
         self.consoleWindow.set_size_request(450, 240)
 
-        if not self.Subget.configGetKey("console", "remember_position") == False:
+        if self.Subget.configGetKey("console", "remember_position"):
             try:
                 x = str(self.Subget.configGetKey("console", "posx"))
                 y = str(self.Subget.configGetKey("console", "posy"))
@@ -275,19 +275,19 @@ class PluginMain(subgetcore.SubgetPlugin):
     def windowDeleteEvent(self, widget, event, data=None):
         self.consoleState = False
 
-        if not self.Subget.configGetKey("console", "remember_position") == False:
+        if self.Subget.configGetKey("console", "remember_position"):
             pos = self.consoleWindow.get_position()
             self.Subget.configSetKey("console", "posx", pos[0])
             self.Subget.configSetKey("console", "posy", pos[1])
             self.Subget.Logging.output("Saving console position at "+str(pos[0])+"x"+str(pos[1]), "debug", False)
 
-        if not self.Subget.configGetKey("console", "remember_size") == False:
+        if self.Subget.configGetKey("console", "remember_size"):
             size = self.consoleWindow.get_size()
             self.Subget.configSetKey("console", "sizex", size[0])
             self.Subget.configSetKey("console", "sizey", size[1])
             self.Subget.Logging.output("Saving console size: "+str(size[0])+"x"+str(size[1]), "debug", False)
 
-        if not self.Subget.configGetKey("console", "remember_size") == False or not self.Subget.configGetKey("console", "remember_size") == False:
+        if self.Subget.configGetKey("console", "remember_size"):
             self.Subget.saveConfiguration()
 
         del self.consoleWindow
@@ -324,7 +324,7 @@ class Commands:
         self.console.Subget.Logging.output(message, "debug", False, True, True)
 
     def send(self, cmdLine):
-        if cmdLine[0] == "send" or cmdLine[0] == "output" or cmdLine[0] == "__init__":
+        if cmdLine[0] in ("send", "output", "__init__"):
             return False
 
         if cmdLine[0] in dir(self):
@@ -356,7 +356,7 @@ class Commands:
     #            traceback.print_exc(file=sys.stdout)
 
     def cd(self, location):
-        if len(location) == 0:
+        if not location:
             self.nav = os.path.expanduser("~")
         if os.path.isdir(location[0]):
             self.nav = location[0]

@@ -1,4 +1,4 @@
-import httplib, urllib, time, os, hashlib, subprocess, re, zipfile, subgetcore
+import urllib, os, zipfile, subgetcore
 from xml.dom import minidom
 
 ### Specification:
@@ -13,11 +13,12 @@ class PluginMain(subgetcore.SubgetPlugin):
     def getListOfSubtitles(self, movieRealName, File, resultsClass):
         response, data = self.HTTPGet("api.allsubs.org", "/index.php?limit=20&search="+urllib.quote_plus(movieRealName))
 
-        if response == False or data == False:
+        if not response == False or not data:
             return False
 
         dom = minidom.parseString(data)
 
+        #!!!: this var is unused
         resultsCount = int(dom.getElementsByTagName('found_results').item(0).firstChild.data)
 
         Results = dom.getElementsByTagName('item')
@@ -46,10 +47,11 @@ class PluginMain(subgetcore.SubgetPlugin):
         global subgetObject
         global language
 
-        if File != None:
+        if File is not None:
             movieName = subgetcore.getSearchKeywords(os.path.basename(File))
              
-            if movieName != False:
+            if movieName:
+                #!!!: this var is unused
                 subtitleList = self.getListOfSubtitles(movieName, File, results)
                 return True
             else:
@@ -62,7 +64,7 @@ class PluginMain(subgetcore.SubgetPlugin):
     def download_by_data(self, File, SavePath):
         response, data = self.HTTPGet('www.allsubs.org', File['url'].replace('http://www.allsubs.org', ''))
 
-        if response == False or data == False:
+        if not response or not data:
             return False
 
         TMPName = self.temporaryPath(File['file'])
@@ -79,10 +81,10 @@ class PluginMain(subgetcore.SubgetPlugin):
             Handler = open(SavePath, "wb")
             Handler.write(z.read(ListOfNames[0]))
             Handler.close()
-            z.close()
         else:
             z.extractall(os.path.dirname(SavePath))
-            z.close()
+
+        z.close()
 
         #os.remove(TMPName)
         return SavePath
