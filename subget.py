@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 #-*- coding: utf-8 -*-
 import getopt, sys, os, glob, time, gettext, locale, xml.dom.minidom
+import traceback
 from threading import Thread
 import subgetcore # libraries
 from pango import FontDescription
@@ -19,7 +20,7 @@ if os.name == "nt":
     os.environ['GTK_PATH'] = winSubget+"/windows/runtime/lib/gtk-2.0"
     os.environ['GTK2_RC_FILES'] = winSubget+"/windows/runtime/share/themes/MS-Windows/gtk-2.0/gtkrc"
 
-import gtk, gobject, glib
+import gtk, gobject
 
 if os.name != "nt":
     gtk.gdk.threads_init()
@@ -128,7 +129,7 @@ class SubGet:
         # list of disabled plugins
         pluginsDisabled = self.configGetKey('plugins', 'disabled')
 
-        if pluginsDisabled is not False:
+        if pluginsDisabled:
             self.disabledPlugins = pluginsDisabled.split(",")
 
 
@@ -149,7 +150,6 @@ class SubGet:
                 continue
             except ValueError:
                 self.togglePlugin(False, Plugin, 'activate')
-                pass
 
 
         # plugin execution order
@@ -167,19 +167,11 @@ class SubGet:
             self.reorderPlugins()
 
         # add missing plugins
-        for k in self.plugins:
-            try:
-                test = self.pluginsList.index(k)
-            except ValueError:
-                self.pluginsList.append(k)
+        [self.pluginsList.append(k) for k in self.plugins if k not in self.pluginsList]
 
     def reorderPlugins(self):
         """ If plugins order is empty, try to create alphabetical order """
-
-        for Item in self.plugins:
-            self.pluginsList.append(Item)
-
-
+        self.pluginsList = sorted(self.plugins)
 
     # close the window and quit
     def delete_event(self, widget, event, data=None):
@@ -249,10 +241,10 @@ class SubGet:
         try:
             opts, args = getopt.getopt(sys.argv[1:], "hcqw", ["help", "console", "quick", "language=", "watch-with-subtitles"])
         except getopt.GetoptError as err:
-            print(_(Error)+": "+str(err)+", "+_("Try --help for usage")+"\n\n")
+            print(_('Error')+": "+str(err)+", "+_("Try --help for usage")+"\n\n")
             usage()
             sys.exit(2)
-
+        # replace with argparse/optparse
         for o, a in opts:
             if o in ('-h', '--help'):
                  usage()
@@ -291,7 +283,7 @@ class SubGet:
 
         self.Hooking.executeHooks(self.Hooking.getAllHooks("onInstanceCheck"), [consoleMode, args, action])
 
-        if consoleMode == True:
+        if consoleMode:
             self.shellMode(args)
         else:
             # Fast download option
@@ -321,7 +313,7 @@ class SubGet:
             Results = self.plugins[Plugin].instance.download_list(File).output()
 
         for Result in Results:
-            if Result == False:
+            if not Result:
                 self.queueCount = (self.queueCount - 1)
                 return False
 
@@ -347,11 +339,11 @@ class SubGet:
         while True:
             time.sleep(0.2)
             Sleept += 0.2
-            
+
             if self.queueCount <= 0:
                 break
 
-            if Sleept == 30.0 or Sleept == 60.0 or Sleept == 90.0 or Sleept == 120.0:
+            if Sleept in [30.0, 60.0, 90.0, 120.0]:
                 self.Logging.output("[textModeWait] "+str(Sleept)+"s sleep", "debug", False)
 
             # if waited too many time
@@ -367,7 +359,7 @@ class SubGet:
         prefferedLanguage = self.configGetKey('watch_with_subtitles', 'preferred_language')
 
         # set default language to english
-        if prefferedLanguage == False:
+        if not prefferedLanguage:
             prefferedLanguage = 'en'
 
         # search for matching subtitles
@@ -402,7 +394,7 @@ class SubGet:
             Always returns True
         """
 
-        if len(args) == 0:
+        if not args:
             self.Logging.output(_("No files specified in watch with subtitles."), "", False)
             self.sendCriticAlert(_("No files specified in watch with subtitles."))
             sys.exit(1)
@@ -433,14 +425,14 @@ class SubGet:
 
         if len(args) == 1:
             # get the first job using "for" and "break" after first result
-            if not self.configGetKey('watch_with_subtitles', 'download_only') == True:
+            if not self.configGetKey('watch_with_subtitles', 'download_only'):
                 Found = False
 
                 for File in self.finishedJobs:
                     Found = True
                     break
 
-                if Found == False:
+                if not Found:
                     self.Logging.output(_("No subtitles found for file") + " "+args[0], "warning")
                     self.sendCriticAlert(_("No subtitles found for file") + " "+args[0])
 
@@ -485,6 +477,7 @@ class SubGet:
                 pixbuf = gtk.gdk.pixbuf_new_from_file(pixbuf_path)
             except Exception:
                 self.Logging.output(pixbuf_path+" "+_("icon file not found"), "warning", True)
+                #???: return True ?
                 True
 
             self.liststore.append([pixbuf, str(release_name), str(server), (len(self.subtitlesList)-1)])
@@ -492,14 +485,14 @@ class SubGet:
     def reorderTreeview(self, useGTK=True):
         """ Sorting subtitles list by plugin priority """
 
-        if self.locks['reorder'] == True:
+        if self.locks['reorder']:
             return False
 
         self.locks['reorder'] = True
         self.workingState(True)
 
         if "plugins" in self.Config:
-            if self.dictGetKey(self.Config['plugins'], 'list_ordering') == False:
+            if not self.dictGetKey(self.Config['plugins'], 'list_ordering'):
                 self.Logging.output(_("Sorting disabled."), "debug", True)
                 return True
 
@@ -523,7 +516,7 @@ class SubGet:
             sortedList = sorted(newList, key=lambda k: k['priority'])
             self.subtitlesList = list()
 
-            if useGTK == True:
+            if useGTK:
                 self.liststore.clear()
 
                 for Item in sortedList:
@@ -546,11 +539,11 @@ class SubGet:
             elif self.plugins[Plugin].PluginInfo['API'] == 2:
                 Results = self.plugins[Plugin].instance.download_list(self.files).output()
 
-            if Results == None:
+            if Results is None:
                 self.Logging.output("[plugin:"+Plugin+"] "+_("ERROR: Cannot import"), "warning", True)
             else:
                 for Result in Results:
-                    if Result == False:
+                    if not Result:
                         self.queueCount = (self.queueCount - 1)
                         return False
 
@@ -597,8 +590,8 @@ class SubGet:
 
             entry1,entry2 = self.treeview.get_selection().get_selected()    
 
-            if entry2 == None:
-                if self.dialog != None:
+            if entry2 is None:
+                if self.dialog is not None:
                     return
                 else:
                     self.dialog = gtk.MessageDialog(parent = None,flags = gtk.DIALOG_DESTROY_WITH_PARENT,type = gtk.MESSAGE_INFO,buttons = gtk.BUTTONS_OK,message_format = _("No subtitles selected."))
@@ -662,7 +655,7 @@ class SubGet:
                  elif self.plugins[Plugin].PluginInfo['API'] == 2:
                     Results = self.plugins[Plugin].instance.download_by_data(self.subtitlesList[SelectID]['data'], filename)
 
-                 if Results != language and Results != '':
+                 if Results != language and Results:
                     try:
                         self.Hooking.executeHooks(self.Hooking.getAllHooks("onSubtitlesDownload"), [False, Results, self.dictGetKey(self.subtitlesList[SelectID]['data'], 'file'), True])
                     except Exception as e:
@@ -703,8 +696,7 @@ class SubGet:
                     if not os.path.isfile(fileName) or not os.access(fileName, os.R_OK):
                         continue
 
-                    self.files = list()
-                    self.files.append(fileName)
+                    self.files = [fileName, ]
                     #self.files = {fileName} # works on Python 2.7 only
                     #print self.files
                     self.TreeViewUpdate()
@@ -741,7 +733,7 @@ class SubGet:
                     self.plugins[Plugin].PluginInfo['type'] = 'normal'
 
                 # refresh the list
-                if not liststore == None:
+                if liststore is not None:
                     liststore.clear() 
                     self.pluginsListing(liststore)
 
@@ -767,7 +759,7 @@ class SubGet:
             self.plugins[Plugin] = 'Disabled'
 
             # refresh the list
-            if not liststore == None:
+            if liststore is not None:
                 liststore.clear() 
                 self.pluginsListing(liststore)
 
@@ -824,7 +816,7 @@ class SubGet:
                                     customItem.connect("activate", option[1], option[2])
                                     menu.append(customItem)
                                 except Exception as e:
-                                    self.Logging.output(_("Cannot add custom menu")+". "+_("plugin")+": "+plugin+", "+_("exception")+": "+str(e))
+                                    self.Logging.output(_("Cannot add custom menu")+". "+_("plugin")+": "+Plugin+", "+_("exception")+": "+str(e))
 
                     menu.append(Deactivate)
                     menu.show_all()
@@ -859,14 +851,9 @@ class SubGet:
                 try:
                     Packages = self.plugins[Plugin].PluginInfo['Requirements']['Packages']
 
-                    if len(Packages) > 0:
-                        i=0
-                        for Package in Packages:
-                            if i == 0:
-                                Packages_c = Packages_c + Package
-                            else:
-                                Packages_c = Packages_c + Package + ", "
-                            i=i+1
+                    if Packages:
+                        #!!!: refactored, but this var is not used
+                        Packages_c = ', '.join(Packages)
 
                 except Exception:
                     Packages = _("Unknown")
@@ -897,7 +884,7 @@ class SubGet:
     def gtkPluginMenu(self, arg):
             """ GTK Widget with list of plugins """
 
-            if self.dictGetKey(self.Windows, 'gtkPluginMenu') == False:
+            if not self.dictGetKey(self.Windows, 'gtkPluginMenu'):
                 self.Windows['gtkPluginMenu'] = True
             else:
                 return False
@@ -952,7 +939,7 @@ class SubGet:
             treeview.connect("button-press-event", self.pluginTreeviewEvent, liststore)
 
             # Allow sorting on the column
-            if not self.configGetKey('interface', 'custom_plugins_sorting') == False:
+            if self.configGetKey('interface', 'custom_plugins_sorting'):
                 tvcolumn.set_sort_column_id(1)
                 tvcolumn1.set_sort_column_id(1)
                 tvcolumn2.set_sort_column_id(2)
@@ -1020,7 +1007,7 @@ class SubGet:
     def gtkAboutMenu(self, arg=''):
             """ Shows about dialog """
 
-            if self.dictGetKey(self.Windows, 'gtkAboutMenu') == False:
+            if not self.dictGetKey(self.Windows, 'gtkAboutMenu'):
                 self.Windows['gtkAboutMenu'] = True
             else:
                 return False
@@ -1066,7 +1053,7 @@ class SubGet:
             if not os.path.isfile(self.subgetOSPath+"/usr/share/subget/version.xml"):
                 self.gtkAddTab(notebook, _("Version"), _("Version information can't be read because file /usr/share/subget/version.xml is missing."))
             else:
-                if self.versioning == None:
+                if self.versioning is  None:
                     try:
                         dom = xml.dom.minidom.parse(self.subgetOSPath+"/usr/share/subget/version.xml")
 
@@ -1104,7 +1091,7 @@ class SubGet:
                         self.Logging.output("Catched an exception while tried to parse /usr/share/subget/version.xml, details: "+str(e), "error", True)
                     
 
-                if self.versioning == False or self.versioning == None:
+                if not self.versioning:
                     self.gtkAddTab(notebook, _("Version"), _("Version information can't be read because there was a problem parsing file /usr/share/subget/version.xml"))
                 else:
                     self.gtkAddTab(notebook, _("Version"), _("Version")+": "+self.versioning['version']+", "+self.osName()+"\n\n"+_("Supported platforms")+":\n"+self.versioning['platforms']+"\n"+_("Project developers")+":\n "+self.versioning['developers']+"\n"+_("Contact")+":\n"+self.versioning['contact'])
@@ -1151,17 +1138,14 @@ class SubGet:
 
         if self.plugins[Plugin].PluginInfo['type'] == 'extension':
             if "isPlugin" in self.plugins[Plugin].PluginInfo:
-                if self.plugins[Plugin].PluginInfo['isPlugin'] == True or self.plugins[Plugin].PluginInfo['isPlugin'] == "True":
-                    return True
-                else:
-                    return False
+                return self.plugins[Plugin].PluginInfo['isPlugin'] or self.plugins[Plugin].PluginInfo['isPlugin'] == "True"
             else:
                 return False
 
         return True
 
     def gtkSearchMenu(self, arg):
-            if self.dictGetKey(self.Windows, 'gtkSearchMenu') == False:
+            if not self.dictGetKey(self.Windows, 'gtkSearchMenu'):
                 self.Windows['gtkSearchMenu'] = True
             else:
                 return False
@@ -1247,7 +1231,7 @@ class SubGet:
             #self.sm.destroy()
             time.sleep(0.1)
 
-            if query == "" or query == None:
+            if query == "" or query is None:
                 return
 
             if self.sm.clearCB.get_active():
@@ -1269,17 +1253,17 @@ class SubGet:
                         elif self.plugins[Plugin].PluginInfo['API'] == 2:
                             Results = self.plugins[Plugin].instance.search_by_keywords(query) # query the plugin for results
 
-                        if Results == None or Results == False:
+                        if not Results:
                             return
 
                         for Subtitles in Results:
-                            if str(type(Subtitles).__name__) == "str":
+                            if isinstance(Subtitles, str):
                                 continue
 
                             self.addSubtitlesRow(Subtitles['lang'], Subtitles['title'], Subtitles['domain'], Subtitles['data'], Plugin, Subtitles['file'])
 
                     except AttributeError:
-                       True # Plugin does not support searching by keywords
+                       return True # Plugin does not support searching by keywords
             else:
                 try:
                     Plugin = self.sm.plugins[plugin]
@@ -1291,11 +1275,11 @@ class SubGet:
                         Results = self.plugins[Plugin].instance.search_by_keywords(query) # query the plugin for results
                         Results = Results[0]
 
-                    if Results == None:
+                    if Results is None:
                         return
 
                     for Result in Results:
-                        if str(type(Result).__name__) == "str":
+                        if isinstance(Result, str):
                             continue
 
                         self.addSubtitlesRow(Result['lang'], Result['title'], Result['domain'], Result['data'], plugin, Result['file'])
@@ -1332,7 +1316,7 @@ class SubGet:
     def gtkPreferences(self, aid=''):
         #self.sendCriticAlert("Sorry, this feature is not implemented yet.")
         #return
-        if self.Windows['preferences'] == True:
+        if self.Windows['preferences']:
             return False
 
         self.Windows['preferences'] = True
@@ -1381,7 +1365,7 @@ class SubGet:
 
     def configSetButton(self, Type, Section, Option, Value, revert=False):
 
-        if revert == True:
+        if revert:
             Value = self.revertBool(Value.get_active())
         else:
             Value = Value.get_active()
@@ -1394,10 +1378,7 @@ class SubGet:
             self.Logging.output(_("Error setting configuration variable:")+" "+Section+"->"+Option+" = \""+str(Value)+"\". "+_("Error")+": "+str(e), "warning", True)
 
     def revertBool(self, boolean):
-        if boolean == "False" or boolean == False:
-            return True
-        else:
-            return False
+        return boolean == "False" or boolean
 
     def configGetSection(self, Section):
         """ Returns section as dictionary 
@@ -1410,11 +1391,7 @@ class SubGet:
               False - on false
 
         """
-
-        if Section in self.Config:
-            return self.Config[Section]
-
-        return False
+        return self.Configa.get(Section, False)
 
 
     def configGetKey(self, Section, Key):
@@ -1429,19 +1406,16 @@ class SubGet:
               False - when value of variable is "false" or "False" or just False
               string value - value of variable
         """
-
-        if not Section in self.Config:
+        try:
+            cfg = self.Config[Section][Key]
+            if cfg.lower() == "false":
+                return False
+            else:
+                return cfg
+        except KeyError:
             return False
 
-        if not Key in self.Config[Section]:
-            return False
 
-        if self.Config[Section][Key] == "false" or self.Config[Section][Key] == "False":
-            return False
-
-        return self.Config[Section][Key]
-
-     
     def gtkPreferencesIntegration(self):
         # "General" preferences
         Path = os.path.expanduser("~/")
@@ -1465,7 +1439,7 @@ class SubGet:
 
         Dolphin.connect("pressed", subgetcore.filemanagers.KDEService, self, Path)
 
-        if not Found == False:
+        if Found:
             Dolphin.set_active(1)
 
         # ==== Nautilus
@@ -1481,7 +1455,7 @@ class SubGet:
 
         Nautilus.connect("pressed", subgetcore.filemanagers.Nautilus, self, Path)
 
-        if not Found == False:
+        if Found:
             Nautilus.set_active(1)
 
         # ==== Thunar
@@ -1495,7 +1469,7 @@ class SubGet:
             dom, Found = subgetcore.filemanagers.checkThunar(Thunar, self, Path)
         Thunar.connect("pressed", subgetcore.filemanagers.ThunarUCA, self, Path, dom, Found)
 
-        if not Found == False:
+        if Found:
             Thunar.set_active(1)
 
         # ==== PCManFM
@@ -1535,7 +1509,7 @@ class SubGet:
         Toolbar = gtk.CheckButton(self._("Show toolbar")+" ("+self._("requires restart")+")")
         Toolbar.connect("pressed", self.configSetButton, 'interface', 'toolbar', Toolbar, True)
 
-        if not str(self.configGetKey("interface", "toolbar")) == "False":
+        if self.configGetKey("interface", "toolbar"):
             Toolbar.set_active(1)
 
         Vbox = gtk.VBox(False, 0)
@@ -1550,6 +1524,7 @@ class SubGet:
         """ Watch with subtitles preferences """
 
         # "General" preferences
+        #!!!: unused
         Path = os.path.expanduser("~/")
 
         WWS = gtk.Fixed()
@@ -1651,7 +1626,7 @@ class SubGet:
         scale.set_size_request(230, 40)
         scaleValue = int(self.configGetKey('plugins', 'timeout'))
 
-        if not scaleValue == False and scaleValue > 0 and scaleValue <= 30:
+        if scaleValue and scaleValue <= 30:
             adj.set_value(scaleValue)
 
 
@@ -1705,17 +1680,17 @@ class SubGet:
         toolbar = None
         menu = None
 
-        if isMenu != False:
+        if isMenu:
             if menuItem in self.window.Menubar.elementsArray:
                 menu = gtk.ImageMenuItem(title, self.window.agr)
 
-                if shortkey != '':
+                if shortkey:
                     key, mod = gtk.accelerator_parse(shortkey)
                     menu.add_accelerator("activate", self.window.agr, key, mod, gtk.ACCEL_VISIBLE)
 
                 menu.connect("activate", onActivate)
 
-                if icon != '' and iconOnlyToolbar != True:
+                if icon and not iconOnlyToolbar:
                     try:
                         image = self.createImage(icon)
                         menu.set_image(image)
@@ -1725,10 +1700,10 @@ class SubGet:
                 self.window.Menubar.elementsArray[menuItem].append(menu)
                 self.window.Menubar.show_all()
 
-        if isToolbar != False and self.window.toolbar != None:
+        if isToolbar and self.window.toolbar is not None:
             self.window.toolbar.elements[itemName] = gtk.ToolButton(title)
 
-            if icon != '':
+            if icon:
                 try:
                     image = self.createImage(icon)
                     self.window.toolbar.elements[itemName].set_icon_widget(image)
@@ -1912,7 +1887,7 @@ class SubGet:
         spinnerHbox = gtk.HBox(False, 0)
         spinnerHbox.pack_start(self.window.Menubar, True, True, 0)
 
-        if self.window.spinner != None:
+        if self.window.spinner is not None:
             spinnerHbox.pack_end(self.window.spinner, False, False, 5)
 
 
@@ -1930,7 +1905,7 @@ class SubGet:
         self.window.vbox.set_border_width(0)
         self.window.vbox.pack_start(spinnerHbox, False, False, 0)
 
-        if str(self.configGetKey("interface", "toolbar")) != "False":
+        if self.configGetKey("interface", "toolbar"):
             self.window.vbox.pack_start(self.window.toolbar, False, False, 0)
 
         self.window.vbox.pack_start(scrolled_window, True, True, 0)
@@ -1949,14 +1924,13 @@ class SubGet:
             self.Hooking.executeHooks(self.Hooking.getAllHooks("onGTKWindowOpen"))
         except Exception as e:
             self.Logging.output(_("Error")+": "+_("Cannot execute hook")+"; GTKWindowOpen; "+str(e), "warning", True)
-        
 
         self.window.show_all()
 
     def workingState(self, state):
         try:
-            if self.window.spinner != None:
-                if state == True:
+            if self.window.spinner is not None:
+                if state:
                     self.window.spinner.show()
                     self.window.spinner.start()
                     return True
@@ -2002,7 +1976,7 @@ class SubGet:
     def TreeViewUpdate(self):
         """ Refresh TreeView, run all plugins to parse files """
 
-        if len(self.files) == 0:
+        if not self.files:
             return
 
         # increase queue
@@ -2052,7 +2026,7 @@ class SubGet:
                 elif self.plugins[Plugin].PluginInfo['API'] == 2:
                     Results = self.plugins[Plugin].instance.download_list(files).output()
 
-                if Results == None:
+                if Results is None:
                     continue
 
                 for Result in Results:
@@ -2069,6 +2043,7 @@ class SubGet:
                 preferredData = False
 
         for File in files:
+            #!!!: "plugins" is not defined!!!
             for Plugin in plugins:
                 State = self.plugins[Plugin]
 
@@ -2085,8 +2060,8 @@ class SubGet:
                 elif self.plugins[Plugin].PluginInfo['API'] == 2:
                     Results = self.plugins[Plugin].instance.download_list(fileToList).output()
 
-                if Results != None:
-                    if type(Results[0]).__name__ == "dict":
+                if Results is not None:
+                    if isinstance(Results[0], dict):
                         continue
                     else:
                         if Results[0][0]["lang"] == language:
@@ -2100,18 +2075,18 @@ class SubGet:
                             print(_("Subtitles saved to")+" "+str(DLResults))
                             Found = True
                             break
-                        elif preferredData != None:
+                        elif preferredData is not None:
                             continue
                         else:
                             preferredData = Results[0][0]
-                 
-        if Found == False and preferredData == True:
+
+        if not Found and preferredData:
             FileTXT = File+".("+str(preferredData['lang'])+").txt"
 
             if self.plugins[Plugin].PluginInfo['API'] == 1:
-                DLResults = self.plugins[Plugin].download_by_data(prefferedData['data'], FileTXT)
+                DLResults = self.plugins[Plugin].download_by_data(preferredData['data'], FileTXT)
             elif self.plugins[Plugin].PluginInfo['API'] == 2:
-                DLResults = self.plugins[Plugin].instance.download_by_data(prefferedData['data'], FileTXT)
+                DLResults = self.plugins[Plugin].instance.download_by_data(preferredData['data'], FileTXT)
 
             print(_("Subtitles saved to")+" "+str(DLResults)+", "+_("but not in your preferred language"))
 

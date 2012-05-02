@@ -15,7 +15,8 @@ subgetcore = None
 # http://napisy24.pl/search.php?str=QUERY - searching
 # http://napisy24.pl/download/ID/ - downloading (ZIP format)
 
-def removeNonAscii(s): return "".join(filter(lambda x: ord(x)<128, s))
+#???: it is already used somewhere -> move to "utils" and reuse this function?
+def removeNonAscii(s): return "".join([x for x in s if ord(x) < 128])
 
 def loadSubgetObject(x):
     global subgetObject
@@ -26,13 +27,9 @@ def loadSubgetObject(x):
         if "timeout" in subgetObject.Config['plugins']:
             HTTPTimeout = subgetObject.Config['plugins']['timeout']
 
+#???: it is already used somewhere -> move to "utils" and reuse this function?
 def download_list(files, query=''):
-    results = list()
-
-    for File in files:
-        results.append(check_exists(File))
-
-    return results
+    return [check_exists(File) for File in files]
 
 def getListOfSubtitles(movieRealName, File):
     global HTTPTimeout
@@ -55,14 +52,14 @@ def getListOfSubtitles(movieRealName, File):
 
     currentCount = re.findall("<a href=\"/\">napisy24.pl</a> > Znaleziono ([0-9]+) film", dataCutedOff)
 
-    if int(currentCount[0]) > 0:
+    if int(currentCount[0]):
 
         Items = dataCutedOff.split("<a href=\"javascript:void(0);\" onclick=\"javascript:showInfo('")
 
         for Item in Items:
             ID = re.findall("<a href=\"/download/([0-9]+)/\">", Item)
         
-            if len(ID) > 0:
+            if ID:
                 End = Item.split("<a href=\"/napis/"+ID[0]+"/\"")
                 ItemData = End[0]
                 
@@ -79,7 +76,7 @@ def getListOfSubtitles(movieRealName, File):
                     Name = Name[0][1]
 
                 if len(resultsLanguage) == 1:
-                    if len(resultsLanguage[0]) > 0:
+                    if resultsLanguage[0]:
                         resultsLanguage = resultsLanguage[0][0]
                     else:
                         resultsLanguage = "unknown"
@@ -111,21 +108,17 @@ def getListOfSubtitles(movieRealName, File):
 
     # napisy.org archive support
     Archives = dataCutedOff.split("href=\"/download/archiwum/")
-    i = 0
 
-    for Archive in Archives:
-        i = i + 1
-        if i == 1:
-            continue
-
+    #???: will this work as expected: exclude first item from Archives
+    for Archive in Archives[1:]:
         End = Archive.split("png\" width=\"17\" height=\"17\" alt=\"")
-        
+
         if len(End) > 5:
            continue
-        
+
         Number = re.findall("([0-9]+)/\"\>", End[0])
         ID = Number[0]
-    
+
         Name = re.findall("<td( | class=\"dark\")>([A-Za.-z _-]+)<\/td>", End[0])
         Name = Name[0][1]
         Language = re.findall("<img src=\"\/images\/ico_flag_([A-Za-z]+)_", End[0])
@@ -133,7 +126,6 @@ def getListOfSubtitles(movieRealName, File):
 
         nodes.append({'lang': str(Language).lower(), 'site' : 'napisy.org', 'title' : str(Name), 'url' : 'http://napisy24.pl/download/archiwum/'+str(ID)+'/', 'data': {'file': File, 'headers': response.getheaders(), 'id': str(ID), 'type': 'napisy.org', 'search_string': urllib.quote_plus(movieRealName), 'lang': str(Language).lower()}, 'domain': 'napisy.org', 'file': File})
 
-            
     return nodes
 
 def search_by_keywords(Keywords):
@@ -143,13 +135,14 @@ def check_exists(File):
     global subgetObject
     global language
 
-    if File != None:
+    if File is not None:
         movieName = subgetcore.getSearchKeywords(os.path.basename(File))
-         
-        if movieName != False:
+
+        if movieName:
             subtitleList = getListOfSubtitles(movieName, File)
             return subtitleList
         else:
+            #???: is this an constant?
             return {'errInfo': "NOT_FOUND"}
 
     else:
@@ -167,7 +160,7 @@ def download_by_data(File, SavePath):
             Cookies = Item[1]
             break
 
-    if Cookies == None:
+    if Cookies is None:
         return {'errInfo': "NOT_FOUND"}
 
     PHPSESSID = re.findall('PHPSESSID=([A-Za-z-_0-9]+);', Cookies)
@@ -200,7 +193,7 @@ def download_by_data(File, SavePath):
     z = zipfile.ZipFile(TMPName)
     ListOfNames = z.namelist()
 
-    if len(ListOfNames) > 0:
+    if ListOfNames:
         Handler = open(SavePath, "wb")
         Handler.write(z.read(ListOfNames[0]))
         Handler.close()

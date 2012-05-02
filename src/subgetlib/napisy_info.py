@@ -19,13 +19,9 @@ def loadSubgetObject(x):
         if "timeout" in subgetObject.Config['plugins']:
             HTTPTimeout = subgetObject.Config['plugins']['timeout']
 
+
 def download_list(files, query=''):
-    results = list()
-
-    for File in files:
-        results.append(check_exists(File))
-
-    return results
+    return [check_exists(File) for File in files]
 
 
 def check_exists(File):
@@ -33,20 +29,16 @@ def check_exists(File):
     # http://napisy.info/plugin/SzukajNapisow.php?sid=subget&to=Sliders%2001x01
     # http://napisy.info/napisy_info_[tutaj ID].zip
 
-    if File != None:
+    if File is not None:
         movieName = subgetcore.getSearchKeywords(os.path.basename(File))
         movieName = getMovieName(movieName)
-        
-        if movieName != False:
+
+        if movieName:
             subtitleList = getListOfSubtitles(movieName, File)
 
-            if subtitleList != None:
-                if len(subtitleList) > 0:
+            if subtitleList is not None and subtitleList:
                     return subtitleList
-                else:
-                    return {'errInfo': "NOT_FOUND"}
             else:
-
                 return {'errInfo': "NOT_FOUND"}
         else:
             return {'errInfo': "NOT_FOUND"}
@@ -75,10 +67,10 @@ def getListOfSubtitles(movieRealName, File):
         ID = node.getElementsByTagName('id').item(0)
         LANG = node.getElementsByTagName('language').item(0)
 
-        if ID != None:
+        if ID is not None:
             ID = str(ID.firstChild.data)
 
-        if LANG != None:
+        if LANG is not None:
             LANG = str(LANG.firstChild.data)
 
         nodes.append({'lang': LANGLIST[LANG.lower()], 'site' : 'napisy.info', 'title' : movieRealName, 'url' : 'http://napisy.info/napisy_info_'+ID+'.zip', 'data': {'file': File, 'url': 'http://napisy.info/napisy_info_'+ID+'.zip', 'lang': LANGLIST[LANG.lower()]}, 'domain': 'napisy.info', 'file': File})
@@ -106,7 +98,7 @@ def getMovieName(parsedFileName):
     dom = minidom.parseString(data)
         
     titleOriginal =  dom.getElementsByTagName('title.original').item(0)
-    if titleOriginal == None:
+    if titleOriginal is None:
         return False
     else:
         titleOriginal = titleOriginal.firstChild.data.replace("\n", "")
@@ -115,20 +107,16 @@ def getMovieName(parsedFileName):
 
 
 def get_subtitle(File):
-    if File != None:
+    if File is not None:
         movieName = subgetcore.getSearchKeywords(os.path.basename(File))
         movieName = getMovieName(movieName)
         
-        if movieName != False:
+        if movieName:
             subtitleList = getListOfSubtitles(movieName, File)
 
-            if subtitleList != None:
-                if len(subtitleList) > 0:
+            if subtitleList is not None and subtitleList:
                     return subtitleList
-                else:
-                    return {'errInfo': "NOT_FOUND"}
             else:
-
                 return {'errInfo': "NOT_FOUND"}
         else:
             return {'errInfo': "NOT_FOUND"}
@@ -151,7 +139,7 @@ def download_by_data(File, SavePath):
     z = zipfile.ZipFile(TMPName)
     ListOfNames = z.namelist()
 
-    if len(ListOfNames) > 0:
+    if ListOfNames:
         Handler = open(SavePath, "wb")
         Handler.write(z.read(ListOfNames[0]))
         Handler.close()

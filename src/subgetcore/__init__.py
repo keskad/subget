@@ -1,6 +1,7 @@
 """ Subget core library """
 
 import filemanagers, os, re, httplib, logging, inspect, traceback
+from collections import defaultdict
 from time import strftime, localtime
 from StringIO import StringIO
 
@@ -33,7 +34,6 @@ class Logging:
         except Exception as e:
             self.logger = None
             print("Cannot get access ~/.subget/subget.log, check your permissions")
-            pass
         return False
 
     def turnOffLogger(self):
@@ -43,29 +43,29 @@ class Logging:
     def output(self, message, utype='', savetoLogs=True, execHook=True, skipDate=False):
         """ Output to log file and to console """
 
-        if skipDate == False:
+        if not skipDate:
             message = self.convertMessage(message, inspect.stack()[1][3])
         
         if utype == "debug" and self.loggingLevel > 1:
-            if self.logger != None and savetoLogs == True:
+            if self.logger is not None and savetoLogs:
                 self.logger.debug(message)
 
             print(message)
 
         elif utype == "" and self.loggingLevel > 0:
-            if self.logger != None and savetoLogs == True:
+            if self.logger is not None and savetoLogs:
                 self.logger.info(message)
 
             print(message)
 
         elif utype == "warning" and self.loggingLevel > 0:
-            if self.logger != None and savetoLogs == True:
+            if self.logger is not None and savetoLogs:
                 self.logger.warning(message)
 
             print(message)
 
         elif utype == "critical" and self.loggingLevel > -1:
-            if self.logger != None and savetoLogs == True:
+            if self.logger is not None and savetoLogs:
                 self.logger.critical(message)
 
             print(message)
@@ -77,11 +77,11 @@ class Logging:
         try:
             Hooks = self.parent.Hooking.getAllHooks("onLogChange")
 
-            if Hooks != False:
+            if Hooks:
                 self.parent.Hooking.executeHooks(Hooks, self.session)
 
         except Exception as e:
-            if execHook == True:
+            if execHook:
                 self.parent.Logging.output(self.parent._("Error")+": "+self.parent._("Cannot execute hook")+"; onLogChange; "+str(e), "warning", True, False)
             else:
                 print(self.parent._("Error")+": "+self.parent._("Cannot execute hook")+"; onLogChange; "+str(e))
@@ -111,8 +111,8 @@ def getSearchKeywords(File, seriesTVFormat=False):
     SearchTV1 = re.findall("([A-Za-z0-9- ]+)(.?)S([0-9]+)E([0-9]+)(.*)", File, re.IGNORECASE)
 
     # if its in TV series format eg. S01E02
-    if len(SearchTV1) > 0:
-        if seriesTVFormat == False: 
+    if SearchTV1:
+        if not seriesTVFormat:
             return ""+SearchTV1[0][0]+" "+addZero(SearchTV1[0][2])+"x"+addZero(SearchTV1[0][3])
         else:
             return ""+SearchTV1[0][0]+" S"+addZero(SearchTV1[0][2])+"E"+addZero(SearchTV1[0][3])
@@ -121,12 +121,13 @@ def getSearchKeywords(File, seriesTVFormat=False):
         # try luck again, now search in TV series format #2 eg. 01x02
         SearchTV1 = re.findall("([A-Za-z0-9 ]+)(.?)([0-9]+)x([0-9]+)(.*)", File, re.IGNORECASE)
 
-        if len(SearchTV1) > 0:
+        if SearchTV1:
             Zero = SearchTV1[0][0].replace(" 0 ", "")
 
-            if len(SearchTV1) > 0:
+            if SearchTV1:
                 return ""+Zero+" "+addZero(SearchTV1[0][2])+"x"+addZero(SearchTV1[0][3])
             else:
+                #???: this never will be executed
                 return ""+Zero+" S"+addZero(SearchTV1[0][2])+"E"+addZero(SearchTV1[0][3])
 
                    # title              # season           # episode
@@ -134,7 +135,7 @@ def getSearchKeywords(File, seriesTVFormat=False):
             SearchTV1 = re.findall("([A-Za-z0-9 ]+)(.?)", File, re.IGNORECASE)
 
             # if its ripped movie release
-            if len(SearchTV1) > 0:
+            if SearchTV1:
                 return SearchTV1[0][0] # print only title
             else: # if its unidentified movie type
                 return False
@@ -142,10 +143,7 @@ def getSearchKeywords(File, seriesTVFormat=False):
 def languageFromName(Name):
     countries = {'english': 'en', 'dutch': 'de', 'brazillian': 'br', 'brazillian-portuguese' : 'br', 'italian': 'it', 'arabic': 'sa', 'argentin': 'ar', 'hebrew': 'ps', 'vietnamese': 'vn', 'portuguese': 'pt', 'swedish': 'se', 'polish': 'pl', 'czech': 'cz'}
 
-    if Name in countries:
-        return countries[Name]
-    else:
-        return Name
+    return countries.get(Name, Name)
 
 
 class SubtitlesList:
@@ -160,22 +158,15 @@ class SubtitlesList:
 
     def output(self):
         """ Called by Subget to get list of Subtitles """
-
-        results = list()
-        
-        for File in self.results:
-            results.append(File)
-
-        return [results]
+        return [self.results]
 
 class Hooking:
-    Hooks = dict() # list of all hooks
+    Hooks = defaultdict(list) # list of all hooks
 
     def connectHook(self, name, method):
         """ Connect to hook's socket """
-        if not name in self.Hooks:
-            self.Hooks[name] = list()
-
+        # defaultdict is used so if key doesn't exist it will be automaticly
+        # created
         self.Hooks[name].append(method)
 
     def removeHook(self, name, method):
@@ -191,16 +182,13 @@ class Hooking:
 
     def getAllHooks(self, name):
         """ Get all hooked methods to execute them """
+        return self.Hooks.get(name, False)
 
-        if name in self.Hooks:
-            return self.Hooks[name]
-
-        return False
 
     def executeHooks(self, hooks, data=True):
         """ Executes all functions from list. Takes self.getAllHooks as hooks """
 
-        if not hooks == False:
+        if hooks:
             for Hook in hooks:
                 try:
                     data = Hook(data)
@@ -220,13 +208,13 @@ class SubgetPlugin:
     def removeNonAscii(s): 
         """ Removes non-ascii characters from a string """
 
-        return "".join(filter(lambda x: ord(x)<128, s))
+        return "".join([x for x in s if ord(x) < 128])
 
     def __init__(self, SubgetLib=None):
         self.Subget = SubgetLib
         self.HTTPTimeout = self.Subget.configGetKey('plugins', 'timeout')
 
-        if self.HTTPTimeout == False or self.HTTPTimeout == None:
+        if not self.HTTPTimeout or self.HTTPTimeout is None:
             self.HTTPTimeout = 3
 
     def check_exists(self, File, results):
@@ -247,10 +235,10 @@ class SubgetPlugin:
         return self.contextMenu
 
     def contextMenuAdd(self, title, hookedFunction, params):
-        if not type(title).__name__ == 'str':
+        if not isinstance(title, str):
             return False
 
-        if not type(self.contextMenu).__name__ == 'list':
+        if not isinstance(self.contextMenu, list):
             self.contextMenu = list()
 
         self.contextMenu.append([title, hookedFunction, params])
