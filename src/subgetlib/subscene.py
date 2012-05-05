@@ -170,15 +170,13 @@ def check_exists(File):
     Headers = {
         'User-Agent': userAgent,
     }
-    #!!!: this var is unused
-    langList = [ 'en', 'pl', 'pt', 'ru', 'hu', 'it', 'br', 'cz', 'de' ]
+
+    #langList = [ 'en', 'pl', 'pt', 'ru', 'hu', 'it', 'br', 'cz', 'de' ]
 
     try:
         Connection = httplib.HTTPConnection('subscene.com', 80, timeout=HTTPTimeout)
         Connection.request("GET", "/s.aspx?q="+convertToQuery(subgetcore.getSearchKeywords(File, True)), headers=Headers)
         Response = Connection.getresponse()
-        #!!!: this var is unused
-        RespHeaders = Response.getheaders()
     except Exception as e:
         print("[plugin:subscene] Connection timed out, err: "+str(e))
 

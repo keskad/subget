@@ -6,6 +6,7 @@ try:
 except ImportError:
     #???: dbus is needed - what if we don't find it? SyntaxError later maybe
     # add constat like DBUS_ENABLED to check it later if we can use dbus module
+    # Response: It should work without dbus.
     pass
 
 ####

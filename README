@@ -20,6 +20,20 @@ Video Player option allows easily play movie using favorite media player right a
 Requirements: GTK+, Python 2.6/2.7/3.0/3.1/3.2, X11, PyGTK, python-dbus, python-gettext, p7zip (Gentoo: app-arch/p7zip, Debian/Ubuntu: p7zip-full)
 
 * Changelog:
+05.05.2012 (v.1.4.4) <webnull.www@gmail.com>:
+    * os.name = "Linux" #!!!: it's not a good idea
+    * this var is unused
+    * if dbus.service.Object is a new style class => use super()
+    * possible crash => SubgetServiceObj is not defined
+    * return True ?
+    * #!!!: "plugins" is not defined!!!
+    * Upgraded napiprojekt to Subget's Plugin APIv2
+
+05.05.2012 (v.1.4.3) <Sebastian Kalinowski>:
+    * made subgetcore code more pythonic
+    * made subgetlib module code more pythonic
+    * made subget.py more pythonic and fixed few small bugs
+
 25.04.2012 (v.1.4.2) <webnull.www@gmail.com>:
     * Fixed: Plugins were not loaded on Windows
 

@@ -477,8 +477,7 @@ class SubGet:
                 pixbuf = gtk.gdk.pixbuf_new_from_file(pixbuf_path)
             except Exception:
                 self.Logging.output(pixbuf_path+" "+_("icon file not found"), "warning", True)
-                #???: return True ?
-                True
+                return False
 
             self.liststore.append([pixbuf, str(release_name), str(server), (len(self.subtitlesList)-1)])
 
@@ -586,7 +585,6 @@ class SubGet:
     # DOWNLOAD DIALOG
     def GTKDownloadSubtitles(self, a='', b=''):
             """ Dialog with file name chooser to save subtitles to """
-            #print "TEST: CLICKED, LETS GO DOWNLOAD!"
 
             entry1,entry2 = self.treeview.get_selection().get_selected()    
 
@@ -602,7 +600,7 @@ class SubGet:
                 SelectID = int(entry1.get_value(entry2, 3))
                 
                 if len(self.subtitlesList) == int(SelectID) or len(self.subtitlesList) > int(SelectID):
-                    chooser = gtk.FileChooserDialog(title=_("Where to save the subtitles?"),action=gtk.FILE_CHOOSER_ACTION_SAVE,buttons=(gtk.STOCK_CANCEL,gtk.RESPONSE_CANCEL,gtk.STOCK_SAVE,gtk.RESPONSE_OK))
+                    chooser = gtk.FileChooserDialog(title=self._("Where to save the subtitles?"),action=gtk.FILE_CHOOSER_ACTION_SAVE,buttons=(gtk.STOCK_CANCEL,gtk.RESPONSE_CANCEL,gtk.STOCK_SAVE,gtk.RESPONSE_OK))
                     chooser.set_current_folder(os.path.dirname(self.subtitlesList[SelectID]['file']))
                     chooser.set_current_name(os.path.basename(self.subtitlesList[SelectID]['file'])+".txt")
                     response = chooser.run()
@@ -1273,9 +1271,11 @@ class SubGet:
                         Results = self.plugins[Plugin].search_by_keywords(query) # query the plugin for results
                     elif self.plugins[Plugin].PluginInfo['API'] == 2:
                         Results = self.plugins[Plugin].instance.search_by_keywords(query) # query the plugin for results
-                        Results = Results[0]
 
-                    if Results is None:
+                        if Results is not False:
+                            Results = Results[0]
+
+                    if Results is None or Results is False:
                         return
 
                     for Result in Results:
@@ -1391,7 +1391,7 @@ class SubGet:
               False - on false
 
         """
-        return self.Configa.get(Section, False)
+        return self.Config.get(Section, False)
 
 
     def configGetKey(self, Section, Key):
@@ -2043,8 +2043,7 @@ class SubGet:
                 preferredData = False
 
         for File in files:
-            #!!!: "plugins" is not defined!!!
-            for Plugin in plugins:
+            for Plugin in self.plugins:
                 State = self.plugins[Plugin]
 
                 if not self.isPlugin(Plugin):

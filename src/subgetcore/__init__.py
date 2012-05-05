@@ -1,6 +1,6 @@
 """ Subget core library """
 
-import filemanagers, os, re, httplib, logging, inspect, traceback
+import filemanagers, os, re, httplib, logging, inspect, traceback, subprocess
 from collections import defaultdict
 from time import strftime, localtime
 from StringIO import StringIO
@@ -219,6 +219,30 @@ class SubgetPlugin:
 
     def check_exists(self, File, results):
         return False
+
+    def unSevenZip(self, subtitleZipped, File):
+        """ Unpacks 7zipped archive
+
+            Args:
+              stream - encoded data
+              File - destination where to save decoded data
+
+            Returns:
+              File - you must manually check if it exists  
+        """
+
+        Handler = open(File+".7z", "wb")
+        Handler.write(subtitleZipped)
+        Handler.close()
+
+        # use p7zip.exe to unpack subtitles on Windows
+        if os.name == "nt":
+            subprocess.call("\""+self.Subget.subgetOSPath.replace("/", "\\")+"7za.exe\" x -y -so -piBlm8NTigvru0Jr0 \""+File+".7z\" > \""+File+".txt\"", shell=True, bufsize=1)
+        else: # and 7zip on Linux and FreeBSD
+            os.system(self.Subget.getFile(["/usr/bin/7z", "/usr/local/bin/7z"])+" x -y -so -piBlm8NTigvru0Jr0 \""+File+".7z\" 2>/dev/null > \""+File+".txt\"")
+
+        os.remove(File+".7z")
+        return File
 
     def download_list(self, files, query=''):
         """ Download list of subtitles for a number of files """

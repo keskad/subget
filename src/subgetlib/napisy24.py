@@ -28,11 +28,14 @@ def loadSubgetObject(x):
             HTTPTimeout = subgetObject.Config['plugins']['timeout']
 
 #???: it is already used somewhere -> move to "utils" and reuse this function?
+# this function should be avaliable in APIv2, the whole plugin should move to this API version
 def download_list(files, query=''):
     return [check_exists(File) for File in files]
 
 def getListOfSubtitles(movieRealName, File):
     global HTTPTimeout
+
+    print str(movieRealName) + " - " +str(File)
 
     try:
         conn = httplib.HTTPConnection('napisy24.pl', 80, timeout=HTTPTimeout)
@@ -120,6 +123,10 @@ def getListOfSubtitles(movieRealName, File):
         ID = Number[0]
 
         Name = re.findall("<td( | class=\"dark\")>([A-Za.-z _-]+)<\/td>", End[0])
+
+        if len(Name) == 0:
+            continue
+
         Name = Name[0][1]
         Language = re.findall("<img src=\"\/images\/ico_flag_([A-Za-z]+)_", End[0])
         Language = Language[0]

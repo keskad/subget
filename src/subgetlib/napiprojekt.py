@@ -1,21 +1,4 @@
-import httplib, urllib, os, hashlib, subprocess
-
-####
-PluginInfo = { 'Requirements' : { 'OS' : 'All', 'Packages:' : ( 'p7zip' )}, 'API': 1, 'Authors': 'webnull', 'domain': 'napiprojekt.pl'  }
-language = "PL"
-
-apiUrl = "http://napiprojekt.pl/unit_napisy/dl.php"
-subgetObject=""
-HTTPTimeout = 2
-
-def loadSubgetObject(x):
-    global subgetObject, HTTPTimeout
-
-    subgetObject = x
-
-    if "plugins" in subgetObject.Config:
-        if "timeout" in subgetObject.Config['plugins']:
-            HTTPTimeout = subgetObject.Config['plugins']['timeout']
+import urllib, zipfile, subgetcore, httplib, os, hashlib, subprocess
 
 # thanks to gim,krzynio,dosiu,hash 2oo8 for this function
 def f(z):
@@ -35,118 +18,42 @@ def f(z):
 
     return ''.join(b)
 
-def download_list(files, query=''):
-    return [check_exists(file_ for file_ in files)]
+####
+PluginInfo = { 'Requirements' : { 'OS' : 'All'}, 'API': 2, 'Authors': 'webnull', 'domain': 'napiprojekt.pl'  }
 
+class PluginMain(subgetcore.SubgetPlugin):
+    language = "PL"
 
-def check_exists(File):
-    global subgetObject
-    global language, HTTPTimeout
-
-    d = hashlib.md5(open(File, "rb").read(10485760)).hexdigest()
-
-    if os.name == "posix":
-        #!!!: it's not a good idea
-        os.name = "Linux"
-    
-    # RECEIVE DATA
-    subtitleUrl = "?l="+language.upper()+"&f="+d+"&t="+f(d)+"&v=other&kolejka=false&nick=&pass=&napios="+os.name
-
-    try:
-       conn = httplib.HTTPConnection('napiprojekt.pl', 80, timeout=float(HTTPTimeout))
-       conn.request("GET", "/unit_napisy/dl.php"+subtitleUrl)
-       response = conn.getresponse()
-       subtitleZipped = response.read(5)
-    except Exception as e:
-       print "[plugin:napiprojekt] Connection timed out, exception: "+str(e)
-       return False
-
-    if len(subtitleZipped) > 0 and subtitleZipped != "NPc0":
-        return ({'lang': language.lower(), 'site' : 'napiprojekt.pl', 'title' : os.path.basename(File)[:-3]+"txt", 'url' : subtitleUrl, 'data': {'file': File, 'lang': language}, 'domain': 'napiprojekt.pl', 'file': File})
-    else:
-        return {'errInfo': "NOT_FOUND"}
-
-
-def get_subtitle(File):
-    global language
-    global subgetObject
-
-    if File[0:4] == "http":
-        subtitleZipped = urllib.urlopen(File).read()
-    else:
-        d = hashlib.md5(open(File, "rb").read(10485760, "rb")).hexdigest()
-
-        if os.name == "posix":
-        #!!!: it's not a good idea
-            os.name = "Linux"
-
-        # RECEIVE DATA
-        subtitleUrl = "?l="+language.upper()+"&f="+d+"&t="+f(d)+"&v=other&kolejka=false&nick=&pass=&napios="+os.name
-
-        try:
-            conn = httplib.HTTPConnection('napiprojekt.pl', 80, timeout=float(HTTPTimeout))
-            conn.request("GET", "/unit_napisy/dl.php"+subtitleUrl)
-            response = conn.getresponse()
-            subtitleZipped = response.read()
-        except Exception as e:
-            print "[plugin:napiprojekt] Connection timed out, exception: "+str(e)
-            return False
-
-    if len(subtitleZipped) > 0 and subtitleZipped != "NPc0": 
-        Handler = open(File+".7z", "wb")
-        Handler.write(subtitleZipped)
-        Handler.close()
-
-        # use 7zip to unpack subtitles
-        if os.name == "nt":
-            subprocess.call("\""+subgetObject.subgetOSPath.replace("/", "\\")+"7za.exe\" x -y -so -piBlm8NTigvru0Jr0 \""+File+".7z\" > \""+File+".txt\"", shell=True, bufsize=1)
-        else:
-            os.system(subgetObject.getFile(["/usr/bin/7z", "/usr/local/bin/7z"])+" x -y -so -piBlm8NTigvru0Jr0 \""+File+".7z\" 2>/dev/null > \""+File+".txt\"")
-
-        os.remove(File+".7z")
-        return File+".7z"
-    else:
-        return {'errInfo': "NOT_FOUND"}
-
-def download_by_data(File, SavePath):
-    global HTTPTimeout
-
-    language = File['lang']
-
-    if File['file'][0:4] == "http":
-        subtitleZipped = urllib.urlopen(File).read()
-    else:
-        File = File['file']
+    def check_exists(self, File, resultsClass):
+        if File is None:
+            return {'errInfo': "NOT_FOUND"}
 
         d = hashlib.md5(open(File, "rb").read(10485760)).hexdigest()
+        Dir = "/unit_napisy/dl.php?l="+self.language.upper()+"&f="+d+"&t="+f(d)+"&v=other&kolejka=false&nick=&pass=&napios=Linux"
 
-        if os.name == "posix":
-            #!!!: it's not a good idea
-            os.name = "Linux"
+        # HTTP Request
+        response, subtitleZipped = self.HTTPGet('napiprojekt.pl', Dir)
 
-        # RECEIVE DATA
-        try:
-            subtitleUrl = "?l="+language.upper()+"&f="+d+"&t="+f(d)+"&v=other&kolejka=false&nick=&pass=&napios="+os.name
-            conn = httplib.HTTPConnection('napiprojekt.pl', 80, timeout=float(HTTPTimeout))
-            conn.request("GET", "/unit_napisy/dl.php"+subtitleUrl)
-            response = conn.getresponse()
-            subtitleZipped = response.read()
-        except Exception as e:
-            print "[plugin:napiprojekt] Connection timed out, "+str(e)
-            return False
-
-    if len(subtitleZipped) > 0 and subtitleZipped != "NPc0": 
-        Handler = open(File+".7z", "wb")
-        Handler.write(subtitleZipped)
-        Handler.close()
-
-        # use 7zip to unpack subtitles
-        if os.name == "nt":
-            subprocess.call("\""+subgetObject.subgetOSPath.replace("/", "\\")+"7za.exe\" x -y -so -piBlm8NTigvru0Jr0 \""+File+".7z\" > \""+File+".txt\"", shell=True, bufsize=1)
+        # Appending to list
+        if subtitleZipped and subtitleZipped != "NPc0":
+            resultsClass.append(self.language.lower(), 'napiprojekt.pl', os.path.basename(File), Dir, {'file': File, 'url': 'http://napiprojekt.pl'+Dir}, 'napiprojekt.pl', File)
+            return True
         else:
-            os.system(subgetObject.getFile(["/usr/bin/7z", "/usr/local/bin/7z"])+" x -y -so -piBlm8NTigvru0Jr0 \""+File+".7z\" 2>/dev/null > \""+File+".txt\"")
+            return {'errInfo': "NOT_FOUND"}
 
-        os.remove(File+".7z")
-        return SavePath
-    else:
-        return {'errInfo': "NOT_FOUND"}
+
+
+    def download_by_data(self, File, SavePath):
+        # method of downloading subtitles - from already parsed URL (with calculated and fixed md5 sums)
+        if File['file'][0:7] == "http://":
+            subtitleZipped = urllib.urlopen(File).read()
+
+        else: # calculating sums
+            File = File['file']
+            d = hashlib.md5(open(File, "rb").read(10485760)).hexdigest()
+            response, subtitleZipped = self.HTTPGet('napiprojekt.pl', "/unit_napisy/dl.php?l="+self.language.upper()+"&f="+d+"&t="+f(d)+"&v=other&kolejka=false&nick=&pass=&napios=Linux")
+
+        if subtitleZipped and subtitleZipped != "NPc0":
+            return self.unSevenZip(subtitleZipped, SavePath)
+        else:
+            return {'errInfo': "NOT_FOUND"}

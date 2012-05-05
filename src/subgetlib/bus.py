@@ -9,8 +9,9 @@ if os.name == "posix":
     try:
         import dbus, dbus.service, dbus.glib
     except ImportError:
-        #!!!: when dbus will not be installed all code under this line will
-        # crash
+        #!!!: when dbus will not be installed all code under this line will crash
+        # Response: it should crash, Subget will automatically disable the plugin, but there is no error handling yet i should implmement any
+        # this plugin wont be installed by Linux package manager if dbus were not installed
         pass
 
     class SubgetService(dbus.service.Object):
@@ -18,8 +19,7 @@ if os.name == "posix":
 
         def __init__(self):
             bus_name = dbus.service.BusName('org.freedesktop.subget', bus=dbus.SessionBus())
-            #!!!: if dbus.service.Object is a new style clas => use super()
-            dbus.service.Object.__init__(self, bus_name, '/org/freedesktop/subget')
+            super(SubgetService, self).__init__(bus_name, '/org/freedesktop/subget')
 
         @dbus.service.method('org.freedesktop.subget')
         def ping(self):
@@ -184,10 +184,8 @@ class PluginMain(subgetcore.SubgetPlugin):
 
         if check == True:
             if len(Data[1]) > 0:
-
                 if os.name == "posix":
-                    #!!!: possible crash => SubgetServiceObj is not defined
-                    addLinks = SubgetServiceObj.get_dbus_method('addLinks', 'org.freedesktop.subget')
+                    addLinks = self.bus.get_dbus_method('addLinks', 'org.freedesktop.subget')
                 else: # Windows NT
                     addLinks = self.bus.addLinks
 
@@ -209,7 +207,7 @@ class PluginMain(subgetcore.SubgetPlugin):
                 self.bus = win32com.client.Dispatch("Subget")
                 self.bus.setSubgetObject(self.Subget)
             else:
-                self.bus = self.SubgetService()
+                self.bus = SubgetService()
                 self.bus.subget = self.Subget
 
         return Data
@@ -226,8 +224,8 @@ class PluginMain(subgetcore.SubgetPlugin):
     def checkDBUS(self):
         try:
             bus = dbus.SessionBus()
-            SubgetServiceObj = bus.get_object('org.freedesktop.subget', '/org/freedesktop/subget')
-            ping = SubgetServiceObj.get_dbus_method('ping', 'org.freedesktop.subget')
+            self.bus = bus.get_object('org.freedesktop.subget', '/org/freedesktop/subget')
+            ping = self.bus.get_dbus_method('ping', 'org.freedesktop.subget')
         except Exception as e:
             return False
 

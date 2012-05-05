@@ -95,8 +95,6 @@ def searchSubtitles(Files):
 def check_exists(File):
     global userAgent, SearchMethod, SleepTime
 
-    #!!!: this var is unused
-    URL = "http://api.thesubdb.com/?action=download&hash={hash}&language=en"
     Hash = get_hash(File)
 
     Headers = {
@@ -160,8 +158,6 @@ def check_exists(File):
 def get_hash(name):
     readsize = 64 * 1024
     with open(name, 'rb') as f:
-        #!!!: this var is unused
-        size = os.path.getsize(name)
         data = f.read(readsize)
         f.seek(-readsize, os.SEEK_END)
         data += f.read(readsize)
