@@ -1,6 +1,6 @@
 """ Subget core library """
 
-import filemanagers, os, re, httplib, logging, inspect, traceback, subprocess
+import filemanagers, os, re, httplib, logging, inspect, traceback, subprocess, zipfile
 from collections import defaultdict
 from time import strftime, localtime
 from StringIO import StringIO
@@ -205,7 +205,7 @@ class SubgetPlugin:
     HTTPTimeout = 3
     contextMenu = list()
 
-    def removeNonAscii(s): 
+    def removeNonAscii(self, s): 
         """ Removes non-ascii characters from a string """
 
         return "".join([x for x in s if ord(x) < 128])
@@ -220,11 +220,48 @@ class SubgetPlugin:
     def check_exists(self, File, results):
         return False
 
+    def unZip(self, data, SavePath):
+        """ Unpacks zipped archive
+
+            Args:
+              subtitleZipped - encoded data
+              SavePath - destination where to save decoded data
+
+            Returns:
+              File - you must manually check if it exists  
+        """
+
+        TMPName = self.temporaryPath(os.path.basename(SavePath))
+
+        try:
+            Handler = open(TMPName, "wb")
+            Handler.write(data)
+            Handler.close()
+
+            z = zipfile.ZipFile(TMPName)
+            ListOfNames = z.namelist()
+
+            if ListOfNames:
+                Handler = open(SavePath, "wb")
+                Handler.write(z.read(ListOfNames[0]))
+                Handler.close()
+                z.close()
+                os.remove(TMPName)
+
+        except Exception:
+            buffer = StringIO()
+            traceback.print_exc(file=buffer)
+            self.Subget.Logging.output(buffer.getvalue(), "warning", True)
+            pass
+
+        return SavePath
+
+
     def unSevenZip(self, subtitleZipped, File):
         """ Unpacks 7zipped archive
 
             Args:
-              stream - encoded data
+              subtitleZipped - encoded data
               File - destination where to save decoded data
 
             Returns:
@@ -277,23 +314,28 @@ class SubgetPlugin:
         """ Determinates temporary paths """
 
         if os.name == "nt": # WINDOWS "THE PROBLEMATIC OS"
-            return os.path.expanduser("~").replace("\\\\", "/")+"/"+os.path.basename(fileName)+".zip.tmp"
+            return os.path.expanduser("~").replace("\\\\", "/")+"/"+os.path.basename(fileName)+".tmp"
         else: # UNIX, Linux, *BSD
-            return "/tmp/"+os.path.basename(fileName+".zip")
+            return "/tmp/"+os.path.basename(fileName)
 
 
-    def HTTPGet(self, Server, Request):
+    def HTTPGet(self, Server, Request, Headers=None):
         """ Do a simple HTTP GET request
             Returns: False, False on error
         """
 
         try:
-            conn = httplib.HTTPConnection(Server, 80, timeout=float(self.HTTPTimeout))
+            if Headers:
+                conn = httplib.HTTPConnection(Server, 80, Headers, timeout=float(self.HTTPTimeout))
+            else:
+                conn = httplib.HTTPConnection(Server, 80, timeout=float(self.HTTPTimeout))
+
             conn.request("GET", Request)
             response = conn.getresponse()
             data = response.read()
+
         except Exception as e:
-            print("[SubgetPlugin] Connection timed out, "+str(e))
+            self.Subget.Logging.output("HTTP Connection error, "+str(e), "warning", False)
             return False, False
 
         return response, data

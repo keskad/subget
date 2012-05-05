@@ -1249,7 +1249,8 @@ class SubGet:
                         if self.plugins[Plugin].PluginInfo['API'] == 1:
                             Results = self.plugins[Plugin].search_by_keywords(query) # query the plugin for results
                         elif self.plugins[Plugin].PluginInfo['API'] == 2:
-                            Results = self.plugins[Plugin].instance.search_by_keywords(query) # query the plugin for results
+                            Results = self.plugins[Plugin].instance.search_by_keywords(query).output() # query the plugin for results
+                            Results = Results[0]
 
                         if not Results:
                             return
