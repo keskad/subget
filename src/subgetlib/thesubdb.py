@@ -8,7 +8,7 @@ Language = 'en'
 SleepTime = None
 SearchMethod = None
 
-PluginInfo = { 'Requirements' : { 'OS' : 'All' }, 'Authors': 'webnull', 'API': 1, 'domain': 'thesubdb.com' }
+PluginInfo = { 'Requirements' : { 'OS' : 'All' }, 'Authors': 'webnull', 'API': 1, 'domain': 'thesubdb.com', 'Description': 'Free, centralized subtitle database intended to be used only by opensource and non-commercial softwares'}
 
 def loadSubgetObject(x):
     global subgetObject, SearchMethod, SleepTime

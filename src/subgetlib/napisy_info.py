@@ -2,7 +2,7 @@ import httplib, urllib, time, os, hashlib, zipfile, time
 from xml.dom import minidom
 
 ####
-PluginInfo = { 'Requirements' : { 'OS' : 'All' }, 'Authors': 'webnull', 'API': 1, 'domain': 'napisy.info' }
+PluginInfo = { 'Requirements' : { 'OS' : 'All' }, 'Authors': 'webnull', 'API': 1, 'domain': 'napisy.info', 'Description': 'Polish and English napisy.info support' }
 
 LANGLIST = {'polski': 'pl', 'angielski': 'en'}
 

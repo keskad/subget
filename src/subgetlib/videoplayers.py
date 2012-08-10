@@ -1,7 +1,7 @@
 import subgetcore, gtk, os
 
 ####
-PluginInfo = {'Requirements' : { 'OS' : 'All'}, 'API': 2, 'Authors': 'webnull', 'domain': '', 'type': 'extension', 'isPlugin': False}
+PluginInfo = {'Requirements' : { 'OS' : 'All'}, 'API': 2, 'Authors': 'webnull', 'domain': '', 'type': 'extension', 'isPlugin': False, 'Description': 'Integration with video players.'}
 
 class PluginMain(subgetcore.SubgetPlugin):
     """ Easy management of video players list, with data validation.

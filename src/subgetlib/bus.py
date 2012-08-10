@@ -3,7 +3,7 @@ import subgetcore, sys, os, time
 from threading import Thread
 
 ####
-PluginInfo = {'Requirements' : { 'OS' : 'Unix, Linux, Windows'}, 'API': 2, 'Authors': 'webnull', 'domain': '', 'type': 'extension', 'isPlugin': False}
+PluginInfo = {'Requirements' : { 'OS' : 'Unix, Linux, Windows'}, 'API': 2, 'Authors': 'webnull', 'domain': '', 'type': 'extension', 'isPlugin': False, 'Description': 'DBUS interface'}
 
 if os.name == "posix":
     try:

@@ -19,7 +19,7 @@ def f(z):
     return ''.join(b)
 
 ####
-PluginInfo = { 'Requirements' : { 'OS' : 'All'}, 'API': 2, 'Authors': 'webnull', 'domain': 'napiprojekt.pl'  }
+PluginInfo = { 'Requirements' : { 'OS' : 'All'}, 'API': 2, 'Authors': 'webnull', 'domain': 'napiprojekt.pl', 'Description': 'Polish database napiprojekt.pl, matching by file hash only' }
 
 class PluginMain(subgetcore.SubgetPlugin):
     language = "PL"

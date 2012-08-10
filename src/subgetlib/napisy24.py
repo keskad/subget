@@ -1,7 +1,7 @@
 import httplib, urllib, time, os, hashlib, subprocess, re, zipfile, subgetcore
 
 ####
-PluginInfo = { 'Requirements' : { 'OS' : 'All'}, 'API': 2, 'Authors': 'webnull', 'domain': 'napisy24.pl' }
+PluginInfo = { 'Requirements' : { 'OS' : 'All'}, 'API': 2, 'Authors': 'webnull', 'domain': 'napisy24.pl', 'Description': 'Polish napisy24.pl and napisy.org archive' }
 language = "PL"
 
 class PluginMain(subgetcore.SubgetPlugin):

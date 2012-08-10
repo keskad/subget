@@ -4,7 +4,7 @@ import gzip
 from xmlrpclib import ServerProxy
 
 ####
-PluginInfo = { 'Requirements' : { 'OS' : 'All'}, 'API': 2, 'Authors': 'webnull', 'domain': 'opensubtitles24.org' }
+PluginInfo = { 'Requirements' : { 'OS' : 'All'}, 'API': 2, 'Authors': 'webnull', 'domain': 'opensubtitles24.org', 'Description': 'International opensubtitles.org support' }
 language = "PL"
 
 class PluginMain(subgetcore.SubgetPlugin):

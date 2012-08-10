@@ -869,36 +869,36 @@ class SubGet:
                     OS = _("Unknown")
 
                 try:
+                    Description = self.plugins[Plugin].PluginInfo['Description']
+                except Exception:
+                    Description = ""
+
+                try:
                     Packages = self.plugins[Plugin].PluginInfo['Requirements']['Packages']
-
-                    if Packages:
-                        #!!!: refactored, but this var is not used
-                        Packages_c = ', '.join(Packages)
-
                 except Exception:
                     Packages = _("Unknown")
 
                 if self.plugins[Plugin] == "Disabled":
                     pixbuf = gtk.gdk.pixbuf_new_from_file(self.subgetOSPath+'/usr/share/subget/icons/plugin-disabled.png')
-                    liststore.append([pixbuf, Plugin, OS, str(Author), str(API)])
+                    liststore.append([pixbuf, Plugin, Description, OS, str(Author), str(API)])
                     continue
 
                 if not "PluginInfo" in dir(self.plugins[Plugin]):
                     pixbuf = gtk.gdk.pixbuf_new_from_file(self.subgetOSPath+'/usr/share/subget/icons/error.png') 
-                    liststore.append([pixbuf, Plugin, OS, str(Author), str(API)])
+                    liststore.append([pixbuf, Plugin, Description, OS, str(Author), str(API)])
                     continue
 
                 if self.plugins[Plugin].PluginInfo['type'] == 'extension':
                     pixbuf = gtk.gdk.pixbuf_new_from_file(self.subgetOSPath+'/usr/share/subget/icons/extension.png') 
-                    liststore.append([pixbuf, Plugin, OS, str(Author), str(API)])
+                    liststore.append([pixbuf, Plugin, Description, OS, str(Author), str(API)])
                     continue
 
                 if type(self.plugins[Plugin]).__name__ == "module":
                     pixbuf = gtk.gdk.pixbuf_new_from_file(self.subgetOSPath+'/usr/share/subget/icons/plugin.png') 
-                    liststore.append([pixbuf, Plugin, OS, str(Author), str(API)])
+                    liststore.append([pixbuf, Plugin, Description, OS, str(Author), str(API)])
                 else:
                     pixbuf = gtk.gdk.pixbuf_new_from_file(self.subgetOSPath+'/usr/share/subget/icons/error.png') 
-                    liststore.append([pixbuf, Plugin, OS, str(Author), str(API)])
+                    liststore.append([pixbuf, Plugin, Description, OS, str(Author), str(API)])
 
 
     def gtkPluginMenu(self, arg):
@@ -916,24 +916,27 @@ class SubGet:
             window.set_icon_from_file(self.subgetOSPath+"/usr/share/subget/icons/plugin.png")
             window.connect("delete_event", self.closeWindow, window, 'gtkPluginMenu')
 
-            liststore = gtk.ListStore(gtk.gdk.Pixbuf, str, str, str, str)
+            liststore = gtk.ListStore(gtk.gdk.Pixbuf, str, str, str, str, str)
             treeview = gtk.TreeView(liststore)
 
 
             # column list
-            tvcolumn = gtk.TreeViewColumn(_("Plugin"))
-            tvcolumn1 = gtk.TreeViewColumn(_("Operating system"))
-            tvcolumn2 = gtk.TreeViewColumn(_("Authors"))
-            tvcolumn3 = gtk.TreeViewColumn(_("API interface version"))
+            tvcolumn = gtk.TreeViewColumn(self._("Plugin"))
+            descColumn = gtk.TreeViewColumn(self._("Description"))
+            tvcolumn1 = gtk.TreeViewColumn(self._("Operating system"))
+            tvcolumn2 = gtk.TreeViewColumn(self._("Authors"))
+            tvcolumn3 = gtk.TreeViewColumn(self._("API interface version"))
 
             treeview.append_column(tvcolumn)
             treeview.append_column(tvcolumn1)
+            treeview.append_column(descColumn)
             treeview.append_column(tvcolumn2)
             treeview.append_column(tvcolumn3)
             treeview.set_reorderable(1)
 
             cellpb = gtk.CellRendererPixbuf()
             cell = gtk.CellRendererText()
+            descCell = gtk.CellRendererText()
             cell1 = gtk.CellRendererText()
             cell2 = gtk.CellRendererText()
             cell3 = gtk.CellRendererText()
@@ -941,14 +944,17 @@ class SubGet:
             # add the cells to the columns - 2 in the first
             tvcolumn.pack_start(cellpb, False)
             tvcolumn.set_cell_data_func(cellpb, self.cell_pixbuf_func)
+            descColumn.pack_start(descCell, True)
             tvcolumn.pack_start(cell, True)
             tvcolumn1.pack_start(cell1, True)
             tvcolumn2.pack_start(cell2, True)
             tvcolumn3.pack_start(cell3, True)
+
             tvcolumn.set_attributes(cell, text=1)
-            tvcolumn1.set_attributes(cell1, text=2)
-            tvcolumn2.set_attributes(cell2, text=3)
-            tvcolumn3.set_attributes(cell3, text=4)
+            descColumn.set_attributes(descCell, text=2)
+            tvcolumn1.set_attributes(cell1, text=3)
+            tvcolumn2.set_attributes(cell2, text=4)
+            tvcolumn3.set_attributes(cell3, text=5)
 
             self.pluginsListing(liststore)
 

@@ -6,7 +6,7 @@ from xml.dom import minidom
 # http://napisy24.pl/download/ID/ - downloading (ZIP format)
 
 ####
-PluginInfo = { 'Requirements' : { 'OS' : 'All'}, 'API': 2, 'Authors': 'webnull', 'domain': 'allsubs.org'  }
+PluginInfo = { 'Requirements' : { 'OS' : 'All'}, 'API': 2, 'Authors': 'webnull', 'domain': 'allsubs.org', 'Description': 'International allsubs.org database' }
 
 class PluginMain(subgetcore.SubgetPlugin):
 

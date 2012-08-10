@@ -1,7 +1,7 @@
 import subgetcore, sys, os
 
 ####
-PluginInfo = {'Requirements' : { 'OS' : 'Unix, Linux'}, 'API': 2, 'Authors': 'webnull', 'domain': '', 'type': 'extension', 'isPlugin': False}
+PluginInfo = {'Requirements' : { 'OS' : 'Unix, Linux'}, 'API': 2, 'Authors': 'webnull', 'domain': '', 'type': 'extension', 'isPlugin': False, 'Description': 'Simple plugin to fork Subget to console\'s background'}
 
 class PluginMain(subgetcore.SubgetPlugin):
     def daemonize (self, stdin='/dev/null', stdout='/dev/null', stderr='/dev/null'):

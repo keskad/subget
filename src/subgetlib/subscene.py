@@ -6,7 +6,7 @@ userAgent = "Mozilla/5.0 (X11; Linux i686) AppleWebKit/535.1 (KHTML, like Gecko)
 subgetObject=""
 HTTPTimeout = 2
 
-PluginInfo = { 'Requirements' : { 'OS' : 'Unix, Linux' }, 'Authors': 'webnull', 'API': 1, 'domain': 'subscene.com' }
+PluginInfo = { 'Requirements' : { 'OS' : 'Unix, Linux' }, 'Authors': 'webnull', 'API': 1, 'domain': 'subscene.com', 'Description': 'International database, subscene.com' }
 
 def loadSubgetObject(x):
     global subgetObject, SearchMethod, SleepTime

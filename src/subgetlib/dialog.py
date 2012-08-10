@@ -2,7 +2,7 @@
 import subgetcore, os
 
 ####
-PluginInfo = {'Requirements' : { 'OS' : 'Unix, Linux'}, 'API': 2, 'Authors': 'webnull', 'domain': '', 'type': 'extension', 'isPlugin': False}
+PluginInfo = {'Requirements' : { 'OS' : 'Unix, Linux'}, 'API': 2, 'Authors': 'webnull', 'domain': '', 'type': 'extension', 'isPlugin': False, 'Description': 'zenity, kdialog and xmessage support to show error messages'}
 
 class PluginMain(subgetcore.SubgetPlugin):
     """ Implements kdialog, xmessage, zenity to show error messages """

@@ -2,7 +2,7 @@ import subgetcore, gtk, sys, traceback, os
 from StringIO import StringIO
 
 ####
-PluginInfo = {'Requirements' : { 'OS' : 'All'}, 'API': 2, 'Authors': 'webnull', 'domain': '', 'type': 'extension', 'isPlugin': False}
+PluginInfo = {'Requirements' : { 'OS' : 'All'}, 'API': 2, 'Authors': 'webnull', 'domain': '', 'type': 'extension', 'isPlugin': False, 'Description': 'Developer shell'}
 
 class PluginMain(subgetcore.SubgetPlugin):
     consoleState = False # Closed

@@ -10,7 +10,7 @@ except ImportError:
     pass
 
 ####
-PluginInfo = {'Requirements' : { 'OS' : 'Unix, Linux'}, 'API': 2, 'Authors': 'webnull', 'domain': '', 'type': 'extension', 'isPlugin': False}
+PluginInfo = {'Requirements' : { 'OS' : 'Unix, Linux'}, 'API': 2, 'Authors': 'webnull', 'domain': '', 'type': 'extension', 'isPlugin': False, 'Description': 'Notification plugin. Supports knotify, libnotify, notify-send'}
 
 class PluginMain(subgetcore.SubgetPlugin):
     notifyType = None

@@ -1,7 +1,7 @@
 import subgetcore, gtk, sys
 
 ####
-PluginInfo = {'Requirements' : { 'OS' : 'All'}, 'API': 2, 'Authors': 'webnull', 'domain': '', 'type': 'extension', 'isPlugin': False}
+PluginInfo = {'Requirements' : { 'OS' : 'All'}, 'API': 2, 'Authors': 'webnull', 'domain': '', 'type': 'extension', 'isPlugin': False, 'Description': 'Put\'s icon in system tray'}
 
 class PluginMain(subgetcore.SubgetPlugin):
     iconInitialized = False
