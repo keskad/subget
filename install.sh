@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 osname="`uname`"
 
+rm -rf build/
+
 #### FreeBSD
 if [ "$osname" == "FreeBSD" ]
 then
