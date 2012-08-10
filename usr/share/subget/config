@@ -3,6 +3,9 @@ kde = False
 gnome = False
 kde4 = False
 
+[notify]
+errormessages = True
+
 [watch_with_subtitles]
 download_only = False
 only_preferred_language = True
@@ -33,7 +36,7 @@ playmovie = False
 [plugins]
 timeout = 10
 order = napiprojekt,napisy_info,napisy24,allsubs,opensubtitles
-disabled = daemonize
+disabled = daemonize,dialog
 list_ordering = True
 
 [interface]
