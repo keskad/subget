@@ -36,7 +36,7 @@ class PluginMain(subgetcore.SubgetPlugin):
 
         # Appending to list
         if subtitleZipped and subtitleZipped != "NPc0":
-            resultsClass.append(self.language.lower(), 'napiprojekt.pl', os.path.basename(File), Dir, {'file': File, 'url': 'http://napiprojekt.pl'+Dir}, 'napiprojekt.pl', File)
+            resultsClass.append(self.language.lower(), 'napiprojekt', os.path.basename(File), Dir, {'file': File, 'url': 'http://napiprojekt.pl'+Dir}, 'napiprojekt.pl', File)
             return True
         else:
             return {'errInfo': "NOT_FOUND"}
@@ -54,6 +54,7 @@ class PluginMain(subgetcore.SubgetPlugin):
             response, subtitleZipped = self.HTTPGet('napiprojekt.pl', "/unit_napisy/dl.php?l="+self.language.upper()+"&f="+d+"&t="+f(d)+"&v=other&kolejka=false&nick=&pass=&napios=Linux")
 
         if subtitleZipped and subtitleZipped != "NPc0":
+            self.Subget.Logging.output("napiprojekt subtitles -> unSevenZipping...", "debug", False)
             return self.unSevenZip(subtitleZipped, SavePath)
         else:
             return {'errInfo': "NOT_FOUND"}

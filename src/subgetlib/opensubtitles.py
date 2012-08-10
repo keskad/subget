@@ -1,178 +1,155 @@
-import httplib, struct, os
+import urllib, time, os, hashlib, subprocess, re, zipfile, subgetcore
+import httplib, struct
 import gzip
 from xmlrpclib import ServerProxy
 
-apiUrl = 'http://api.opensubtitles.org/xml-rpc'
-userAgent = "Subget"
-subgetObject=""
-HTTPTimeout = 2
-server = ServerProxy(apiUrl)
-token = None
-Language = 'eng'
-LanguageTable = {
-    'eng': 'en',
-    'pol': 'pl',
-    'ita': 'it',
-    'esp': 'es',
-    'cze': 'cz',
-    'dut': 'de',
-    'fre': 'fr',
-    'rus': 'ru',
-    'rum': 'ro',
-    'fin': 'fi',
-    'swe': 'se',
-    'dan': 'dk',
-    'tur': 'tr',
-    'por': 'pt',
-    'bra': 'br',
-    'hun': 'hu',
-    'bra': 'br',
-    'hrv': 'hr',
-    'scc': 'sc',
-}
+####
+PluginInfo = { 'Requirements' : { 'OS' : 'All'}, 'API': 2, 'Authors': 'webnull', 'domain': 'opensubtitles24.org' }
+language = "PL"
 
-PluginInfo = { 'Requirements' : { 'OS' : 'All' }, 'Authors': 'webnull', 'API': 1, 'domain': 'opensubtitles.org' }
+class PluginMain(subgetcore.SubgetPlugin):
+    ### Specification:
+    # http://napisy24.pl/search.php?str=QUERY - searching
+    # http://napisy24.pl/download/ID/ - downloading (ZIP format)
 
-def loadSubgetObject(x):
-    global subgetObject
-    subgetObject = x
+    apiUrl = 'http://api.opensubtitles.org/xml-rpc'
+    userAgent = "Subget"
+    subgetObject=""
+    HTTPTimeout = 2
+    server = ServerProxy(apiUrl)
+    token = None
+    Language = 'eng'
+    LanguageTable = {
+        'eng': 'en',
+        'pol': 'pl',
+        'ita': 'it',
+        'esp': 'es',
+        'cze': 'cz',
+        'dut': 'de',
+        'fre': 'fr',
+        'rus': 'ru',
+        'rum': 'ro',
+        'fin': 'fi',
+        'swe': 'se',
+        'dan': 'dk',
+        'tur': 'tr',
+        'por': 'pt',
+        'bra': 'br',
+        'hun': 'hu',
+        'bra': 'br',
+        'hrv': 'hr',
+        'scc': 'sc',
+    }
 
-    if "plugins" in subgetObject.Config:
-        if "timeout" in subgetObject.Config['plugins']:
-            HTTPTimeout = subgetObject.Config['plugins']['timeout']
+    def parseResults(self, subtitlesList, resultsClass, fileSizes=False):
+        if not isinstance(subtitlesList['data'], list):
+            self.error("[plugin:opensubtitles] Got corrupted data, propably server is overloaded.")
+            return False
 
-def download_list(files):
-    return searchSubtitles(files)
-
-def download_quick(files):
-    return
-
-def download_by_data(File, SavePath):
-    global HTTPTimeout
-
-    try:
-        conn = httplib.HTTPConnection('www.opensubtitles.org', 80, timeout=HTTPTimeout)
-        conn.request("GET", File['link'].replace("http://www.opensubtitles.org", ""))
-        response = conn.getresponse()
-        data = response.read()
-    except Exception as e:
-        print("[plugin:opensubtitles] Connection timed out, details: "+str(e))
-        return False
-
-    if os.name == "nt": # WINDOWS "THE PROBLEMATIC OS"
-        TMPName = os.path.expanduser("~").replace("\\\\", "/")+"/"+os.path.basename(File['file'])+".tmp"
-    else: # UNIX, Linux, *BSD
-        TMPName = "/tmp/"+os.path.basename(File['file'])
-
-    try:
-        Handler = open(TMPName, "wb")
-        Handler.write(data)
-        Handler.close()
-
-
-        f = gzip.open(TMPName, 'rb')
-        file_content = f.read()
-        f.close()
-
-        Handler = open(SavePath, "wb")
-        Handler.write(file_content)
-        Handler.close()
-    except Exception as e:
-        print("[plugin:opensubtitles] Exception: "+str(e))
-
-    return SavePath
-
-def search_by_keywords(Keywords):
-    searchList = []
-    token = getLoginToken()
-    searchList.append({'query': Keywords})
-    subtitlesList = server.SearchSubtitles(token, searchList)
-    return parseResults(subtitlesList)
-
-def searchSubtitles(Files):
-    global Language, LanguageTable
-
-    searchList = []
-    token = getLoginToken()
-    fileSizes = dict()
-
-    for File in Files:
-        searchList.append({'moviehash': str(hashFile(File)), 'moviebytesize': str(int(os.path.getsize(File)))})
-        fileSizes[str(int(os.path.getsize(File)))] = File
-
-    subtitlesList = server.SearchSubtitles(token, searchList)
-    return parseResults(subtitlesList, fileSizes)
-
-
-def parseResults(subtitlesList, fileSizes=False):
-    nodes = list()
-
-    if not isinstance(subtitlesList['data'], list):
-        print("[plugin:opensubtitles] Got corrupted data, propably server is overloaded.")
-        return False
-
-    for subtitle in subtitlesList['data']:
-        if not 'SubLanguageID' in subtitle:
-            continue
-
-        if str(subtitle['SubLanguageID']) in LanguageTable:
-            subtitle['SubLanguageID'] = LanguageTable[subtitle['SubLanguageID']]
-
-        
-        if fileSizes:
-            if not subtitle['MovieByteSize'] in fileSizes:
+        for subtitle in subtitlesList['data']:
+            if not 'SubLanguageID' in subtitle:
                 continue
-            subtitle['File'] = fileSizes[subtitle['MovieByteSize']]
-        else:
-            subtitle['File'] = "None"
 
-        
-        nodes.append({'lang': subtitle['SubLanguageID'], 'site' : 'opensubtitles.org', 'title' : subtitle['SubFileName'], 'domain': 'opensubtitles.org', 'data': {'file': subtitle['File'], 'link': subtitle['SubDownloadLink']}, 'link': subtitle['SubDownloadLink'], 'file': subtitle['SubFileName']})
+            print subtitle
 
-    return nodes
+            if str(subtitle['SubLanguageID']) in self.LanguageTable:
+                subtitle['SubLanguageID'] = self.LanguageTable[subtitle['SubLanguageID'].lower()]
 
-def getLoginToken():
-    global userAgent
+            
+            if fileSizes:
+                if not subtitle['MovieByteSize'] in fileSizes:
+                    continue
 
-    try:
-        # Connexion to opensubtitles.org server
-        session = server.LogIn('', '', 'en', userAgent)
-        if session['status'] != '200 OK':
-            print("Cannot estabilish connection to server.")
+                subtitle['File'] = fileSizes[subtitle['MovieByteSize']]
+            else:
+                subtitle['File'] = "None"
 
-        return session['token']
+            resultsClass.append(str(subtitle['SubLanguageID']).lower(), 'opensubtitles.org', str(subtitle['SubFileName']), subtitle['SubDownloadLink'], {'file': subtitle['File'], 'link': subtitle['SubDownloadLink']}, 'opensubtitles.org', subtitle['SubFileName'])
+        return resultsClass
 
-    except Exception:
-        return True
 
-# http://trac.opensubtitles.org/projects/opensubtitles/wiki/HashSourceCodes
-def hashFile(path):
-    """Produce a hash for a video file : size + 64bit chksum of the first and last 64k (even if they overlap because the file is smaller than 128k)"""
-    try:
-        longlongformat = 'Q' # unsigned long long little endian
-        bytesize = struct.calcsize(longlongformat)
-        format = "<%d%s" % (65536//bytesize, longlongformat)
-        
-        f = open(path, "rb")
-        
-        filesize = os.fstat(f.fileno()).st_size
-        hash = filesize
-        
-        if filesize < 65536 * 2:
-            return "SizeError"
-        
-        buffer = f.read(65536)
-        longlongs = struct.unpack(format, buffer)
-        hash += sum(longlongs)
-        
-        f.seek(-65536, os.SEEK_END)
-        buffer = f.read(65536)
-        longlongs = struct.unpack(format, buffer)
-        hash += sum(longlongs)
-        hash &= 0xFFFFFFFFFFFFFFFF
-        
-        f.close()
-        returnedhash = "%016x" % hash
-        return returnedhash
-    except(IOError): 
-        return "IOError"
+    def download_list(self, Files):
+        resultsClass = subgetcore.SubtitlesList()
+        return self.searchSubtitles(Files, resultsClass)
+
+    def searchSubtitles(self, Files, resultsClass):
+        searchList = []
+        token = self.getLoginToken()
+        fileSizes = dict()
+
+        for File in Files:
+            searchList.append({'moviehash': str(self.hashFile(File)), 'moviebytesize': str(int(os.path.getsize(File)))})
+            fileSizes[str(int(os.path.getsize(File)))] = File
+
+        subtitlesList = self.server.SearchSubtitles(token, searchList)
+        return self.parseResults(subtitlesList, resultsClass, fileSizes)
+
+    def search_by_keywords(self, Keywords):
+        resultsClass = subgetcore.SubtitlesList()
+
+        searchList = []
+        token = self.getLoginToken()
+        searchList.append({'query': Keywords})
+        subtitlesList = self.server.SearchSubtitles(token, searchList)
+        return self.parseResults(subtitlesList, resultsClass)
+
+
+    def download_by_data(self, File, SavePath):
+        response, data = self.HTTPGet('www.opensubtitles.org', File['link'].replace("http://www.opensubtitles.org", ""))
+
+        #if os.name == "nt": # WINDOWS "THE PROBLEMATIC OS"
+        #    TMPName = os.path.expanduser("~").replace("\\\\", "/")+"/"+os.path.basename(File['file'])+".tmp"
+        #else: # UNIX, Linux, *BSD
+        #    TMPName = "/tmp/"+os.path.basename(File['file'])
+
+        try:
+            self.unSevenZip(data, SavePath.replace(".txt.txt", ".txt"))
+            #os.rm(TMPName)
+        except Exception as e:
+            self.error("Exception: "+str(e))
+
+        return SavePath
+
+    # http://trac.opensubtitles.org/projects/opensubtitles/wiki/HashSourceCodes
+    def hashFile(self, path):
+        """Produce a hash for a video file : size + 64bit chksum of the first and last 64k (even if they overlap because the file is smaller than 128k)"""
+        try:
+            longlongformat = 'Q' # unsigned long long little endian
+            bytesize = struct.calcsize(longlongformat)
+            format = "<%d%s" % (65536//bytesize, longlongformat)
+            
+            f = open(path, "rb")
+            
+            filesize = os.fstat(f.fileno()).st_size
+            hash = filesize
+            
+            if filesize < 65536 * 2:
+                return "SizeError"
+            
+            buffer = f.read(65536)
+            longlongs = struct.unpack(format, buffer)
+            hash += sum(longlongs)
+            
+            f.seek(-65536, os.SEEK_END)
+            buffer = f.read(65536)
+            longlongs = struct.unpack(format, buffer)
+            hash += sum(longlongs)
+            hash &= 0xFFFFFFFFFFFFFFFF
+            
+            f.close()
+            returnedhash = "%016x" % hash
+            return returnedhash
+        except(IOError): 
+            return "IOError"
+
+    def getLoginToken(self):
+        try:
+            # Connexion to opensubtitles.org server
+            session = self.server.LogIn('', '', 'en', self.userAgent)
+            if session['status'] != '200 OK':
+                print("Cannot estabilish connection to self.server.")
+
+            return session['token']
+
+        except Exception:
+            return True

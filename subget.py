@@ -187,6 +187,8 @@ class SubGet:
             os.system("/usr/bin/zenity --info --text=\""+Message+"\"")
         elif os.path.isfile("/usr/bin/xmessage"):
             os.system("/usr/bin/xmessage -nearmouse \""+Message+"\"")
+        else:
+            print(Message)
 
 
     def loadConfig(self):
@@ -548,9 +550,16 @@ class SubGet:
 
                     for Movie in Result:
                         try:
-                            if "title" in Movie:
-                                self.addSubtitlesRow(Movie['lang'], Movie['title'], Movie['domain'], Movie['data'], Plugin, Movie['file'])
-                                self.Logging.output("[plugin:"+Plugin+"] "+_("found subtitles")+" - "+Movie['title'], "debug", True)
+                            if not type(Movie).__name__ == "dict":
+                                self.Logging.output("[plugin:"+Plugin+"] Error: got "+str(type(Movie).__name__)+", not a dictionary. Data="+str(Movie), "debug", True)
+                                continue
+
+                            if not "title" in Movie:
+                                self.Logging.output("[plugin:"+Plugin+"] Error: no title found in results", "debug", True)
+                                continue
+
+                            self.addSubtitlesRow(Movie['lang'], Movie['title'], Movie['domain'], Movie['data'], Plugin, Movie['file'])
+                            self.Logging.output("[plugin:"+Plugin+"] "+_("found subtitles")+" - "+Movie['title'], "debug", True)
                         except AttributeError as e:
                              self.Logging.output("[plugin:"+Plugin+"] "+_("no any subtitles found")+", "+str(e), "debug", True)
 
@@ -602,7 +611,13 @@ class SubGet:
                 if len(self.subtitlesList) == int(SelectID) or len(self.subtitlesList) > int(SelectID):
                     chooser = gtk.FileChooserDialog(title=self._("Where to save the subtitles?"),action=gtk.FILE_CHOOSER_ACTION_SAVE,buttons=(gtk.STOCK_CANCEL,gtk.RESPONSE_CANCEL,gtk.STOCK_SAVE,gtk.RESPONSE_OK))
                     chooser.set_current_folder(os.path.dirname(self.subtitlesList[SelectID]['file']))
-                    chooser.set_current_name(os.path.basename(self.subtitlesList[SelectID]['file'])+".txt")
+
+                    txtFileName = self.subtitlesList[SelectID]['file']
+
+                    if not ".txt" in txtFileName:
+                        txtFileName = txtFileName+".txt"
+
+                    chooser.set_current_name(os.path.basename(txtFileName))
                     response = chooser.run()
 
                     if response == gtk.RESPONSE_OK:
@@ -617,7 +632,9 @@ class SubGet:
     def GTKDownloadDialog(self, SelectID, filename):
              """Download progress dialog, downloading and saving subtitles to file"""
 
+             print self.subtitlesList[SelectID]
              Plugin = self.subtitlesList[SelectID]['extension']
+
              State = self.plugins[Plugin]
 
              if type(State).__name__ == "module":
@@ -2089,6 +2106,11 @@ class SubGet:
                 DLResults = self.plugins[Plugin].instance.download_by_data(preferredData['data'], FileTXT)
 
             print(_("Subtitles saved to")+" "+str(DLResults)+", "+_("but not in your preferred language"))
+
+    def errorMessage(self, message):
+         """ Create's error popups, created for notify plugin """
+
+         self.Hooking.executeHooks(self.Hooking.getAllHooks("onErrorMessage"), message)
 
 if __name__ == "__main__":
     SubgetMain = SubGet()

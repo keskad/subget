@@ -36,6 +36,14 @@ class PluginMain(subgetcore.SubgetPlugin):
 
         return Data
 
+    def _onErrorMessage(self, Data):
+
+        # enabled (true) or disabled (false) by configuration file - notify->errormessages
+        if str(self.Subget.configGetKey("notify", "errormessages")) == "True":
+            self.sendEvent("subget:", Data)
+
+        return Data
+
     def sendEvent(self, title, text):
         """ Sends notification """
 
@@ -126,6 +134,7 @@ class PluginMain(subgetcore.SubgetPlugin):
 
         self.subgetIcon = self.Subget.getPath("/usr/share/subget/icons/Subget-logo.xpm")
         self.Subget.Hooking.connectHook("onSubtitlesDownload", self._onSubtitlesDownload)
+        self.Subget.Hooking.connectHook("onErrorMessage", self._onErrorMessage)
 
     def _pluginDestroy(self):
         """ Unload plugin """

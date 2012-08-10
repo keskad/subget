@@ -151,6 +151,9 @@ class SubtitlesList:
 
     results = list()
 
+    def __init__(self):
+        self.results = list() # erase the list, just for sure
+
     def append(self, language, site, title, url, data, domain, File):
         """ Adds new element to list of subtitles """
 
@@ -204,6 +207,9 @@ class SubgetPlugin:
     Subget = None
     HTTPTimeout = 3
     contextMenu = list()
+
+    def error(self, strE):
+        self.Subget.Logging.output("[plugin:"+str(inspect.stack()[0][1])+"] "+str(strE), "error", True)
 
     def removeNonAscii(self, s): 
         """ Removes non-ascii characters from a string """
@@ -274,9 +280,9 @@ class SubgetPlugin:
 
         # use p7zip.exe to unpack subtitles on Windows
         if os.name == "nt":
-            subprocess.call("\""+self.Subget.subgetOSPath.replace("/", "\\")+"7za.exe\" x -y -so -piBlm8NTigvru0Jr0 \""+File+".7z\" > \""+File+".txt\"", shell=True, bufsize=1)
+            subprocess.call("\""+self.Subget.subgetOSPath.replace("/", "\\")+"7za.exe\" x -y -so -piBlm8NTigvru0Jr0 \""+File+".7z\" > \""+File+"\"", shell=True, bufsize=1)
         else: # and 7zip on Linux and FreeBSD
-            os.system(self.Subget.getFile(["/usr/bin/7z", "/usr/local/bin/7z"])+" x -y -so -piBlm8NTigvru0Jr0 \""+File+".7z\" 2>/dev/null > \""+File+".txt\"")
+            os.system(self.Subget.getFile(["/usr/bin/7z", "/usr/local/bin/7z"])+" x -y -so -piBlm8NTigvru0Jr0 \""+File+".7z\" 2>/dev/null > \""+File+"\"")
 
         os.remove(File+".7z")
         return File
@@ -324,6 +330,8 @@ class SubgetPlugin:
             Returns: False, False on error
         """
 
+        self.Subget.Logging.output(str(Server)+str(Request), "debug", False)
+
         try:
             if Headers:
                 conn = httplib.HTTPConnection(Server, 80, Headers, timeout=float(self.HTTPTimeout))
@@ -336,6 +344,7 @@ class SubgetPlugin:
 
         except Exception as e:
             self.Subget.Logging.output("HTTP Connection error, "+str(e), "warning", False)
+            self.Subget.errorMessage(self.Subget._("HTTP Connection error to server") + " "+Server+", "+self.Subget._("propably server is busy, please try again later. Error code: ")+str(response.status))
             return False, False
 
         return response, data

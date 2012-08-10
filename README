@@ -20,6 +20,17 @@ Video Player option allows easily play movie using favorite media player right a
 Requirements: GTK+, Python 2.6/2.7/3.0/3.1/3.2, X11, PyGTK, python-dbus, python-gettext, p7zip (Gentoo: app-arch/p7zip, Debian/Ubuntu: p7zip-full)
 
 * Changelog:
+09.08.2012 (v.1.5) <webnull.www@gmail.com>:
+    * More debugging code on plugins when pushing subtitles to list
+    * Fixed list displaying (no doubled entries)
+    + Added error() logging function to APIv2
+    + Subget.errorMessage allows showing application error messages in dialogs or notifications (hook: onErrorMessage, args: str(message), errType="info")
+    + notify plugin supports error messages capturing
+    + new dialog plugin uses zenity, kdialog or xmessage to show Subget's errors, use Subget.errorMessage(str(Message), errType="info") to raise error
+    * Fixed OpenSubtitles plugin and moved to APIv2
+    + Added print to Subget.sendCriticAlert()
+    * Fixed file search in allsubs.org plugin
+
 05.05.2012 (v.1.4.5) <webnull.www@gmail.com>:
     + SubgetPlugin.HTTPGet now supports custom headers
     * SubgetPlugin.HTTPGet uses internal logging system now

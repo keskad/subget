@@ -1,4 +1,4 @@
-import httplib, urllib, time, os, hashlib, re, zipfile, time
+import httplib, urllib, time, os, hashlib, zipfile, time
 from xml.dom import minidom
 
 ####

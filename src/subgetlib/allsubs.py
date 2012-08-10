@@ -13,13 +13,10 @@ class PluginMain(subgetcore.SubgetPlugin):
     def getListOfSubtitles(self, movieRealName, File, resultsClass):
         response, data = self.HTTPGet("api.allsubs.org", "/index.php?limit=20&search="+urllib.quote_plus(movieRealName))
 
-        if not response == False or not data:
+        if response == False or not data:
             return False
 
         dom = minidom.parseString(data)
-
-        #!!!: this var is unused
-        resultsCount = int(dom.getElementsByTagName('found_results').item(0).firstChild.data)
 
         Results = dom.getElementsByTagName('item')
 
@@ -34,7 +31,7 @@ class PluginMain(subgetcore.SubgetPlugin):
             except AttributeError:
                 continue
        
-            resultsClass.append(str(Language).lower(), 'allsubs.org', Title+" ("+str(Count)+")", Download, {'file': File, 'url': Download, 'lang': str(Language).lower()}, 'allsubs.org', File)
+            resultsClass.append(str(Language).lower(), 'allsubs', Title+" ("+str(Count)+")", Download, {'file': File, 'url': Download, 'lang': str(Language).lower()}, 'allsubs.org', File)
 
         return True
 
