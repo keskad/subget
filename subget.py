@@ -2118,10 +2118,10 @@ class SubGet:
 
             print(_("Subtitles saved to")+" "+str(DLResults)+", "+_("but not in your preferred language"))
 
-    def errorMessage(self, message):
+    def errorMessage(self, message, errType='info'):
          """ Create's error popups, created for notify plugin """
 
-         self.Hooking.executeHooks(self.Hooking.getAllHooks("onErrorMessage"), message)
+         self.Hooking.executeHooks(self.Hooking.getAllHooks("onErrorMessage"), [message,errType])
 
 if __name__ == "__main__":
     SubgetMain = SubGet()

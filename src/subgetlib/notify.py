@@ -37,10 +37,9 @@ class PluginMain(subgetcore.SubgetPlugin):
         return Data
 
     def _onErrorMessage(self, Data):
-
         # enabled (true) or disabled (false) by configuration file - notify->errormessages
         if str(self.Subget.configGetKey("notify", "errormessages")) == "True":
-            self.sendEvent("subget:", Data)
+            self.sendEvent("subget:", str(Data[0]))
 
         return Data
 

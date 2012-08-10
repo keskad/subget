@@ -13,8 +13,8 @@ class PluginMain(subgetcore.SubgetPlugin):
     errTypes = {}
 
 
-    def _onErrorMessage(self, Data, errType='info'):
-        self.sendEvent("error", str(Data), errType)
+    def _onErrorMessage(self, Data):
+        self.sendEvent(str(Data[1]), str(Data[0])) # errType, message
         return Data
 
     def sendEvent(self, errType, Data):
