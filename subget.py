@@ -2,6 +2,7 @@
 #-*- coding: utf-8 -*-
 import getopt, sys, os, glob, time, gettext, locale, xml.dom.minidom
 import traceback
+import StringIO
 from threading import Thread
 import subgetcore # libraries
 from pango import FontDescription
@@ -104,12 +105,12 @@ class SubGet:
         return False
 
     def getPath(self, path):
-        userPath = os.path.expanduser("~")+path
+        userPath = os.path.expanduser("~")+str(path)
 
         if os.path.exists(userPath):
             return userPath
         else:
-            return self.subgetOSPath+path
+            return self.subgetOSPath+str(path)
 
     def doPluginsLoad(self, args):
         global plugins
@@ -541,7 +542,9 @@ class SubGet:
                 Results = self.plugins[Plugin].instance.download_list(self.files).output()
 
             if Results is None:
-                self.Logging.output("[plugin:"+Plugin+"] "+_("ERROR: Cannot import"), "warning", True)
+                stack = StringIO.StringIO()
+                traceback.print_exc(file=stack)
+                self.Logging.output("[plugin:"+Plugin+"] "+_("ERROR: Cannot import")+"\n"+str(stack.getvalue()), "warning", True)
             else:
                 for Result in Results:
                     if not Result:
@@ -755,8 +758,10 @@ class SubGet:
                 return True
 
             except Exception as errno:
+                stack = StringIO.StringIO()
+                traceback.print_exc(file=stack)
                 self.plugins[Plugin] = str(errno)
-                self.Logging.output(_("ERROR: Cannot import")+" "+Plugin+" ("+str(errno)+")", "warning", True)
+                self.Logging.output(_("ERROR: Cannot import")+" "+Plugin+" ("+str(errno)+")\n"+str(stack.getvalue()), "warning", True)
                 
                 return False
 

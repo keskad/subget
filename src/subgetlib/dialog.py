@@ -39,10 +39,8 @@ class PluginMain(subgetcore.SubgetPlugin):
 
     def _pluginInit(self):
         """ Initialize plugin """
-
         self.subgetIcon = self.Subget.getPath("/usr/share/subget/icons/Subget-logo.xpm")
         self.Subget.Hooking.connectHook("onErrorMessage", self._onErrorMessage)
-
         forceConfigSetting = self.Subget.configGetKey("dialog", "type")
 
         if forceConfigSetting == "zenity":
@@ -57,15 +55,15 @@ class PluginMain(subgetcore.SubgetPlugin):
             self.selectXmessage()
             return True
 
-        if self.Subget.getPath({"/usr/bin/zenity", "/usr/local/bin/zenity"}):
+        if self.Subget.getFile({"/usr/bin/zenity", "/usr/local/bin/zenity"}):
             self.selectZenity()
             return True
 
-        elif self.Subget.getPath({"/usr/bin/kdialog", "/usr/local/bin/kdialog"}):
+        elif self.Subget.getFile({"/usr/bin/kdialog", "/usr/local/bin/kdialog"}):
             self.selectKdialog()
             return True
 
-        elif self.Subget.getPath({"/usr/bin/xmessage", "/usr/local/bin/xmessage"}):
+        elif self.Subget.getFile({"/usr/bin/xmessage", "/usr/local/bin/xmessage"}):
             self.selectXmessage()
             return True
 
