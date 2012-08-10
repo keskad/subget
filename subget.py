@@ -1426,7 +1426,7 @@ class SubGet:
         """
         try:
             cfg = self.Config[Section][Key]
-            if cfg.lower() == "false":
+            if str(cfg).lower() == "false":
                 return False
             else:
                 return cfg
