@@ -10,6 +10,8 @@ class PluginMain(subgetcore.SubgetPlugin):
     commands = None
     envCache = dict()
     contextMenu = list()
+    history = list()
+    historyFile = ""
 
     def _pluginInit(self):
         """ Initialize plugin """
@@ -23,6 +25,26 @@ class PluginMain(subgetcore.SubgetPlugin):
 
         if "window" in dir(self.Subget):
             self._onGTKLoopEnd(False)
+
+        # initialize history
+        if str(self.Subget.configGetKey("console", "rememberhistory")) == "True":
+            self.historyFile = os.path.expanduser("~/.subget/history")
+
+            # check cache, if empty then try to load something from e
+            if len(self.history) is 0:
+                try:
+                    if os.path.isfile(self.historyFile):
+                        f = open(self.stripFirstLine(self.historyFile), "r")
+                        self.history = f.read().split("\n")
+                        f.close()
+                    else:
+                        f = open(self.historyFile, "w")
+                        f.write("self.Subget.errorMessage(\"Hello world!\")")
+                        f.close()
+                        self.Subget.Logging.output(self.Subget._("Writing to")+ " "+str(self.historyFile), "debug", False)
+
+                except IOError as e:
+                    self.Subget.errorMessage(self.Subget._("Error writing to file")+ " "+str(self.historyFile)+" ("+str(e)+")")
 
         self.commands = Commands(self)
 
@@ -139,21 +161,18 @@ class PluginMain(subgetcore.SubgetPlugin):
             except Exception:
                 pass
 
-        #!!!: those vars are not used anuwhere
+        # these vars are environmental for console
         subget = self.Subget
         _ = self.Subget._
         logging = self.Subget.Logging
-
-        #for moduleName in self.commands.imported:
-        #    exec(moduleName+" = self.commands.imported[moduleName]")
 
         try:
             exec(cmd)
         except Exception as e:
             traceback.print_exc(file=sys.stdout)
 
-        #self.Subget.Logging.output(bufferErr.getvalue(), "debug", False, True, True)
         self.Subget.Logging.output(buffer.getvalue(), "debug", False, True, True)
+        self.logHistory(cmd)
 
         # restore original stdout
         sys.stdout = sys.__stdout__
@@ -166,6 +185,12 @@ class PluginMain(subgetcore.SubgetPlugin):
 
             value = eval(envVar)
             self.envCache[envVar] = value
+
+    def logHistory(self, cmd):
+        self.history.append(cmd)
+
+        while len(self.history) > 50:
+            del self.history[0]
 
     def gscrollMove(self, x, y):
         """ Moves scroll to bottom if console window was updated """
@@ -290,9 +315,24 @@ class PluginMain(subgetcore.SubgetPlugin):
         if self.Subget.configGetKey("console", "remember_size"):
             self.Subget.saveConfiguration()
 
+        if str(self.Subget.configGetKey("console", "rememberhistory")) == "True":
+            try:
+                f = open(self.historyFile, "w")
+                f.write(self.stripFirstLine(str("\n").join(self.history)))
+                f.close()
+                self.Subget.Logging.output(self.Subget._("Writing to")+ " "+str(self.historyFile), "debug", False)
+            except IOError as e:
+                self.Subget.errorMessage(self.Subget._("Error writing to file")+ " "+str(self.historyFile)+" ("+str(e)+")")
+
         del self.consoleWindow
         self.consoleWindow = None
         return False
+
+    def stripFirstLine(self, string):
+        if string[0:1] == "\n":
+            return string[1:]
+        else:
+            return string
 
 
 
@@ -368,6 +408,10 @@ class Commands:
 
     def ls(self, args):
         self.output(str(os.listdir(self.nav)))
+
+    def history(self, args=''):
+        self.output(self.console.stripFirstLine(str("\n").join(self.console.history)))
+            
 
 
 
