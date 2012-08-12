@@ -1395,7 +1395,7 @@ class SubGet:
     def configSetButton(self, Type, Section, Option, Value, revert=False):
 
         if revert:
-            Value = self.revertBool(Value.get_active())
+            Value = str(self.revertBool(Value.get_active()))
         else:
             Value = Value.get_active()
 
@@ -1407,7 +1407,10 @@ class SubGet:
             self.Logging.output(_("Error setting configuration variable:")+" "+Section+"->"+Option+" = \""+str(Value)+"\". "+_("Error")+": "+str(e), "warning", True)
 
     def revertBool(self, boolean):
-        return boolean == "False" or boolean
+        if boolean == "True" or boolean == True:
+            return False
+        else:
+            return True
 
     def configGetSection(self, Section):
         """ Returns section as dictionary 

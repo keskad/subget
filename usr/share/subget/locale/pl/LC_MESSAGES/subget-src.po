@@ -320,3 +320,6 @@ msgstr "Pokaż główne okno"
 
 msgid "Hide main window"
 msgstr "Ukryj główne okno"
+
+msgid "Remember history"
+msgstr "Zapamiętuj historię"

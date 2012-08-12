@@ -85,6 +85,8 @@ class PluginMain(subgetcore.SubgetPlugin):
         if self.Subget.configGetKey("console", "open_at_startup"):
             Startup.set_active(1)
 
+        #### Remember console position
+
         confSize = gtk.CheckButton(self.Subget._("Remeber window size"))
         confSize.connect("pressed", self.Subget.configSetButton, 'console', 'remember_size', confSize, True)
 
@@ -97,6 +99,13 @@ class PluginMain(subgetcore.SubgetPlugin):
         if self.Subget.configGetKey("console", "remember_position"):
             confPosition.set_active(1)
 
+        #### End of remember console position
+
+        confRememberHistory = gtk.CheckButton(self.Subget._("Remember history"))
+        confRememberHistory.connect("pressed", self.Subget.configSetButton, 'console', 'rememberhistory', confRememberHistory, True)
+
+        if self.Subget.configGetKey("console", "rememberhistory"):
+            confRememberHistory.set_active(1)
 
         Label2 = gtk.Label(self.Subget._("Errorlevel outside of internal console:"))
         adj = gtk.Adjustment(1.0, 1.0, 5.0, 1.0, 1.0, 1.0)
@@ -115,6 +124,7 @@ class PluginMain(subgetcore.SubgetPlugin):
         Hbox = gtk.HBox(False, 0)
         Vbox.pack_start(Startup, False, False, 2)
         Vbox.pack_start(confSize, False, False, 2)
+        Vbox.pack_start(confRememberHistory, False, False, 2)
         Vbox.pack_start(confPosition, False, False, 2)
         Vbox.pack_start(Label2, False, False, 2)
         Vbox.pack_start(scale, False, False, 2)
