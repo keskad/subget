@@ -60,8 +60,9 @@ if (lc):
     langs = [lc]
 else:
     langs = ['en_US']
+    lc = "en_US"
 
-print("Lang: "+lc)
+#print("Lang: "+lc)
 
 #print("Translations: "+incpath)
 gettext.bindtextdomain('subget', incpath)
