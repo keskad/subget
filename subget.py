@@ -254,7 +254,7 @@ class SubGet:
         try:
             opts, args = getopt.getopt(sys.argv[1:], "hcqw", ["help", "console", "quick", "language=", "watch-with-subtitles"])
         except getopt.GetoptError as err:
-            print(self._('Error')+": "+str(err)+", "+_("Try --help for usage")+"\n\n")
+            print(self._('Error')+": "+str(err)+", "+self._("Try --help for usage")+"\n\n")
             usage()
             sys.exit(2)
         # replace with argparse/optparse
@@ -361,7 +361,7 @@ class SubGet:
 
             # if waited too many time
             if Sleept > 180:
-                self.Logging.output("[textmodeWait] "+_("One of plugins cannot finish its job, cancelling."), "warning")
+                self.Logging.output("[textmodeWait] "+self._("One of plugins cannot finish its job, cancelling."), "warning")
                 self.workingState(False)
                 return False
 
@@ -397,7 +397,7 @@ class SubGet:
 
 
     def textmodeDLSub(self, Job):
-        self.Logging.output("[textmodeWait] " + _("Downloading to") + " "+Job['data']['file']+".txt")
+        self.Logging.output("[textmodeWait] " + self._("Downloading to") + " "+Job['data']['file']+".txt")
         Result = self.plugins[Job['extension']].download_by_data(Job['data'], Job['data']['file']+".txt")
         return Result
 
@@ -452,17 +452,17 @@ class SubGet:
                     try:
                         self.Hooking.executeHooks(self.Hooking.getAllHooks("onSubtitlesDownload"), [False, False, False, False])
                     except Exception as e:
-                        self.Logging.output(self._("Error")+": "+_("Cannot execute hook")+"; onSubtitlesDownload; "+str(e), "warning", True)
+                        self.Logging.output(self._("Error")+": "+self._("Cannot execute hook")+"; onSubtitlesDownload; "+str(e), "warning", True)
                 else:
                     try:
                         self.Hooking.executeHooks(self.Hooking.getAllHooks("onSubtitlesDownload"), [self.configGetKey('watch_with_subtitles', 'download_only'), File+".txt", File, True])
                     except Exception as e:
-                        self.Logging.output(self._("Error")+": "+_("Cannot execute hook")+"; onSubtitlesDownload; "+str(e), "warning", True)
+                        self.Logging.output(self._("Error")+": "+self._("Cannot execute hook")+"; onSubtitlesDownload; "+str(e), "warning", True)
         else:
             try:
                 self.Hooking.executeHooks(self.Hooking.getAllHooks("onSubtitlesDownload"), [False, False, False, True])
             except Exception as e:
-                self.Logging.output(self._("Error")+": "+_("Cannot execute hook")+"; onSubtitlesDownload; "+str(e), "warning", True)
+                self.Logging.output(self._("Error")+": "+self._("Cannot execute hook")+"; onSubtitlesDownload; "+str(e), "warning", True)
 
         return True
 
@@ -484,12 +484,12 @@ class SubGet:
 
             if not os.path.isfile(pixbuf_path):
                 pixbuf_path = self.getPath('/usr/share/subget/icons/flags/unknown.xpm')
-                self.Logging.output("[addSubtitlesRow] "+language+".xpm "+_("icon does not exists, using unknown.xpm"), "warning", False)
+                self.Logging.output("[addSubtitlesRow] "+language+".xpm "+self._("icon does not exists, using unknown.xpm"), "warning", False)
 
             try:
                 pixbuf = gtk.gdk.pixbuf_new_from_file(pixbuf_path)
             except Exception:
-                self.Logging.output(pixbuf_path+" "+_("icon file not found"), "warning", True)
+                self.Logging.output(pixbuf_path+" "+self._("icon file not found"), "warning", True)
                 return False
 
             self.liststore.append([pixbuf, str(release_name), str(server), (len(self.subtitlesList)-1)])
@@ -554,7 +554,7 @@ class SubGet:
             if Results is None:
                 stack = StringIO.StringIO()
                 traceback.print_exc(file=stack)
-                self.Logging.output("[plugin:"+Plugin+"] "+_("ERROR: Cannot import")+"\n"+str(stack.getvalue()), "warning", True)
+                self.Logging.output("[plugin:"+Plugin+"] "+self._("ERROR: Cannot import")+"\n"+str(stack.getvalue()), "warning", True)
             else:
                 for Result in Results:
                     if not Result:
@@ -572,9 +572,9 @@ class SubGet:
                                 continue
 
                             self.addSubtitlesRow(Movie['lang'], Movie['title'], Movie['domain'], Movie['data'], Plugin, Movie['file'])
-                            self.Logging.output("[plugin:"+Plugin+"] "+_("found subtitles")+" - "+Movie['title'], "debug", True)
+                            self.Logging.output("[plugin:"+Plugin+"] "+self._("found subtitles")+" - "+Movie['title'], "debug", True)
                         except AttributeError as e:
-                             self.Logging.output("[plugin:"+Plugin+"] "+_("no any subtitles found")+", "+str(e), "debug", True)
+                             self.Logging.output("[plugin:"+Plugin+"] "+self._("no any subtitles found")+", "+str(e), "debug", True)
 
             # mark job as done
             self.queueCount = (self.queueCount - 1)
@@ -614,7 +614,7 @@ class SubGet:
                 if self.dialog is not None:
                     return
                 else:
-                    self.dialog = gtk.MessageDialog(parent = None,flags = gtk.DIALOG_DESTROY_WITH_PARENT,type = gtk.MESSAGE_INFO,buttons = gtk.BUTTONS_OK,message_format = _("No subtitles selected."))
+                    self.dialog = gtk.MessageDialog(parent = None,flags = gtk.DIALOG_DESTROY_WITH_PARENT,type = gtk.MESSAGE_INFO,buttons = gtk.BUTTONS_OK,message_format = self._("No subtitles selected."))
                     self.dialog.set_title(self._("Information"))
                     self.dialog.connect('response', lambda dialog, response: self.destroyDialog())
                     self.dialog.show()
@@ -640,7 +640,7 @@ class SubGet:
                     else:
                         chooser.destroy()
                 else:
-                    self.Logging.output("[GTK:DownloadSubtitles] subtitle_ID="+str(SelectID)+" "+_("not found in a list, its wired"), "warning", True)
+                    self.Logging.output("[GTK:DownloadSubtitles] subtitle_ID="+str(SelectID)+" "+self._("not found in a list, its wired"), "warning", True)
 
     def GTKDownloadDialog(self, SelectID, filename):
              """Download progress dialog, downloading and saving subtitles to file"""
@@ -687,14 +687,14 @@ class SubGet:
                     try:
                         self.Hooking.executeHooks(self.Hooking.getAllHooks("onSubtitlesDownload"), [False, Results, self.dictGetKey(self.subtitlesList[SelectID]['data'], 'file'), True])
                     except Exception as e:
-                        self.Logging.output(self._("Error")+": "+_("Cannot execute hook")+"; onSubtitlesDownload; "+str(e), "warning", True)
+                        self.Logging.output(self._("Error")+": "+self._("Cannot execute hook")+"; onSubtitlesDownload; "+str(e), "warning", True)
                         traceback.print_exc(file=sys.stdout)
 
                  else:
                     try:
                         self.Hooking.executeHooks(self.Hooking.getAllHooks("onSubtitlesDownload"), [False, False, False, False])
                     except Exception as e:
-                        self.Logging.output(self._("Error")+": "+_("Cannot execute hook")+"; onSubtitlesDownload; "+str(e), "warning", True)
+                        self.Logging.output(self._("Error")+": "+self._("Cannot execute hook")+"; onSubtitlesDownload; "+str(e), "warning", True)
 
                  w.destroy()
 
@@ -712,7 +712,7 @@ class SubGet:
 
     def gtkSelectVideo(self, arg):
             """ Selecting multiple videos to search for subtitles """
-            chooser = gtk.FileChooserDialog(title=_("Please select video files"),action=gtk.FILE_CHOOSER_ACTION_OPEN,buttons=(gtk.STOCK_CANCEL,gtk.RESPONSE_CANCEL,gtk.STOCK_OPEN,gtk.RESPONSE_OK))
+            chooser = gtk.FileChooserDialog(title=self._("Please select video files"),action=gtk.FILE_CHOOSER_ACTION_OPEN,buttons=(gtk.STOCK_CANCEL,gtk.RESPONSE_CANCEL,gtk.STOCK_OPEN,gtk.RESPONSE_OK))
             chooser.set_select_multiple(True)
             response = chooser.run()
 
@@ -846,7 +846,7 @@ class SubGet:
                                     customItem.connect("activate", option[1], option[2])
                                     menu.append(customItem)
                                 except Exception as e:
-                                    self.Logging.output(self._("Cannot add custom menu")+". "+_("plugin")+": "+Plugin+", "+_("exception")+": "+str(e))
+                                    self.Logging.output(self._("Cannot add custom menu")+". "+self._("plugin")+": "+Plugin+", "+self._("exception")+": "+str(e))
 
                     menu.append(Deactivate)
                     menu.show_all()
@@ -867,7 +867,7 @@ class SubGet:
                 try:
                     Author = self.plugins[Plugin].PluginInfo['Authors']
                 except Exception:
-                    Author = _("Unknown")
+                    Author = self._("Unknown")
 
                 try:
                     OS = self.plugins[Plugin].PluginInfo['Requirements']['OS']
@@ -876,7 +876,7 @@ class SubGet:
                         OS = "Unix, Linux, Windows"
 
                 except Exception:
-                    OS = _("Unknown")
+                    OS = self._("Unknown")
 
                 try:
                     Description = self.plugins[Plugin].PluginInfo['Description']
@@ -886,7 +886,7 @@ class SubGet:
                 try:
                     Packages = self.plugins[Plugin].PluginInfo['Requirements']['Packages']
                 except Exception:
-                    Packages = _("Unknown")
+                    Packages = self._("Unknown")
 
                 if self.plugins[Plugin] == "Disabled":
                     pixbuf = gtk.gdk.pixbuf_new_from_file(self.subgetOSPath+'/usr/share/subget/icons/plugin-disabled.png')
@@ -1079,15 +1079,15 @@ class SubGet:
             notebook.show_tabs = True
             notebook.set_size_request(580, 370)
             notebook.set_border_width(0) 
-            self.gtkAddTab(notebook, _("Team"), _("Programming")+":\n WebNuLL <http://webnull.kablownia.org>\n\n"+_("Testing")+":\n Tiritto <http://dawid-niedzwiedzki.pl>\n Patrick Damgaard Pedersen <totex71782{at}gmail{dot}com>\n WebNuLL <http://webnull.kablownia.org>\n\n"+_("Special thanks")+":\n iluzion <http://dobreprogramy.pl/iluzion>\n famfamfam <http://famfamfam.com>")
+            self.gtkAddTab(notebook, self._("Team"), self._("Programming")+":\n WebNuLL <http://webnull.kablownia.org>\n\n"+self._("Testing")+":\n Tiritto <http://dawid-niedzwiedzki.pl>\n Patrick Damgaard Pedersen <totex71782{at}gmail{dot}com>\n WebNuLL <http://webnull.kablownia.org>\n\n"+self._("Special thanks")+":\n iluzion <http://dobreprogramy.pl/iluzion>\n famfamfam <http://famfamfam.com>")
 
-            self.gtkAddTab(notebook, _("License"), _("This program was published on Free and Open Software license.\n\nConditions:\n - You have right to share this program in original or modified form\n - You are free to run this program in any purpose\n - You are free to view and modify the source code in any purpose\n - You have right to translate this program to any language you want\n - You must leave a note about original author when modifying or sharing this software\n - The program must remain on the same license when editing or sharing\n\n\nProgram license: GNU General Public License 3 (GNU GPLv3)"))
+            self.gtkAddTab(notebook, self._("License"), self._("This program was published on Free and Open Software license.\n\nConditions:\n - You have right to share this program in original or modified form\n - You are free to run this program in any purpose\n - You are free to view and modify the source code in any purpose\n - You have right to translate this program to any language you want\n - You must leave a note about original author when modifying or sharing this software\n - The program must remain on the same license when editing or sharing\n\n\nProgram license: GNU General Public License 3 (GNU GPLv3)"))
 
-            self.gtkAddTab(notebook, _("Translating"), "English:\n WebNuLL <http://webnull.kablownia.org>\n\nPolski:\n WebNuLL <http://webnull.kablownia.org>\n\nDansk:\n Patrick Damgaard Pedersen <totex71782{at}gmail{dot}com>")
+            self.gtkAddTab(notebook, self._("Translating"), "English:\n WebNuLL <http://webnull.kablownia.org>\n\nPolski:\n WebNuLL <http://webnull.kablownia.org>\n\nDansk:\n Patrick Damgaard Pedersen <totex71782{at}gmail{dot}com>")
 
 
             if not os.path.isfile(self.subgetOSPath+"/usr/share/subget/version.xml"):
-                self.gtkAddTab(notebook, _("Version"), _("Version information can't be read because file /usr/share/subget/version.xml is missing."))
+                self.gtkAddTab(notebook, self._("Version"), self._("Version information can't be read because file /usr/share/subget/version.xml is missing."))
             else:
                 if self.versioning is  None:
                     try:
@@ -1128,9 +1128,9 @@ class SubGet:
                     
 
                 if not self.versioning:
-                    self.gtkAddTab(notebook, _("Version"), _("Version information can't be read because there was a problem parsing file /usr/share/subget/version.xml"))
+                    self.gtkAddTab(notebook, self._("Version"), self._("Version information can't be read because there was a problem parsing file /usr/share/subget/version.xml"))
                 else:
-                    self.gtkAddTab(notebook, _("Version"), _("Version")+": "+self.versioning['version']+", "+self.osName()+"\n\n"+_("Supported platforms")+":\n"+self.versioning['platforms']+"\n"+_("Project developers")+":\n "+self.versioning['developers']+"\n"+_("Contact")+":\n"+self.versioning['contact'])
+                    self.gtkAddTab(notebook, self._("Version"), self._("Version")+": "+self.versioning['version']+", "+self.osName()+"\n\n"+self._("Supported platforms")+":\n"+self.versioning['platforms']+"\n"+self._("Project developers")+":\n "+self.versioning['developers']+"\n"+self._("Contact")+":\n"+self.versioning['contact'])
 
             fixed.put(notebook, 12, 160)
 
@@ -1276,7 +1276,7 @@ class SubGet:
             plugin = self.sm.cb.get_active_text()
 
             # search in all plugins
-            if plugin == _("All"):
+            if plugin == self._("All"):
                 for Plugin in self.pluginsList:
                     try:
                         if not self.isPlugin(Plugin):
@@ -1324,7 +1324,7 @@ class SubGet:
                         self.addSubtitlesRow(Result['lang'], Result['title'], Result['domain'], Result['data'], plugin, Result['file'])
 
                 except AttributeError as errno:
-                    self.Logging.output("[plugin:"+self.sm.plugins[plugin]+"] "+_("Searching by keywords is not supported by this plugin"), "info", True)
+                    self.Logging.output("[plugin:"+self.sm.plugins[plugin]+"] "+self._("Searching by keywords is not supported by this plugin"), "info", True)
 
     def gtkPreferencesQuit(self):
         self.winPreferences.destroy()
@@ -1398,7 +1398,7 @@ class SubGet:
         try:
             self.Hooking.executeHooks(self.Hooking.getAllHooks("onPreferencesOpen"))
         except Exception as e:
-            self.Logging.output(self._("Error")+": "+_("Cannot execute hook")+"; onPreferencesOpen; "+str(e), "warning", True)
+            self.Logging.output(self._("Error")+": "+self._("Cannot execute hook")+"; onPreferencesOpen; "+str(e), "warning", True)
 
         return True
 
@@ -1414,7 +1414,7 @@ class SubGet:
             self.Logging.output(self._("Setting config values: ")+ Section+"->"+Option+" = \""+str(Value)+"\"", "debug", False)
             #print("SET to "+str(Value))
         except Exception as e:
-            self.Logging.output(self._("Error setting configuration variable:")+" "+Section+"->"+Option+" = \""+str(Value)+"\". "+_("Error")+": "+str(e), "warning", True)
+            self.Logging.output(self._("Error setting configuration variable:")+" "+Section+"->"+Option+" = \""+str(Value)+"\". "+self._("Error")+": "+str(e), "warning", True)
 
     def revertBool(self, boolean):
         if boolean == "True" or boolean == True:
@@ -1533,7 +1533,7 @@ class SubGet:
         hbox = gtk.HBox(False, 0)
         hbox.pack_start(GeneralPreferences, False, False, 8)
 
-        self.createTab(self.winPreferences.notebook, _("System integration"), hbox)
+        self.createTab(self.winPreferences.notebook, self._("System integration"), hbox)
 
     def configSetKey(self, Section, Option, Value):
         if not Section in self.Config:
@@ -1633,7 +1633,7 @@ class SubGet:
         WWS.put(preferred_language, 150, 75)
         #WWS.put(SelectPlayer, 10, 163)
         
-        self.createTab(self.winPreferences.notebook, _("Watch with subtitles"), WWS)
+        self.createTab(self.winPreferences.notebook, self._("Watch with subtitles"), WWS)
 
     # Set connection timeouts for all plugins supporting this function
     def gtkPreferencesPlugins_Scale(self, x):
@@ -1681,7 +1681,7 @@ class SubGet:
         g.put(Label3, 20, 95)
         g.put(scale, 80, 115)
 
-        self.createTab(self.winPreferences.notebook, _("Plugins"), g)
+        self.createTab(self.winPreferences.notebook, self._("Plugins"), g)
 
 
 
@@ -1965,7 +1965,7 @@ class SubGet:
         try:
             self.Hooking.executeHooks(self.Hooking.getAllHooks("onGTKWindowOpen"))
         except Exception as e:
-            self.Logging.output(self._("Error")+": "+_("Cannot execute hook")+"; GTKWindowOpen; "+str(e), "warning", True)
+            self.Logging.output(self._("Error")+": "+self._("Cannot execute hook")+"; GTKWindowOpen; "+str(e), "warning", True)
 
         self.window.show_all()
 
@@ -2129,7 +2129,7 @@ class SubGet:
             elif self.plugins[Plugin].PluginInfo['API'] == 2:
                 DLResults = self.plugins[Plugin].instance.download_by_data(preferredData['data'], FileTXT)
 
-            print(self._("Subtitles saved to")+" "+str(DLResults)+", "+_("but not in your preferred language"))
+            print(self._("Subtitles saved to")+" "+str(DLResults)+", "+self._("but not in your preferred language"))
 
     def errorMessage(self, message, errType='info'):
          """ Create's error popups, created for notify plugin """
