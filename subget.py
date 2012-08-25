@@ -49,8 +49,12 @@ elif os.path.isdir("usr/share/subget/locale/"):
 else:
     incpath="/usr/share/subget/locale/";
 
-langs = ['pl_PL', 'en_US']
+langs = ['en_US', 'pl_PL']
 lc, encoding = locale.getdefaultlocale()
+
+# handle "C" language as English United States
+if "lc" == "C":
+    lc = "en_US"
 
 if (lc):
     langs = [lc]
