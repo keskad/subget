@@ -34,52 +34,12 @@ else:
 
 consoleMode=False
 action="list"
-language="pl"
-languages=['pl', 'en', 'dk']
-
-
-    ####################################
-    ##### GNU Gettext translations #####
-    ####################################
-
-if os.name == "nt":
-    incpath=winSubget+"/usr/share/subget/locale/"
-elif os.path.isdir("usr/share/subget/locale/"):
-    incpath="usr/share/subget/locale/";
-else:
-    incpath="/usr/share/subget/locale/";
-
-langs = ['en_US', 'pl_PL', 'da_DK']
-lc, encoding = locale.getdefaultlocale()
-
-# handle "C" language as English United States
-if lc == "C":
-    lc = "en_US"
-
-if (lc):
-    langs = [lc]
-else:
-    langs = ['en_US']
-    lc = "en_US"
-
-#print("Lang: "+lc)
-
-#print("Translations: "+incpath)
-gettext.bindtextdomain('subget', incpath)
-
-t = gettext.translation('subget', incpath, langs, fallback=True)
-_ = t.gettext
-
-
-    ###########################################
-    ##### End of GNU Gettext translations #####
-    ###########################################
 
 
 def usage():
     'Shows program usage and version, lists all options'
 
-    print(_("subget for GNU/Linux. Simple Subtitle Downloader for shell and GUI.\nUsage: subget [long GNU option] [option] first-file, second-file, ...\n\n\n --help                : this message\n --console, -c         : show results in console, not in graphical user interface\n --language, -l        : specify preffered language\n --quick, -q           : grab first result and download"))
+    print(self._("subget for GNU/Linux. Simple Subtitle Downloader for shell and GUI.\nUsage: subget [long GNU option] [option] first-file, second-file, ...\n\n\n --help                : this message\n --console, -c         : show results in console, not in graphical user interface\n --language, -l        : specify preffered language\n --quick, -q           : grab first result and download"))
     print("")
 
 class SubGet:
@@ -234,13 +194,54 @@ class SubGet:
                 for Option in Options:
                     self.Config[Section][Option] = Parser.get(Section, Option)
 
+        ####################################
+        ##### GNU Gettext translations #####
+        ####################################
+
+    def translateString(self, string):
+        self.gettext(string).decode("utf-8")
+
+    def loadgettext(self):
+        if os.name == "nt":
+            incpath=winSubget+"/usr/share/subget/locale/"
+        elif os.path.isdir("usr/share/subget/locale/"):
+            incpath="usr/share/subget/locale/";
+        else:
+            incpath="/usr/share/subget/locale/";
+
+        langs = ['en_US', 'pl_PL', 'da_DK']
+        lc, encoding = locale.getdefaultlocale()
+
+        # handle "C" language as English United States
+        if lc == "C":
+            lc = "en_US"
+
+        if (lc):
+            langs = [lc]
+        else:
+            langs = ['en_US']
+            lc = "en_US"
+
+        print("Subget is loading in \""+lc+"\" language.")
+
+        #print("Translations: "+incpath)
+        gettext.bindtextdomain('subget', incpath)
+
+        t = gettext.translation('subget', incpath, langs, fallback=True)
+        self.translateString = t.gettext
+
+
+        ###########################################
+        ##### End of GNU Gettext translations #####
+        ###########################################
+
     def main(self):
         """ Main function, getopt etc. """
 
         global consoleMode, action, _
 
-        self.LANG = _
-        self._ = _
+        self.loadgettext()
+        self._ = self.translateString
 
         if os.name == "nt":
             self.subgetOSPath = winSubget+"/"
@@ -253,7 +254,7 @@ class SubGet:
         try:
             opts, args = getopt.getopt(sys.argv[1:], "hcqw", ["help", "console", "quick", "language=", "watch-with-subtitles"])
         except getopt.GetoptError as err:
-            print(_('Error')+": "+str(err)+", "+_("Try --help for usage")+"\n\n")
+            print(self._('Error')+": "+str(err)+", "+_("Try --help for usage")+"\n\n")
             usage()
             sys.exit(2)
         # replace with argparse/optparse
@@ -407,8 +408,8 @@ class SubGet:
         """
 
         if not args:
-            self.Logging.output(_("No files specified in watch with subtitles."), "", False)
-            self.sendCriticAlert(_("No files specified in watch with subtitles."))
+            self.Logging.output(self._("No files specified in watch with subtitles."), "", False)
+            self.sendCriticAlert(self._("No files specified in watch with subtitles."))
             sys.exit(1)
 
         # subtitlesList
@@ -445,23 +446,23 @@ class SubGet:
                     break
 
                 if not Found:
-                    self.Logging.output(_("No subtitles found for file") + " "+args[0], "warning")
-                    self.sendCriticAlert(_("No subtitles found for file") + " "+args[0])
+                    self.Logging.output(self._("No subtitles found for file") + " "+args[0], "warning")
+                    self.sendCriticAlert(self._("No subtitles found for file") + " "+args[0])
 
                     try:
                         self.Hooking.executeHooks(self.Hooking.getAllHooks("onSubtitlesDownload"), [False, False, False, False])
                     except Exception as e:
-                        self.Logging.output(_("Error")+": "+_("Cannot execute hook")+"; onSubtitlesDownload; "+str(e), "warning", True)
+                        self.Logging.output(self._("Error")+": "+_("Cannot execute hook")+"; onSubtitlesDownload; "+str(e), "warning", True)
                 else:
                     try:
                         self.Hooking.executeHooks(self.Hooking.getAllHooks("onSubtitlesDownload"), [self.configGetKey('watch_with_subtitles', 'download_only'), File+".txt", File, True])
                     except Exception as e:
-                        self.Logging.output(_("Error")+": "+_("Cannot execute hook")+"; onSubtitlesDownload; "+str(e), "warning", True)
+                        self.Logging.output(self._("Error")+": "+_("Cannot execute hook")+"; onSubtitlesDownload; "+str(e), "warning", True)
         else:
             try:
                 self.Hooking.executeHooks(self.Hooking.getAllHooks("onSubtitlesDownload"), [False, False, False, True])
             except Exception as e:
-                self.Logging.output(_("Error")+": "+_("Cannot execute hook")+"; onSubtitlesDownload; "+str(e), "warning", True)
+                self.Logging.output(self._("Error")+": "+_("Cannot execute hook")+"; onSubtitlesDownload; "+str(e), "warning", True)
 
         return True
 
@@ -504,7 +505,7 @@ class SubGet:
 
         if "plugins" in self.Config:
             if not self.dictGetKey(self.Config['plugins'], 'list_ordering'):
-                self.Logging.output(_("Sorting disabled."), "debug", True)
+                self.Logging.output(self._("Sorting disabled."), "debug", True)
                 return True
 
         while not self.queueCount == 0:
@@ -614,7 +615,7 @@ class SubGet:
                     return
                 else:
                     self.dialog = gtk.MessageDialog(parent = None,flags = gtk.DIALOG_DESTROY_WITH_PARENT,type = gtk.MESSAGE_INFO,buttons = gtk.BUTTONS_OK,message_format = _("No subtitles selected."))
-                    self.dialog.set_title(_("Information"))
+                    self.dialog.set_title(self._("Information"))
                     self.dialog.connect('response', lambda dialog, response: self.destroyDialog())
                     self.dialog.show()
             else:
@@ -653,7 +654,7 @@ class SubGet:
 
                  w = gtk.Window(gtk.WINDOW_TOPLEVEL)
                  w.set_resizable(False)
-                 w.set_title(_("Download subtitles"))
+                 w.set_title(self._("Download subtitles"))
                  w.set_border_width(0)
                  w.set_size_request(300, 70)
 
@@ -668,7 +669,7 @@ class SubGet:
                  self.pbar.show()
 
                  # label
-                 label = gtk.Label(_("Please wait, downloading subtitles..."))
+                 label = gtk.Label(self._("Please wait, downloading subtitles..."))
                  fixed.put(label, 50,5)
                  fixed.put(self.pbar, 50,30)
 
@@ -686,14 +687,14 @@ class SubGet:
                     try:
                         self.Hooking.executeHooks(self.Hooking.getAllHooks("onSubtitlesDownload"), [False, Results, self.dictGetKey(self.subtitlesList[SelectID]['data'], 'file'), True])
                     except Exception as e:
-                        self.Logging.output(_("Error")+": "+_("Cannot execute hook")+"; onSubtitlesDownload; "+str(e), "warning", True)
+                        self.Logging.output(self._("Error")+": "+_("Cannot execute hook")+"; onSubtitlesDownload; "+str(e), "warning", True)
                         traceback.print_exc(file=sys.stdout)
 
                  else:
                     try:
                         self.Hooking.executeHooks(self.Hooking.getAllHooks("onSubtitlesDownload"), [False, False, False, False])
                     except Exception as e:
-                        self.Logging.output(_("Error")+": "+_("Cannot execute hook")+"; onSubtitlesDownload; "+str(e), "warning", True)
+                        self.Logging.output(self._("Error")+": "+_("Cannot execute hook")+"; onSubtitlesDownload; "+str(e), "warning", True)
 
                  w.destroy()
 
@@ -770,7 +771,7 @@ class SubGet:
                 stack = StringIO.StringIO()
                 traceback.print_exc(file=stack)
                 self.plugins[Plugin] = str(errno)
-                self.Logging.output(_("ERROR: Cannot import")+" "+Plugin+" ("+str(errno)+")\n"+str(stack.getvalue()), "warning", True)
+                self.Logging.output(self._("ERROR: Cannot import")+" "+Plugin+" ("+str(errno)+")\n"+str(stack.getvalue()), "warning", True)
                 
                 return False
 
@@ -830,10 +831,10 @@ class SubGet:
                     menu = gtk.Menu() 
 
                     if self.plugins[Plugin] == 'Disabled':
-                        Deactivate = gtk.MenuItem(_("Activate plugin"))
+                        Deactivate = gtk.MenuItem(self._("Activate plugin"))
                         Deactivate.connect("activate", self.togglePlugin, Plugin, 'activate', liststore)
                     else:
-                        Deactivate = gtk.MenuItem(_("Deactivate plugin"))
+                        Deactivate = gtk.MenuItem(self._("Deactivate plugin"))
                         Deactivate.connect("activate", self.togglePlugin, Plugin, 'deactivate', liststore)
 
                         if self.plugins[Plugin].PluginInfo['API'] > 1:
@@ -845,7 +846,7 @@ class SubGet:
                                     customItem.connect("activate", option[1], option[2])
                                     menu.append(customItem)
                                 except Exception as e:
-                                    self.Logging.output(_("Cannot add custom menu")+". "+_("plugin")+": "+Plugin+", "+_("exception")+": "+str(e))
+                                    self.Logging.output(self._("Cannot add custom menu")+". "+_("plugin")+": "+Plugin+", "+_("exception")+": "+str(e))
 
                     menu.append(Deactivate)
                     menu.show_all()
@@ -919,7 +920,7 @@ class SubGet:
                 return False
 
             window = gtk.Window(gtk.WINDOW_TOPLEVEL)
-            window.set_title(_("Plugins"))
+            window.set_title(self._("Plugins"))
             window.set_resizable(True)
             window.set_size_request(700, 290)
             window.set_icon_from_file(self.subgetOSPath+"/usr/share/subget/icons/plugin.png")
@@ -1048,7 +1049,7 @@ class SubGet:
                 return False
 
             about = gtk.Window(gtk.WINDOW_TOPLEVEL)
-            about.set_title(_("About Subget"))
+            about.set_title(self._("About Subget"))
             about.set_resizable(False)
             about.set_size_request(600,550)
             about.set_icon_from_file(self.subgetOSPath+"/usr/share/subget/icons/Subget-logo.png")
@@ -1063,12 +1064,12 @@ class SubGet:
             fixed.put(logo, 12, 20)
 
             # title
-            title = gtk.Label(_("About Subget"))
+            title = gtk.Label(self._("About Subget"))
             title.modify_font(FontDescription("sans 18"))
             fixed.put(title, 150, 20)
 
             # description title
-            description = gtk.Label(_("Small, multiplatform and portable Subtitles downloader \nwritten in Python and GTK.\nWorks on most Unix systems, based on Linux kernel and on Windows NT.\nThis program is a free software licensed on GNU General Public License v3."))
+            description = gtk.Label(self._("Small, multiplatform and portable Subtitles downloader \nwritten in Python and GTK.\nWorks on most Unix systems, based on Linux kernel and on Windows NT.\nThis program is a free software licensed on GNU General Public License v3."))
             description.modify_font(FontDescription("sans 8"))
             fixed.put(description, 150, 60)
 
@@ -1186,7 +1187,7 @@ class SubGet:
                 return False
 
             self.sm = gtk.Window(gtk.WINDOW_TOPLEVEL)
-            self.sm.set_title(_("Search"))
+            self.sm.set_title(self._("Search"))
             self.sm.set_size_request(450, 180)
             self.sm.set_resizable(False)
             self.sm.set_icon_from_file(self.subgetOSPath+"/usr/share/subget/icons/Subget-logo.png")
@@ -1195,7 +1196,7 @@ class SubGet:
             self.sm.fixed = gtk.Fixed()
 
             # informations
-            self.sm.label = gtk.Label(_("Select website to search subtitles on.\nNote: not all websites supports searching subtitles by keywords."))
+            self.sm.label = gtk.Label(self._("Select website to search subtitles on.\nNote: not all websites supports searching subtitles by keywords."))
 
             # text query
             self.sm.entry = gtk.Entry()
@@ -1205,7 +1206,7 @@ class SubGet:
 
             # combo box with plugin selection
             self.sm.cb = gtk.combo_box_new_text()
-            self.sm.cb.append_text(_("All"))
+            self.sm.cb.append_text(self._("All"))
             self.sm.plugins = dict()
 
             for Plugin in self.pluginsList:
@@ -1226,7 +1227,7 @@ class SubGet:
 
 
             # search button
-            self.sm.searchButton = gtk.Button(_("Search"))
+            self.sm.searchButton = gtk.Button(self._("Search"))
             self.sm.searchButton.set_size_request(80, 35)
 
             image = gtk.Image() # image for button
@@ -1235,7 +1236,7 @@ class SubGet:
             self.sm.searchButton.connect('clicked', self.gtkDoSearch)
 
             # cancel button
-            self.sm.cancelButton = gtk.Button(_("Cancel"))
+            self.sm.cancelButton = gtk.Button(self._("Cancel"))
             self.sm.cancelButton.set_size_request(80, 35)
             self.sm.cancelButton.connect('clicked', self.closeWindow, False, self.sm, 'gtkSearchMenu')
 
@@ -1244,7 +1245,7 @@ class SubGet:
             self.sm.cancelButton.set_image(image)
 
             # list clearing check box
-            self.sm.clearCB = gtk.CheckButton(_("Clear list before search"))
+            self.sm.clearCB = gtk.CheckButton(self._("Clear list before search"))
 
             self.sm.fixed.put(self.sm.label, 10, 8)
             self.sm.fixed.put(self.sm.entry, 10, 60)
@@ -1344,12 +1345,12 @@ class SubGet:
             Output += "\n"
 
         try:
-            self.Logging.output(_("Saving to")+" ~/.subget/config", "debug", True)
+            self.Logging.output(self._("Saving to")+" ~/.subget/config", "debug", True)
             Handler = open(os.path.expanduser("~/.subget/config"), "wb")
             Handler.write(Output)
             Handler.close()
         except Exception as e:
-            self.Logging.output(_("Error, cannot save to")+" ~/.subget/config, "+str(e), "critical", True)
+            self.Logging.output(self._("Error, cannot save to")+" ~/.subget/config, "+str(e), "critical", True)
 
     def gtkPreferences(self, aid=''):
         #self.sendCriticAlert("Sorry, this feature is not implemented yet.")
@@ -1360,7 +1361,7 @@ class SubGet:
         self.Windows['preferences'] = True
 
         self.winPreferences = gtk.Window(gtk.WINDOW_TOPLEVEL)
-        self.winPreferences.set_title(_("Settings"))
+        self.winPreferences.set_title(self._("Settings"))
         self.winPreferences.set_resizable(False)
         self.winPreferences.set_size_request(600, 400)
         self.winPreferences.set_icon_from_file(self.subgetOSPath+"/usr/share/subget/icons/Subget-logo.png")
@@ -1397,7 +1398,7 @@ class SubGet:
         try:
             self.Hooking.executeHooks(self.Hooking.getAllHooks("onPreferencesOpen"))
         except Exception as e:
-            self.Logging.output(_("Error")+": "+_("Cannot execute hook")+"; onPreferencesOpen; "+str(e), "warning", True)
+            self.Logging.output(self._("Error")+": "+_("Cannot execute hook")+"; onPreferencesOpen; "+str(e), "warning", True)
 
         return True
 
@@ -1410,10 +1411,10 @@ class SubGet:
 
         try:
             self.Config[Section][Option] = Value
-            self.Logging.output(_("Setting config values: ")+ Section+"->"+Option+" = \""+str(Value)+"\"", "debug", False)
+            self.Logging.output(self._("Setting config values: ")+ Section+"->"+Option+" = \""+str(Value)+"\"", "debug", False)
             #print("SET to "+str(Value))
         except Exception as e:
-            self.Logging.output(_("Error setting configuration variable:")+" "+Section+"->"+Option+" = \""+str(Value)+"\". "+_("Error")+": "+str(e), "warning", True)
+            self.Logging.output(self._("Error setting configuration variable:")+" "+Section+"->"+Option+" = \""+str(Value)+"\". "+_("Error")+": "+str(e), "warning", True)
 
     def revertBool(self, boolean):
         if boolean == "True" or boolean == True:
@@ -1461,7 +1462,7 @@ class SubGet:
         # "General" preferences
         Path = os.path.expanduser("~/")
 
-        Label1 = gtk.Label(_("File managers popup menu integration"))
+        Label1 = gtk.Label(self._("File managers popup menu integration"))
         Label1.set_alignment (0, 0)
         Label1.show()
 
@@ -1569,26 +1570,26 @@ class SubGet:
         Path = os.path.expanduser("~/")
 
         WWS = gtk.Fixed()
-        Label1 = gtk.Label(_("\"Watch with subtitles\" settings"))
+        Label1 = gtk.Label(self._("\"Watch with subtitles\" settings"))
         Label1.set_alignment (0, 0)
         Label1.show()
 
         # Filemanagers
 
         # ==== Download only option
-        downloadOnly = gtk.CheckButton(_("Never launch movie, just download subtitles"))
+        downloadOnly = gtk.CheckButton(self._("Never launch movie, just download subtitles"))
         downloadOnly.connect("pressed", self.configSetButton, 'watch_with_subtitles', 'download_only', downloadOnly, True)
         downloadOnly.set_sensitive(True)
         downloadOnly.set_active(bool(self.configGetKey('watch_with_subtitles', 'download_only')))
 
         # ==== Only preferred language
-        only_preferred_language = gtk.CheckButton(_("Download subtitles only in preferred language"))
+        only_preferred_language = gtk.CheckButton(self._("Download subtitles only in preferred language"))
         only_preferred_language.connect("pressed", self.configSetButton, 'watch_with_subtitles', 'only_preferred_language', only_preferred_language, True)
         only_preferred_language.set_sensitive(True)
         only_preferred_language.set_active(bool(self.configGetKey('watch_with_subtitles', 'only_preferred_language')))
 
         # ==== Selection of preferred language
-        Label2 = gtk.Label(_("Preferred language:"))
+        Label2 = gtk.Label(self._("Preferred language:"))
 
         liststore = gtk.ListStore(gtk.gdk.Pixbuf, str)
         languages = os.listdir(self.getPath("/usr/share/subget/icons/flags"))
@@ -1646,11 +1647,11 @@ class SubGet:
 
     def gtkPreferencesPlugins(self):
         g = gtk.Fixed()
-        Label = gtk.Label(_("List ordering"))
+        Label = gtk.Label(self._("List ordering"))
         Label.set_alignment (0, 0)
 
         # Sorting
-        AllowSorting = gtk.CheckButton(_("Sort search results by plugins list"))
+        AllowSorting = gtk.CheckButton(self._("Sort search results by plugins list"))
         if self.configGetKey('plugins', 'list_ordering') == "True":
             AllowSorting.set_active(1)
         else:
@@ -1659,7 +1660,7 @@ class SubGet:
         AllowSorting.connect("toggled", self.configSetButton, 'plugins', 'list_ordering', AllowSorting)
 
         # Global settings
-        Label2 = gtk.Label(_("Extensions global settings"))
+        Label2 = gtk.Label(self._("Extensions global settings"))
         adj = gtk.Adjustment(1.0, 1.0, 30.0, 1.0, 1.0, 1.0)
         adj.connect("value_changed", self.gtkPreferencesPlugins_Scale)
         scale = gtk.HScale(adj)
@@ -1671,7 +1672,7 @@ class SubGet:
             adj.set_value(scaleValue)
 
 
-        Label3 = gtk.Label(_("Timeout waiting for connection")+":")
+        Label3 = gtk.Label(self._("Timeout waiting for connection")+":")
         
         # put all elements
         g.put(Label, 10, 8)
@@ -1769,7 +1770,7 @@ class SubGet:
         # Create a new window
         self.window = gtk.Window(gtk.WINDOW_TOPLEVEL)
         self.screen = self.window.get_screen()
-        self.window.set_title(_("Download subtitles"))
+        self.window.set_title(self._("Download subtitles"))
         self.window.set_resizable(True)
 
         # make the application bigger if it will fit on screen
@@ -1805,18 +1806,18 @@ class SubGet:
 
         # "File" menu
         self.window.Menubar.elementsArray['fileMenu'] = gtk.Menu()
-        self.window.Menubar.elementsArray['fileMenuItem'] = gtk.MenuItem(_("File"))
+        self.window.Menubar.elementsArray['fileMenuItem'] = gtk.MenuItem(self._("File"))
         self.window.Menubar.elementsArray['fileMenuItem'].set_submenu(self.window.Menubar.elementsArray['fileMenu'])
         self.window.Menubar.append(self.window.Menubar.elementsArray['fileMenuItem'])
 
         # "Tools" menu
         self.window.Menubar.elementsArray['toolsMenu'] = gtk.Menu()
-        self.window.Menubar.elementsArray['toolsMenuItem'] = gtk.MenuItem(_("Tools"))
+        self.window.Menubar.elementsArray['toolsMenuItem'] = gtk.MenuItem(self._("Tools"))
         self.window.Menubar.elementsArray['toolsMenuItem'].set_submenu(self.window.Menubar.elementsArray['toolsMenu'])
         self.window.Menubar.append(self.window.Menubar.elementsArray['toolsMenuItem'])
 
         # "Plugins list"
-        pluginMenu = gtk.ImageMenuItem(_("Plugins"), self.window.agr)
+        pluginMenu = gtk.ImageMenuItem(self._("Plugins"), self.window.agr)
         key, mod = gtk.accelerator_parse("<Control>P")
         pluginMenu.add_accelerator("activate", self.window.agr, key,mod, gtk.ACCEL_VISIBLE)
         pluginMenu.connect("activate", self.gtkPluginMenu)
@@ -1846,8 +1847,8 @@ class SubGet:
         except Exception:
             pixbuf = ''
 
-        self.interfaceAddIcon(_("About Subget"), self.gtkAboutMenu, "toolsMenu", "about", pixbuf, '', True, True, False)
-        self.interfaceAddIcon(_("Clear list"), self.cleanUpResults, "toolsMenu", "clear", gtk.STOCK_CLEAR, '<Control>L', True, True, False)
+        self.interfaceAddIcon(self._("About Subget"), self.gtkAboutMenu, "toolsMenu", "about", pixbuf, '', True, True, False)
+        self.interfaceAddIcon(self._("Clear list"), self.cleanUpResults, "toolsMenu", "clear", gtk.STOCK_CLEAR, '<Control>L', True, True, False)
 
         # Preferences
         self.interfaceAddIcon(gtk.STOCK_PREFERENCES, self.gtkPreferences, "toolsMenu", "preferences", gtk.STOCK_PREFERENCES, '<Control>P', True, True, True)
@@ -1865,9 +1866,9 @@ class SubGet:
 
 
         # column list
-        self.tvcolumn = gtk.TreeViewColumn(_("Language"))
-        self.tvcolumn1 = gtk.TreeViewColumn(_("Name of release"))
-        self.tvcolumn2 = gtk.TreeViewColumn(_("Server"))
+        self.tvcolumn = gtk.TreeViewColumn(self._("Language"))
+        self.tvcolumn1 = gtk.TreeViewColumn(self._("Name of release"))
+        self.tvcolumn2 = gtk.TreeViewColumn(self._("Server"))
 
         # Resizable attributes
         self.tvcolumn1.set_resizable(True)
@@ -1905,7 +1906,7 @@ class SubGet:
 
         # Create buttons
         self.DownloadButton = gtk.Button(stock=gtk.STOCK_GO_DOWN)
-        self.DownloadButton.set_label(_("Download"))
+        self.DownloadButton.set_label(self._("Download"))
         image = gtk.Image()
         image.set_from_stock("gtk-go-down", gtk.ICON_SIZE_BUTTON)
         self.DownloadButton.set_image(image)
@@ -1964,7 +1965,7 @@ class SubGet:
         try:
             self.Hooking.executeHooks(self.Hooking.getAllHooks("onGTKWindowOpen"))
         except Exception as e:
-            self.Logging.output(_("Error")+": "+_("Cannot execute hook")+"; GTKWindowOpen; "+str(e), "warning", True)
+            self.Logging.output(self._("Error")+": "+_("Cannot execute hook")+"; GTKWindowOpen; "+str(e), "warning", True)
 
         self.window.show_all()
 
@@ -2112,7 +2113,7 @@ class SubGet:
                             elif self.plugins[Plugin].PluginInfo['API'] == 2:
                                 DLResults = self.plugins[Plugin].instance.download_by_data(Results[0][0]['data'], FileTXT)
 
-                            print(_("Subtitles saved to")+" "+str(DLResults))
+                            print(self._("Subtitles saved to")+" "+str(DLResults))
                             Found = True
                             break
                         elif preferredData is not None:
@@ -2128,7 +2129,7 @@ class SubGet:
             elif self.plugins[Plugin].PluginInfo['API'] == 2:
                 DLResults = self.plugins[Plugin].instance.download_by_data(preferredData['data'], FileTXT)
 
-            print(_("Subtitles saved to")+" "+str(DLResults)+", "+_("but not in your preferred language"))
+            print(self._("Subtitles saved to")+" "+str(DLResults)+", "+_("but not in your preferred language"))
 
     def errorMessage(self, message, errType='info'):
          """ Create's error popups, created for notify plugin """
