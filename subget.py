@@ -53,11 +53,13 @@ langs = ['en_US', 'pl_PL']
 lc, encoding = locale.getdefaultlocale()
 
 # handle "C" language as English United States
-if "lc" == "C":
+if lc == "C":
     lc = "en_US"
 
 if (lc):
     langs = [lc]
+else:
+    langs = ['en_US']
 
 #print("Translations: "+incpath)
 gettext.bindtextdomain('subget', incpath)

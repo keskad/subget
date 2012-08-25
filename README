@@ -20,6 +20,9 @@ Video Player option allows easily play movie using favorite media player right a
 Requirements: GTK+, Python 2.6/2.7/3.0/3.1/3.2, X11, PyGTK, python-dbus, python-gettext, p7zip (Gentoo: app-arch/p7zip, Debian/Ubuntu: p7zip-full)
 
 * Changelog:
+25.08.2012 (v.1.6) <webnull.www@gmail.com>:
+    * Finally fixed language selection, now supports en_US, pl_PL and C without problems, default is en_US when no supported language found
+
 25.08.2012 (v.1.5.7) <webnull.www@gmail.com>:
     * Fixed handling of English language and "C" system language
 
