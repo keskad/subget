@@ -35,7 +35,7 @@ else:
 consoleMode=False
 action="list"
 language="pl"
-languages=['pl', 'en']
+languages=['pl', 'en', 'dk']
 
 
     ####################################
@@ -49,7 +49,7 @@ elif os.path.isdir("usr/share/subget/locale/"):
 else:
     incpath="/usr/share/subget/locale/";
 
-langs = ['en_US', 'pl_PL']
+langs = ['en_US', 'pl_PL', 'da_DK']
 lc, encoding = locale.getdefaultlocale()
 
 # handle "C" language as English United States
@@ -60,6 +60,8 @@ if (lc):
     langs = [lc]
 else:
     langs = ['en_US']
+
+print("Lang: "+lc)
 
 #print("Translations: "+incpath)
 gettext.bindtextdomain('subget', incpath)
@@ -1075,11 +1077,11 @@ class SubGet:
             notebook.show_tabs = True
             notebook.set_size_request(580, 370)
             notebook.set_border_width(0) 
-            self.gtkAddTab(notebook, _("Team"), _("Programming")+":\n WebNuLL <http://webnull.kablownia.org>\n\n"+_("Testing")+":\n Tiritto <http://dawid-niedzwiedzki.pl>\n WebNuLL <http://webnull.kablownia.org>\n\n"+_("Special thanks")+":\n iluzion <http://dobreprogramy.pl/iluzion>\n famfamfam <http://famfamfam.com>")
+            self.gtkAddTab(notebook, _("Team"), _("Programming")+":\n WebNuLL <http://webnull.kablownia.org>\n\n"+_("Testing")+":\n Tiritto <http://dawid-niedzwiedzki.pl>\n Patrick Damgaard Pedersen <totex71782{at}gmail{dot}com>\n WebNuLL <http://webnull.kablownia.org>\n\n"+_("Special thanks")+":\n iluzion <http://dobreprogramy.pl/iluzion>\n famfamfam <http://famfamfam.com>")
 
             self.gtkAddTab(notebook, _("License"), _("This program was published on Free and Open Software license.\n\nConditions:\n - You have right to share this program in original or modified form\n - You are free to run this program in any purpose\n - You are free to view and modify the source code in any purpose\n - You have right to translate this program to any language you want\n - You must leave a note about original author when modifying or sharing this software\n - The program must remain on the same license when editing or sharing\n\n\nProgram license: GNU General Public License 3 (GNU GPLv3)"))
 
-            self.gtkAddTab(notebook, _("Translating"), "English:\n WebNuLL <http://webnull.kablownia.org>\n\nPolski:\n WebNuLL <http://webnull.kablownia.org>")
+            self.gtkAddTab(notebook, _("Translating"), "English:\n WebNuLL <http://webnull.kablownia.org>\n\nPolski:\n WebNuLL <http://webnull.kablownia.org>\n\nDansk:\n Patrick Damgaard Pedersen <totex71782{at}gmail{dot}com>")
 
 
             if not os.path.isfile(self.subgetOSPath+"/usr/share/subget/version.xml"):

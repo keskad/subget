@@ -6,7 +6,7 @@
 		<platform>Windows</platform>
 	</platforms>
 
-	<version>1.6</version>
+	<version>1.6.1</version>
 	<mirrors>
 		<mirror>git://github.com/webnull/subget.git</mirror>
 	</mirrors>

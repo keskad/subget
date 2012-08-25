@@ -1,0 +1,325 @@
+# Converted using alang_to_gettext.py from Subget tools
+
+msgid "subget for GNU/Linux. Simple Subtitle Downloader for shell and GUI.\nUsage: subget [long GNU option] [option] first-file, second-file, ...\n\n\n --help                : this message\n --console, -c         : show results in console, not in graphical user interface\n --language, -l        : specify preffered language\n --quick, -q           : grab first result and download"
+msgstr "subget dla GNU/Linux. Prosty program do pobierania napisów z interfejsem tekstowym oraz graficznym.\nUżycie: subget [long GNU option] [option] pierwszy-plik, drugi-plik, ...\n\n\n --help                : ta wiadomość\n --console, -c         : pokazuje wyniki w konsoli zamiast w graficznym okienku\n --language, -l        : wybierz preferowany język\n --quick, -q           : wybierz pierwszy znaleziony wynik"
+
+msgid "Try --help for usage"
+msgstr "Spróbuj użyć --help aby wyświetlić możliwe opcje"
+
+msgid "Error"
+msgstr "Błąd"
+
+msgid "Error: Can't open plugins dir. Check if"
+msgstr "Błąd: Nie można otworzyć katalogu z wtyczkami, sprawdź czy ścieżka"
+
+msgid "is correct path."
+msgstr "jest poprawna."
+
+msgid "ERROR: Cannot import"
+msgstr "Błąd: Nie można zaimportować wtyczki"
+
+msgid "no any subtitles found"
+msgstr "brak wyników"
+
+msgid "found subtitles"
+msgstr "odnaleziono napisy"
+
+msgid "Where to save the subtitles?"
+msgstr "Gdzie zapisać napisy?"
+
+msgid "not found in a list, its wired"
+msgstr "nie odnaleziono na liście, to dziwne..."
+
+msgid "Download subtitles"
+msgstr "This is a test of Danish, this all will be translated"
+
+msgid "Please wait, downloading subtitles..."
+msgstr "Trwa pobieranie, proszę czekać..."
+
+msgid "Language"
+msgstr "Język"
+
+msgid "Name of release"
+msgstr "Nazwa wydania"
+
+msgid "Server"
+msgstr "Serwer"
+
+msgid "Sorry, GUI mode is not fully available yet."
+msgstr "Przykro mi, ale GUI nie jest jeszcze skończone aby można go używać."
+
+msgid "Download"
+msgstr "Pobierz napisy"
+
+msgid "Information"
+msgstr "Informacja"
+
+msgid "No subtitles selected."
+msgstr "Nie wybrano napisów."
+
+msgid "Subtitles saved to"
+msgstr "Pobrano napisy do pliku"
+
+msgid "but not in your preferred language"
+msgstr "niestety nie znaleziono preferowanej wersji językowej"
+
+msgid "Please select video files"
+msgstr "Proszę wybrać pliki wideo"
+
+msgid "File"
+msgstr "Plik"
+
+msgid "About Subget"
+msgstr "Subget - informacje"
+
+msgid "Small, multiplatform and portable Subtitles downloader \nwritten in Python and GTK.\nWorks on most Unix systems, based on Linux kernel and on Windows NT.\nThis program is a free software licensed on GNU General Public License v3."
+msgstr "Mała, przenośna aplikacja do pobierania napisów filmowych\nnapisana w Pythonie z użyciem GTK.\nDziała na większości Uniksowych systemów w tym i na systemach\nopartych o jądro Linux, oraz Windows NT.\nWydano na wolnej licencji GNU General Public License v3.\nTen program jest Wolnym i Otwartym Oprogramowaniem."
+
+msgid "Team"
+msgstr "Zasługi"
+
+msgid "Programming"
+msgstr "Programowanie"
+
+msgid "Testing"
+msgstr "Testowanie"
+
+msgid "Special thanks"
+msgstr "Specjalne podziękowania"
+
+msgid "License"
+msgstr "Licencja"
+
+msgid "This program was published on Free and Open Software license.\n\nConditions:\n - You have right to share this program in original or modified form\n - You are free to run this program in any purpose\n - You are free to view and modify the source code in any purpose\n - You have right to translate this program to any language you want\n - You must leave a note about original author when modifying or sharing this software\n - The program must remain on the same license when editing or sharing\n\n\nProgram license: GNU General Public License 3 (GNU GPLv3)"
+msgstr "Ten program został udostępniony na licencji Wolnego Oprogramowania.\n\n\nWarunki:\n - Możesz dowolnie rozprowadzać program w postaci oryginalnej bądź zmodyfikowanej\n - Możesz uruchamiać to oprogramowanie w dowolnym celu niezależnie od sytuacji\n - Masz prawo do wglądu w kod źródłowy programu oraz jego modyfikację w dowolnym celu\n - Masz prawo do tłumaczenia programu na dowolny język\n - Masz obowiązek zachować wzmiankę o oryginalnym autorze\n - Rozpowszechniać program można tylko i wyłącznie zachowując warunki oryginalnej licencji\n\n\nLicencja programu: GNU General Public License 3 (GNU GPLv3)"
+
+msgid "Translating"
+msgstr "Tłumaczenie"
+
+msgid "Tools"
+msgstr "Narzędzia"
+
+msgid "Operating system"
+msgstr "System operacyjny"
+
+msgid "Authors"
+msgstr "Zasługi"
+
+msgid "API interface version"
+msgstr "Wersja interfejsu API"
+
+msgid "Unknown"
+msgstr "Nieznane"
+
+msgid "Plugins"
+msgstr "Wtyczki"
+
+msgid "Plugin"
+msgstr "Wtyczka"
+
+msgid "Search"
+msgstr "Szukaj"
+
+msgid "Select website to search subtitles on.\nNote: not all websites supports searching subtitles by keywords."
+msgstr "Wybierz serwis z napisami do przeszukania.\nNie każdy serwis obsługuje wyszukiwanie po słowach kluczowych."
+
+msgid "All"
+msgstr "Wszystkie"
+
+msgid "Cancel"
+msgstr "Anuluj"
+
+msgid "Clear list before search"
+msgstr "Wyczyść listę wyników"
+
+msgid "Clear list"
+msgstr "Wyczyść listę"
+
+msgid "Searching by keywords is not supported by this plugin"
+msgstr "Funkcja wyszukiwania po słowach kluczowych jest niedostępna dla tej wtyczki"
+
+msgid "icon does not exists, using unknown.xpm"
+msgstr "nie istnieje, użyję domyślnej unknown.xpm"
+
+msgid "Error setting configuration variable:"
+msgstr "Wystąpił błąd podczas ustawiania zmiennej w konfiguracji:"
+
+msgid "File managers popup menu integration"
+msgstr "Integracja z menu kontekstowym menadżerów plików"
+
+msgid "Video Player settings"
+msgstr "Ustawienia odtwarzacza filmowego"
+
+msgid "System's default"
+msgstr "Domyślny systemowy"
+
+msgid "Start automaticaly when program runs"
+msgstr "Automatyczne uruchamianie odtwarzacza filmowego"
+
+msgid "System integration"
+msgstr "Integracja systemowa"
+
+msgid "Start video player"
+msgstr "Uruchom odtwarzacz filmowy"
+
+msgid "Only one instance (graphical window) of Subget can be running at once by one user."
+msgstr "Tylko jedna graficzna kopia programu Subget może być uruchomiona w tym samym czasie przez jednego użytkownika."
+
+msgid "List ordering"
+msgstr "Sortowanie listy"
+
+msgid "Sort search results by plugins list"
+msgstr "Sortuj wyniki wyszukiwania według listy wtyczek"
+
+msgid "Extensions global settings"
+msgstr "Globalne ustawienia wtyczek"
+
+msgid "Timeout waiting for connection"
+msgstr "Maksymalny czas oczekiwania na połączenie"
+
+msgid "Saving to"
+msgstr "Zapisuję do"
+
+msgid "Cannot save to file"
+msgstr "Niemożna zapisać konfiguracji do"
+
+msgid "for more details please check this message"
+msgstr "po więcej szczegółów proszę sprawdzić ten komunikat"
+
+msgid "Settings"
+msgstr "Ustawienia"
+
+msgid "Activate plugin"
+msgstr "Aktywuj wtyczkę"
+
+msgid "Deactivate plugin"
+msgstr "Dezaktywuj wtyczkę"
+
+msgid "Version"
+msgstr "Wersja"
+
+msgid "Version information can't be read because file /usr/share/subget/version.xml is missing."
+msgstr "Informacje na temat wersji niedostępne z powodu braku pliku /usr/share/subget/version.xml"
+
+msgid "Version information can't be read because there was a problem parsing file /usr/share/subget/version.xml"
+msgstr "Informacje na temat wersji niedostępne z powodu błędu w pliku /usr/share/subget/version.xml"
+
+msgid "Supported platforms"
+msgstr "Obsługiwane platformy"
+
+msgid "Project developers"
+msgstr "Deweloperzy projektu"
+
+msgid "Contact"
+msgstr "Kontakt"
+
+msgid "Watch with subtitles"
+msgstr "Obejrzyj z napisami"
+
+msgid "\"Watch with subtitles\" settings"
+msgstr "Ustawienia funkcji \"Obejrzyj z napisami\""
+
+msgid "Never launch movie, just download subtitles"
+msgstr "Gdy wybrano tylko jeden plik nie odtwarzaj filmu"
+
+msgid "Download subtitles only in preferred language"
+msgstr "Pobieraj tłumaczenia tylko w preferowanym języku"
+
+msgid "Preferred language:"
+msgstr "Preferowany język:"
+
+msgid "Added new files to existing list."
+msgstr "Dodaję nowe pliki do istniejącej listy w innym oknie programu."
+
+msgid "No files specified in watch with subtitles."
+msgstr "Nie określono plików do przetworzenia dla funkcji watch with subtitles."
+
+msgid "Sorting disabled."
+msgstr "Sortowanie wyłączone."
+
+msgid "Error, cannot save to"
+msgstr "Wystąpił błąd, nie można zapisać do"
+
+msgid "Cannot execute hook"
+msgstr "Nie można wykonać zaczepionej funkcji"
+
+msgid "icon file not found"
+msgstr "- plik ikony nie został odnaleziony"
+
+msgid "Console"
+msgstr "Konsola"
+
+msgid "Show console on Subget startup"
+msgstr "Otwórz okno konsoli przy starcie programu Subget"
+
+msgid "Remeber window size"
+msgstr "Zapamiętaj rozmiar okna"
+
+msgid "Remember window position"
+msgstr "Zapamiętaj pozycję"
+
+msgid "Setting config values"
+msgstr "Ustawiam wartości konfiguracyjne"
+
+msgid "Errorlevel outside of internal console:"
+msgstr "Pokazuj błędy o poniższym poziomie poza wewnętrzną konsolą:"
+
+msgid "Subtitles cannot be downloaded, see console for details"
+msgstr "Napisy mogły zostać pobrane, proszę sprawdzić konsolę aby zobaczyć szczegóły"
+
+msgid "Downloaded subtitles for file"
+msgstr "Pobrano napisy dla pliku"
+
+msgid "Subtitles downloaded"
+msgstr "Napisy zostały pobrane"
+
+msgid "Cannot identify system notification"
+msgstr "Nie można zidentyfikować interfejsu powiadomień, zostaną one wyłączone"
+
+msgid "Have a nice time watching the movie!"
+msgstr "Miłego oglądania!"
+
+msgid "One of plugins cannot finish its job, cancelling."
+msgstr "Jedna z wtyczek nie może poprawnie zakończyć działania, anulowanie."
+
+msgid "Downloading to"
+msgstr "Pobieranie do"
+
+msgid "No subtitles found for file"
+msgstr "Nie odnaleziono pasujących napisów dla pliku"
+
+msgid "Error trying to get list of subtitles from"
+msgstr "Wystąpił błąd podczas próby uzyskania listy napisów z wtyczki"
+
+msgid "Show console"
+msgstr "Pokaż konsolę"
+
+msgid "Send"
+msgstr "Wyślij"
+
+msgid "Cannot add custom menu"
+msgstr "Nie można dodać menu wtyczki"
+
+msgid "Interface"
+msgstr "Interfejs"
+
+msgid "Show toolbar"
+msgstr "Pokaż pasek narzędziowy"
+
+msgid "requires restart"
+msgstr "wymagany restart"
+
+msgid "About"
+msgstr "O programie"
+
+msgid "Select file"
+msgstr "Wybierz plik"
+
+msgid "Show main window"
+msgstr "Pokaż główne okno"
+
+msgid "Hide main window"
+msgstr "Ukryj główne okno"
+
+msgid "Remember history"
+msgstr "Zapamiętuj historię"
