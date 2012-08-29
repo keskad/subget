@@ -54,6 +54,8 @@ then
     msgfmt usr/share/subget/locale/pl/LC_MESSAGES/subget-src.po -o usr/share/subget/locale/pl/LC_MESSAGES/subget.mo
     msgfmt usr/share/subget/locale/da/LC_MESSAGES/subget-src.po -o usr/share/subget/locale/da/LC_MESSAGES/subget.mo
     cp subget.py /usr/local/bin/subget
+    cp subget-translator.py /usr/local/bin/subget-translator
+    chmod +x /usr/local/bin/subget-translator
     chmod +x /usr/local/bin/subget
     echo "Installation done."
 
@@ -69,7 +71,9 @@ then
     msgfmt usr/share/subget/locale/pl/LC_MESSAGES/subget-src.po -o usr/share/subget/locale/pl/LC_MESSAGES/subget.mo
     msgfmt usr/share/subget/locale/da/LC_MESSAGES/subget-src.po -o usr/share/subget/locale/da/LC_MESSAGES/subget.mo
     cp subget.py /usr/bin/subget
+    cp subget-translator.py /usr/bin/subget-translator
     chmod +x /usr/bin/subget 
+    chmod +x /usr/bin/subget-translator
     echo "Installation done."
     exit
 fi
