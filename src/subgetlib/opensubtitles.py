@@ -50,8 +50,6 @@ class PluginMain(subgetcore.SubgetPlugin):
             if not 'SubLanguageID' in subtitle:
                 continue
 
-            print subtitle
-
             if str(subtitle['SubLanguageID']) in self.LanguageTable:
                 subtitle['SubLanguageID'] = self.LanguageTable[subtitle['SubLanguageID'].lower()]
 

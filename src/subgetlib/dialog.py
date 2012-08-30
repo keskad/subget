@@ -55,15 +55,29 @@ class PluginMain(subgetcore.SubgetPlugin):
             self.selectXmessage()
             return True
 
-        if self.Subget.getFile({"/usr/bin/zenity", "/usr/local/bin/zenity"}):
+        # Python 2.6 compatibility
+        t = list()
+        t.append('/usr/bin/zenity')
+        t.append('/usr/local/bin/zenity')
+
+        if self.Subget.getFile(t):
             self.selectZenity()
             return True
 
-        elif self.Subget.getFile({"/usr/bin/kdialog", "/usr/local/bin/kdialog"}):
+        t = list()
+        t.append('/usr/bin/kdialog')
+        t.append('/usr/local/bin/kdialog')
+
+        if self.Subget.getFile(t):
             self.selectKdialog()
             return True
 
-        elif self.Subget.getFile({"/usr/bin/xmessage", "/usr/local/bin/xmessage"}):
+
+        t = list()
+        t.append('/usr/bin/xmessage')
+        t.append('/usr/local/bin/xmessage')
+
+        if self.Subget.getFile({"/usr/bin/xmessage", "/usr/local/bin/xmessage"}):
             self.selectXmessage()
             return True
 

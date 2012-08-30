@@ -55,7 +55,7 @@ def getListOfSubtitles(movieRealName, File):
         response = conn.getresponse()
         data = response.read()
     except Exception:
-        print "[plugin:napisy_info] Connection timed out"
+        print("[plugin:napisy_info] Connection timed out")
         return False
 
     dom = minidom.parseString(data)
@@ -92,7 +92,7 @@ def getMovieName(parsedFileName):
        response = conn.getresponse()
        data = response.read()
     except Exception:
-        print "[plugin:napisy_info] Connection timed out"
+        print("[plugin:napisy_info] Connection timed out")
         return False
 
     dom = minidom.parseString(data)

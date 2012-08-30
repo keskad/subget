@@ -92,7 +92,6 @@ else:
         subget = None
 
         def setSubgetObject(self, Subget):
-            print Subget.gtkSearchMenu
             self.subget = Subget
     
         def ping(self):
