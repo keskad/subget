@@ -11,6 +11,15 @@ class subgetInstaller:
     tmp = "/tmp/subget-chroot"
     subgetDir = "./"
     destOS = ""
+    os = ""
+    osPKG = ""
+    installDependencies = False
+
+    packages = dict()
+    packages['py26-gtk'] = {'ebuild': 'dev-python/pygtk', 'pkg': 'py26-gtk', 'pacman': 'pygtk', 'deb': 'python-gtk2'}
+    packages['py26-dbus'] = {'ebuild': 'dev-python/dbus-python', 'pkg': 'py26-dbus', 'pacman': 'python2-dbus', 'deb': 'python-dbus'}
+    packages['p7zip'] = {'ebuild': 'app-arch/p7zip', 'pkg': 'p7zip', 'pacman': 'p7zip', 'deb': 'p7zip-full'}
+    packages['gettext'] = {'ebuild': 'sys-devel/gettext', 'pkg': 'gettext', 'pacman': 'gettext', 'deb': 'gettext-base'}
 
     def usage(self):
         print("install.py -[short GNU option] [value] --[long GNU option]=[value]")
@@ -18,11 +27,12 @@ class subgetInstaller:
         print("--help, -h (this message)")
         print("--chroot, -c (where to install files; optional)")
         print("--destination-os, -d (which OS type will be using installed files, supported: FreeBSD, Linux; optional)")
+        print("--dependencies (try install Subget dependencies; supports Debian, Ubuntu, Linux Mint, Arch Linux, Gentoo and FreeBSD; disabled by default; optional)")
 
 
     def getopt(self):
         try:
-            opts, args = getopt.getopt(sys.argv[1:], "hc:d:", ["help", "chroot=", "destination-os="])
+            opts, args = getopt.getopt(sys.argv[1:], "hc:d:", ["help", "chroot=", "destination-os=", "dependencies"])
         except getopt.GetoptError as err:
             print("Error: "+str(err)+", Try --help for usage\n\n")
             self.usage()
@@ -43,6 +53,9 @@ class subgetInstaller:
             if o in ('-d', '--destination-os'):
                 if a == "Linux" or a == "FreeBSD":
                     self.destOS = a
+
+            if o in '--dependencies':
+                self.installDependencies = True
 
         self.main()
 
@@ -132,6 +145,7 @@ class subgetInstaller:
     def main(self):
         self.detectOS()
         self.detectPythonVersions()
+        self.detectPackageManager()
 
         if self.chroot is not "":
             self.osSystem("mkdir "+self.tmp)
@@ -153,8 +167,43 @@ class subgetInstaller:
         self.osSystem("rm -rf "+self.tmp)
 
 
+
+    def detectPackageManager(self):
+        if os.path.isfile("/usr/bin/apt-get"):
+            self.osPKG = "deb"
+            self.pkgCommand = "/usr/bin/apt-get install -y %package%"
+        elif os.path.isfile("/usr/sbin/pkg_add"):
+            self.osPKG = "pkg"
+            self.pkgCommand = "/usr/sbin/pkg_add -rv %package%"
+        elif os.path.isfile("/usr/bin/emerge"):
+            self.osPKG = "ebuild"
+            self.pkgCommand = "/usr/bin/emerge %package%"
+        elif os.path.isfile("/usr/bin/pacman"):
+            self.osPKG = "pacman"
+            self.pkgCommand = "pacman -S %package%"
+        else:
+            self.pkgCommand = ""
+
+    def installPackage(self, package):
+        """ Install package using system's package manager """
+
+        if self.os == "FreeBSD":
+            os.putenv("FTP_PASSIVE_MODE", "1")
+
+        if self.pkgCommand is not "":
+            self.osSystem(self.pkgCommand.replace("%package%", self.packages[package][self.osPKG]))
+
+
     def linuxInstall(self):
         print("# Installing Subget for Linux...")
+
+        if self.installDependencies == True and self.os == "Linux":
+            print("# Checking dependencies...")
+            if not os.path.isfile("/usr/bin/7z"):
+                self.installPackage("p7zip")
+
+            if not os.path.isfile("/usr/bin/msgfmt"):
+                self.installPackage("gettext")
 
         print("# Copying files...")
 
@@ -176,6 +225,20 @@ class subgetInstaller:
 
     def bsdInstall(self):
         self.linuxInstall()
+
+        if self.installDependencies == True and self.os == "FreeBSD":
+            print("# Checking dependencies...")
+            if not os.path.isfile("/usr/local/bin/7z"):
+                self.installPackage("p7zip")
+
+            if not os.path.isfile("/usr/local/bin/msgfmt"):
+                self.installPackage("gettext")
+
+            if not os.path.isfile("/usr/local/lib/python2.6/site-packages/dbus/__init__.pyc"):
+                self.installPackage("py26-dbus")
+
+            if not os.path.isfile("/usr/local/lib/python2.6/gtk-2.0/gtk/__init__.pyc"):
+                self.installPackage("py26-gtk")
 
         print("# Installing Subget for BSD...")
 
