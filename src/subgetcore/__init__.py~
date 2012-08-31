@@ -237,7 +237,7 @@ class SubgetPlugin:
               File - you must manually check if it exists  
         """
 
-        TMPName = self.temporaryPath(os.path.basename(SavePath))+".tmp"
+        TMPName = self.temporaryPath(os.path.basename(SavePath))
 
         try:
             Handler = open(TMPName, "wb")

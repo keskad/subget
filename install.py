@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-import os, sys, subprocess, getopt
+import os, sys, subprocess, getopt, StringIO
 
 class subgetInstaller:
     """ Subget commandline installer, just run it as root to install Subget to your system or run as regular user to install to chrooted directory (eg. for packaging) """
@@ -79,10 +79,13 @@ class subgetInstaller:
         # all files with "python" but "-config" and "-wrapper" in name
         for file in files:
             if "python" in file and not "-config" in file and not "-wrapper" in file:
-
-                # get site-packages directory for this python version
-                distDir = subprocess.check_output([path+file, "-c", self.distCheckCMD]).replace("\n", "")
-
+            
+		try:
+		    # get site-packages directory for this python version
+		    distDir = subprocess.check_output([path+file, "-c", self.distCheckCMD], stderr=open("/dev/null", "w")).replace("\n", "",)
+		except subprocess.CalledProcessError:
+		    continue # if non-python binary found (eg. dh_python2)
+		  		  
                 # Fix for FreeBSD
                 if not os.path.isdir(distDir):
                     distDir = distDir.replace("/usr/lib/", "/usr/local/lib/")
@@ -185,7 +188,7 @@ class subgetInstaller:
             self.pkgCommand = ""
 
     def installPackage(self, package):
-        """ Install package using system's package manager """
+	""" Install package using system's package manager """
 
         if self.os == "FreeBSD":
             os.putenv("FTP_PASSIVE_MODE", "1")

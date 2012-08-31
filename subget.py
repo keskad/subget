@@ -2,7 +2,6 @@
 #-*- coding: utf-8 -*-
 import getopt, sys, os, glob, time, gettext, locale, xml.dom.minidom
 import traceback
-import StringIO
 from threading import Thread
 import subgetcore # libraries
 from pango import FontDescription
@@ -29,7 +28,9 @@ if os.name != "nt":
 
 if sys.version_info[0] >= 3:
     import configparser
+    import io as StringIO
 else:
+    import StringIO
     import ConfigParser as configparser
 
 consoleMode=False
@@ -645,7 +646,6 @@ class SubGet:
     def GTKDownloadDialog(self, SelectID, filename):
              """Download progress dialog, downloading and saving subtitles to file"""
 
-             print self.subtitlesList[SelectID]
              Plugin = self.subtitlesList[SelectID]['extension']
 
              State = self.plugins[Plugin]
@@ -676,14 +676,12 @@ class SubGet:
                  w.add(fixed)
                  w.show_all()
 
-                 Results = self.plugins[Plugin].language = language
-
                  if self.plugins[Plugin].PluginInfo['API'] == 1:
                     Results = self.plugins[Plugin].download_by_data(self.subtitlesList[SelectID]['data'], filename)
                  elif self.plugins[Plugin].PluginInfo['API'] == 2:
                     Results = self.plugins[Plugin].instance.download_by_data(self.subtitlesList[SelectID]['data'], filename)
 
-                 if Results != language and Results:
+                 if Results:
                     try:
                         self.Hooking.executeHooks(self.Hooking.getAllHooks("onSubtitlesDownload"), [False, Results, self.dictGetKey(self.subtitlesList[SelectID]['data'], 'file'), True])
                     except Exception as e:
@@ -1282,8 +1280,6 @@ class SubGet:
                         if not self.isPlugin(Plugin):
                             continue
 
-                        self.plugins[Plugin].language = language
-
                         if self.plugins[Plugin].PluginInfo['API'] == 1:
                             Results = self.plugins[Plugin].search_by_keywords(query) # query the plugin for results
                         elif self.plugins[Plugin].PluginInfo['API'] == 2:
@@ -1304,7 +1300,6 @@ class SubGet:
             else:
                 try:
                     Plugin = self.sm.plugins[plugin]
-                    self.plugins[Plugin].language = language
 
                     if self.plugins[Plugin].PluginInfo['API'] == 1:
                         Results = self.plugins[Plugin].search_by_keywords(query) # query the plugin for results
