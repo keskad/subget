@@ -134,11 +134,7 @@ class subgetInstaller:
         """ Compile GNU Gettext translations to binary files """
 
         print("Compiling translations to binary files...")
-
-        if self.os == "Linux":
-            localeDir = "usr/share"
-        else:
-            localeDir = "usr/local/share"
+        localeDir = "usr/share"
 
         languages = os.listdir(prefix+"/"+localeDir+"/subget/locale")
 
