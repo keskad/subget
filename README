@@ -19,7 +19,17 @@ Video Player option allows easily play movie using favorite media player right a
 
 Requirements: GTK+, Python 2.6/2.7/3.0/3.1/3.2, X11, PyGTK, python-dbus, python-gettext, p7zip (Gentoo: app-arch/p7zip, Debian/Ubuntu: p7zip-full)
 
+* FAQ:
+1. Application stops at "Subget is loading in "en_US" language."
+Solution is to copy or link subget's usr directory if it was installed in /usr/local: ln -s /usr/local/share/subget/ /usr/share/subget
+
 * Changelog:
+19.09.2012 (v.1.7) <webnull.www@gmail.com>:
+    * Default configuration file should be now copied from default directory if it does not exists in home directory
+    - Removed bugged COM support
+    + Support for sockets remote control (like dbus)
+    + Added info in setup.py
+
 18.09.2012 (v.1.6.9.1) <webnull.www@gmail.com>:
     * Subget is now using PyPi compatibile installer (setup.py - removed install.sh and install.py)
 

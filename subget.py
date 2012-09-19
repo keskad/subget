@@ -1,7 +1,15 @@
 #!/usr/bin/env python
 #-*- coding: utf-8 -*-
-import getopt, sys, os, glob, time, gettext, locale, xml.dom.minidom
+import getopt
+import sys
+import os
+import glob
+import time
+import gettext
+import locale
+import xml.dom.minidom
 import traceback
+import shutil
 from threading import Thread
 import subgetcore # libraries
 from pango import FontDescription
@@ -173,7 +181,7 @@ class SubGet:
 
         configPath = os.path.expanduser("~/.subget/config")
         if not os.path.isfile(configPath):
-            configPath = self.subgetOSPath+"/usr/share/subget/config"
+            shutil.copyfile(self.subgetOSPath+"/usr/share/subget/config", configPath)
 
         if os.path.isfile(configPath):
             Parser = configparser.ConfigParser()

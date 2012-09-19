@@ -1,5 +1,11 @@
 #-*- coding: utf-8 -*-
-import subgetcore, sys, os, time
+import subgetcore
+import sys
+import os
+import time
+import socket
+import json
+import asyncore
 from threading import Thread
 
 ####
@@ -82,71 +88,104 @@ if os.name == "posix":
             else:
                 self.subget.TreeViewUpdate()
 
-else:
-    import win32com.server.register, pythoncom, win32com.client
 
-    class SubgetService:
-        _public_methods_ = [ 'ping', 'openSearchMenu', 'openPluginsMenu', 'openSelectVideoDialog', 'openAboutDialog', 'clearList', 'addLinks', 'setSubgetObject' ]
-        _reg_progid_ = "Subget"
-        _reg_clsid_ = pythoncom.CreateGuid()
-        subget = None
+# based on example from: http://docs.python.org/library/asyncore.html
+class SocketInterface(asyncore.dispatcher_with_send):
+    """ Very simple socket interface """
 
-        def setSubgetObject(self, Subget):
-            self.subget = Subget
-    
-        def ping(self):
-            """ Check if Subget is already running """
+    app = None
 
-            return True
+    def ping(self, data=''):
+        """ Check if Subget is already running """
 
-        def openSearchMenu(self):
-            """ Opens search dialog """
+        return True
 
-            if self.subget is not None:
-                return self.subget.gtkSearchMenu(None) 
+    def openSearchMenu(self, data=''):
+        """ Opens search dialog """
 
-        def openPluginsMenu(self):
-            """ Opens plugin menu """
+        return self.app.gtkSearchMenu(None) 
 
-            if self.subget is not None:
-                return self.subget.gtkPluginMenu(None)
+    def openPluginsMenu(self, data=''):
+        """ Opens plugin menu """
 
-        def openSelectVideoDialog(self):
-            """ Opens Video Selection dialog """
+        return self.app.gtkPluginMenu(None)
 
-            if self.subget is not None:
-                return self.subget.gtkSelectVideo(None)
+    def openSelectVideoDialog(self, data=''):
+        """ Opens Video Selection dialog """
 
-        def openAboutDialog(self):
-            """ Opens About dialog """
+        return self.app.gtkSelectVideo(None)
 
-            if self.subget is not None:
-                return self.subget.gtkAboutMenu(None)
+    def openAboutDialog(self, data=''):
+        """ Opens About dialog """
 
-        def clearList(self):
-            """ Clean up the list """
-            if self.subget is not None:
-                return self.subget.cleanUpResults()
+        return self.app.gtkAboutMenu(None)
 
-        def addLinks(self, Links, Wait=False):
-            """ Add links seperated by new line.
-                Returns nothing when not waiting, and other values when waiting for function finish working.
-                On errors returns false.
-                Default - Don't wait.
-            """
-            if self.subget is None:
+    def clearList(self, data=''):
+        """ Clean up the list """
+        return self.app.cleanUpResults()
+
+    def addLinks(self, Links):
+        """ Add links seperated by new line.
+            Returns nothing when not waiting, and other values when waiting for function finish working.
+            On errors returns false.
+            Default - Don't wait.
+        """
+        Links = Links.split("\n")
+        self.subget.files = Links
+
+        return self.app.TreeViewUpdate()
+
+    def __init__(self, socket, app):
+        asyncore.dispatcher_with_send.__init__(self)
+        self.set_socket(socket)
+        self.app = app
+
+    def handle_read(self):
+        data = self.recv(8192)
+
+        if data:
+            if data == "ping":
+                self.send("pong")
                 return False
 
-            if not str(type(Links).__name__) == "String":
-                return False
+            try:
+                text = json.loads(data)
 
-            Links = Links.split("\n")
-            self.subget.files = Links
+                if text['function'] == "handle_read" or text['function'] == "__init__":
+                    self.send("Function not avaliable")
+                    return False
 
-            if Wait:
-                return self.subget.TreeViewUpdate()
-            else:
-                self.subget.TreeViewUpdate()
+                if hasattr(self, text['function']):
+                    exec("r = str(self."+text['function']+"(text['data']))")
+                else:
+                    r = "Function not found"
+
+                # send response                
+                self.send(r)
+
+            except Exception as e:
+                self.app.Logging.output("SubgetSocketInterface: Cannot parse json data, is the client bugged? "+str(e), "warning", True)
+                self.send("Server Error: "+str(e))
+
+class SocketServer(asyncore.dispatcher):
+    app = None
+
+    def __init__(self, host, port, app):
+        self.app = app
+        asyncore.dispatcher.__init__(self)
+        self.create_socket(socket.AF_INET, socket.SOCK_STREAM) # IPv6 support will be implemented later
+        self.set_reuse_addr()
+        self.bind((host, port))
+        self.listen(3)
+
+    def handle_accept(self):
+        pair = self.accept()
+
+        if pair is None:
+            pass
+        else:
+            sock, addr = pair
+            handler = SocketInterface(sock, self.app)
 
 class PluginMain(subgetcore.SubgetPlugin):
     """ Instance manager, uses DBUS on Linux/BSD and other Unix systems, and COM on Windows """
@@ -161,35 +200,50 @@ class PluginMain(subgetcore.SubgetPlugin):
         # 2 => action
         # """
 
-        if os.name == "nt":
-            self.Subget.Logging.output("Bus plugin disabled on Windows", "", False)
-            return Data
+        busType = self.Subget.configGetKey("plugin:bus", "bustype")
 
-        if os.name == "posix":
+        if str(busType) == "False" or busType == "detect":
+            self.Subget.configSetKey("plugin:bus", "bustype", "detect")
+            
+            # use IP connection (com is bugged) on Windows
+            if os.name == "nt":
+                busType = "socket"
+            else: # on Linux and *BSD we have dbus
+                busType = "dbus"
+
+        if busType == "dbus":
             check = self.checkDBUS()
         else:
-            # trivial method to check if the COM server is online... crappy Windows API...
-            self.thread = Thread(target=self.checkCOM)
-            self.thread.setDaemon(False)
-            self.thread.start()
+            host = self.Subget.configGetKey("plugin:bus", "host")
+            port = self.Subget.configGetKey("plugin:bus", "port")
 
-            time.sleep(0.5)
+            if str(host) == "False":
+                self.Subget.configSetKey("plugin:bus", "host", "localhost")
 
-            if self.bus is None:
-                self.thread._Thread__stop()
-                check = False
-            else:
-                check = True
+            if str(port) == "False":
+                self.Subget.configSetKey("plugin:bus", "port", "9918")
+
+            try:
+                port = int(port)
+            except Exception:
+                self.Subget.configSetKey("plugin:bus", "port", "9918")
+                port = 9918
+
+            self.Subget.saveConfiguration()
+
+            check = self.checkSocket()
 
         if check == True:
+
             if len(Data[1]) > 0:
-                if os.name == "posix":
+                links = str.join('\n', Data[1])
+
+                if busType == "dbus":
                     addLinks = self.bus.get_dbus_method('addLinks', 'org.freedesktop.subget')
-                else: # Windows NT
-                    addLinks = self.bus.addLinks
+                    addLinks(links, False)
+                else: # Socket connection
+                    self.socketSend("addLinks", links)
 
-
-                addLinks(str.join('\n', Data[1]), False)
                 self.Subget.Logging.output(self.Subget._("Added new files to existing list."), "", False)
             else:
                 self.Subget.Logging.output(self.Subget._("Only one instance (graphical window) of Subget can be running at once by one user."), "", False) # only one instance of Subget can be running at once
@@ -200,11 +254,11 @@ class PluginMain(subgetcore.SubgetPlugin):
         if Data[2] != "watch": # if not running watch with subtitles function
             self.Subget.Logging.output("Spawning server...", "error", True)
 
-            if os.name == "nt":
-                pythoncom.CoInitialize()
-                win32com.server.register.UseCommandLine(SubgetService)
-                self.bus = win32com.client.Dispatch("Subget")
-                self.bus.setSubgetObject(self.Subget)
+            if busType == "socket":
+                self.bus = SocketServer(host, port, self.Subget)
+                self.thread = Thread(target=asyncore.loop)
+                self.thread.setDaemon(True)
+                self.thread.start()
             else:
                 self.bus = SubgetService()
                 self.bus.subget = self.Subget
@@ -231,6 +285,28 @@ class PluginMain(subgetcore.SubgetPlugin):
         return True
 
 
-    def checkCOM(self):
-        pythoncom.CoInitialize()
-        self.bus = win32com.client.Dispatch("Subget")
+    def checkSocket(self):
+        if self.socketSend("ping", "") == False:
+            return False
+        else:
+            return True
+
+    def socketSend(self, function, data=''):
+        HOST = str(self.Subget.configGetKey("plugin:bus", "host"))
+        PORT = int(self.Subget.configGetKey("plugin:bus", "port"))
+
+        try:
+            s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            s.connect((HOST, PORT))
+
+            if function == "ping":
+                text = "ping"
+            else:
+                text = json.dumps({'function': function, 'data': data})
+
+            s.sendall(text)
+            data = s.recv(1024)
+            s.close()
+            return data
+        except socket.error as e:
+            return False

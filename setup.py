@@ -66,6 +66,7 @@ class InstallData(install_data):
 
         self.data_files.extend(files)
         install_data.run(self)
+        warn("If application wont run try: ln -s /usr/local/share/subget/ /usr/share/subget")
 
     def listDirs(self, directory):
         # Source: http://mayankjohri.wordpress.com/2008/07/02/create-list-of-files-in-a-dir-tree/
