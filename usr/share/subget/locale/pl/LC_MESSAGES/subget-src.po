@@ -323,3 +323,24 @@ msgstr "Ukryj główne okno"
 
 msgid "Remember history"
 msgstr "Zapamiętuj historię"
+
+msgid "SubgetSocketInterface: Cannot parse json data, is the client bugged?"
+msgstr "SubgetSocketInterface: Nie można przetworzyć danych, czyżby klient wysłał je z błędem?"
+
+msgid "Non-numeric port detected, falling back to"
+msgstr "Ustawiony port w konfiguracji nie jest liczbą - ustawiam jego wartość na"
+
+msgid "Setting default socket port:"
+msgstr "Ustawiam domyślny port socketów:"
+
+msgid "Setting default socket host:"
+msgstr "Ustawiam domyślny host socketów:"
+
+msgid "Setting bus type to \"detect\" (Linux: dbus, Windows: socket)"
+msgstr "Ustawiam domyślny typ komunikacji między instancjami Subgeta na \"detect\" (Linux: dbus, Windows: socket)"
+
+msgid "Socket server is running on"
+msgstr "Serwer socketów (IP) jest uruchomiony na"
+
+msgid "Dbus interface is up..."
+msgstr "Interfejs dbus został uruchomiony..."

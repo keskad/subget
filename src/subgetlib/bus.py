@@ -131,14 +131,15 @@ class SocketInterface(asyncore.dispatcher_with_send):
             Default - Don't wait.
         """
         Links = Links.split("\n")
-        self.subget.files = Links
+        self.app.files = Links
 
         return self.app.TreeViewUpdate()
 
-    def __init__(self, socket, app):
+    def __init__(self, socket, app, addr):
         asyncore.dispatcher_with_send.__init__(self)
         self.set_socket(socket)
         self.app = app
+        self.addr = addr
 
     def handle_read(self):
         data = self.recv(8192)
@@ -160,11 +161,13 @@ class SocketInterface(asyncore.dispatcher_with_send):
                 else:
                     r = "Function not found"
 
+                self.app.Logging.output("Socket::GET="+str(text['function'])+"&addr="+str(self.addr), "debug", False)
+
                 # send response                
                 self.send(r)
 
             except Exception as e:
-                self.app.Logging.output("SubgetSocketInterface: Cannot parse json data, is the client bugged? "+str(e), "warning", True)
+                self.app.Logging.output(self.app._("SubgetSocketInterface: Cannot parse json data, is the client bugged?")+" "+str(e), "warning", True)
                 self.send("Server Error: "+str(e))
 
 class SocketServer(asyncore.dispatcher):
@@ -185,7 +188,7 @@ class SocketServer(asyncore.dispatcher):
             pass
         else:
             sock, addr = pair
-            handler = SocketInterface(sock, self.app)
+            handler = SocketInterface(sock, self.app, addr)
 
 class PluginMain(subgetcore.SubgetPlugin):
     """ Instance manager, uses DBUS on Linux/BSD and other Unix systems, and COM on Windows """
@@ -204,6 +207,8 @@ class PluginMain(subgetcore.SubgetPlugin):
 
         if str(busType) == "False" or busType == "detect":
             self.Subget.configSetKey("plugin:bus", "bustype", "detect")
+            self.Subget.Logging.output(self.Subget._("Setting bus type to \"detect\" (Linux: dbus, Windows: socket)"), "debug", False)
+            self.Subget.saveConfiguration()
             
             # use IP connection (com is bugged) on Windows
             if os.name == "nt":
@@ -219,15 +224,20 @@ class PluginMain(subgetcore.SubgetPlugin):
 
             if str(host) == "False":
                 self.Subget.configSetKey("plugin:bus", "host", "localhost")
+                host = "localhost"
+                self.Subget.Logging.output(self.Subget._("Setting default socket host:")+ " localhost", "debug", False)
 
             if str(port) == "False":
                 self.Subget.configSetKey("plugin:bus", "port", "9918")
+                self.Subget.Logging.output(self.Subget._("Setting default socket port:")+ " 9118", "debug", False)
 
             try:
                 port = int(port)
             except Exception:
                 self.Subget.configSetKey("plugin:bus", "port", "9918")
+                self.Subget.Logging.output(self.Subget._("Non-numeric port detected, falling back to")+ " 9118", "warning", True)
                 port = 9918
+
 
             self.Subget.saveConfiguration()
 
@@ -255,11 +265,13 @@ class PluginMain(subgetcore.SubgetPlugin):
             self.Subget.Logging.output("Spawning server...", "error", True)
 
             if busType == "socket":
+                self.Subget.Logging.output(self.Subget._("Socket server is running on")+ " "+str(host)+":"+str(port), "debug", False)
                 self.bus = SocketServer(host, port, self.Subget)
                 self.thread = Thread(target=asyncore.loop)
                 self.thread.setDaemon(True)
                 self.thread.start()
             else:
+                self.Subget.Logging.output(self.Subget._("Dbus interface is up..."), "debug", False)
                 self.bus = SubgetService()
                 self.bus.subget = self.Subget
 
