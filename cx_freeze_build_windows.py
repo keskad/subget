@@ -5,7 +5,9 @@ from socket import _socket
 import subgetcore, subgetlib
 import win32com.server.register, pythoncom, win32com.client
 
+os.system("setup.py build")
 os.system("setup.py install")
+os.system("setup.py install_data")
 
 def zip_dir(dirpath, zippath):
     fzip = zipfile.ZipFile(zippath, 'a', zipfile.ZIP_DEFLATED)
@@ -33,7 +35,7 @@ exe = Executable(
 includefiles = ['usr', '7za.exe', 'windows']
 includes = ['usr', 'src']
 excludes = []
-packages = ['_socket', 'socket', 'httplib', 'subprocess', 'os', 'time', 'urllib', 'hashlib', 're', 'zipfile', 'xml', 'StringIO', 'struct', 'sys', 'gettext', 'getopt', 'subgetcore', 'subgetlib', 'pythoncom', 'win32com', 'win32com.server.register', 'win32com.client']
+packages = ['_socket', 'socket', 'httplib', 'subprocess', 'os', 'time', 'urllib', 'hashlib', 're', 'zipfile', 'xml', 'StringIO', 'struct', 'sys', 'gettext', 'getopt', 'subgetcore', 'pythoncom', 'win32com', 'win32com.server.register', 'json', 'asyncore', 'xmlrpclib']
  
 setup(
     name = "Subget",
@@ -45,4 +47,6 @@ setup(
     executables = [exe]
     )
 
+os.mkdir("build\\exe.win32-2.7\\subgetlib")
+os.system("copy src\\subgetlib build\\exe.win32-2.7\\subgetlib")
 #zip_dir("windows/runtime", "build/exe.win32-2.7/library.zip")

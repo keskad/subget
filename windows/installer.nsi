@@ -76,6 +76,7 @@ OptionsOK:
   File c:\Subget\build\exe.win32-2.7\atk.pyd
   File c:\Subget\build\exe.win32-2.7\bz2.pyd
   File c:\Subget\build\exe.win32-2.7\cairo._cairo.pyd
+  File c:\Subget\build\exe.win32-2.7\dde.pyd
   File c:\Subget\build\exe.win32-2.7\freetype6.dll
   File c:\Subget\build\exe.win32-2.7\gdiplus.dll
   File c:\Subget\build\exe.win32-2.7\gio._gio.pyd
@@ -101,17 +102,63 @@ OptionsOK:
   File c:\Subget\build\exe.win32-2.7\libpangowin32-1.0-0.dll
   File c:\Subget\build\exe.win32-2.7\libpng14-14.dll
   File c:\Subget\build\exe.win32-2.7\library.zip
+  File c:\Subget\build\exe.win32-2.7\mfc90.dll
   File c:\Subget\build\exe.win32-2.7\pango.pyd
   File c:\Subget\build\exe.win32-2.7\pangocairo.pyd
   File c:\Subget\build\exe.win32-2.7\pyexpat.pyd
   File c:\Subget\build\exe.win32-2.7\python27.dll
+  File c:\Subget\build\exe.win32-2.7\pythoncom27.dll
+  File c:\Subget\build\exe.win32-2.7\pywintypes27.dll
   File c:\Subget\build\exe.win32-2.7\select.pyd
   File c:\Subget\build\exe.win32-2.7\subget.exe
   File c:\Subget\build\exe.win32-2.7\unicodedata.pyd
+  File c:\Subget\build\exe.win32-2.7\win32api.pyd
+  File c:\Subget\build\exe.win32-2.7\win32clipboard.pyd
+  File c:\Subget\build\exe.win32-2.7\win32com.shell.shell.pyd
+  File c:\Subget\build\exe.win32-2.7\win32event.pyd
+  File c:\Subget\build\exe.win32-2.7\win32help.pyd
+  File c:\Subget\build\exe.win32-2.7\win32process.pyd
+  File c:\Subget\build\exe.win32-2.7\win32trace.pyd
+  File c:\Subget\build\exe.win32-2.7\win32ui.pyd
+  File c:\Subget\build\exe.win32-2.7\winxpgui.pyd
   File c:\Subget\build\exe.win32-2.7\zlib1.dll
   File c:\Subget\build\exe.win32-2.7\_hashlib.pyd
   File c:\Subget\build\exe.win32-2.7\_socket.pyd
   File c:\Subget\build\exe.win32-2.7\_ssl.pyd
+  CreateDirectory c:\Subget\build\exe.win32-2.7\subgetlib
+  SetOutPath $INSTDIR\subgetlib
+  File c:\Subget\build\exe.win32-2.7\subgetlib\allsubs.py
+  File c:\Subget\build\exe.win32-2.7\subgetlib\allsubs.pyc
+  File c:\Subget\build\exe.win32-2.7\subgetlib\bus.py
+  File c:\Subget\build\exe.win32-2.7\subgetlib\bus.pyc
+  File c:\Subget\build\exe.win32-2.7\subgetlib\console.py
+  File c:\Subget\build\exe.win32-2.7\subgetlib\console.pyc
+  File c:\Subget\build\exe.win32-2.7\subgetlib\daemonize.py
+  File c:\Subget\build\exe.win32-2.7\subgetlib\daemonize.pyc
+  File c:\Subget\build\exe.win32-2.7\subgetlib\dialog.py
+  File c:\Subget\build\exe.win32-2.7\subgetlib\dialog.pyc
+  File c:\Subget\build\exe.win32-2.7\subgetlib\napiprojekt.py
+  File c:\Subget\build\exe.win32-2.7\subgetlib\napiprojekt.pyc
+  File c:\Subget\build\exe.win32-2.7\subgetlib\napisy24.py
+  File c:\Subget\build\exe.win32-2.7\subgetlib\napisy24.pyc
+  File c:\Subget\build\exe.win32-2.7\subgetlib\napisy_info.py
+  File c:\Subget\build\exe.win32-2.7\subgetlib\napisy_info.pyc
+  File c:\Subget\build\exe.win32-2.7\subgetlib\notify.py
+  File c:\Subget\build\exe.win32-2.7\subgetlib\notify.pyc
+  File c:\Subget\build\exe.win32-2.7\subgetlib\opensubtitles.py
+  File c:\Subget\build\exe.win32-2.7\subgetlib\opensubtitles.pyc
+  File c:\Subget\build\exe.win32-2.7\subgetlib\subscene.py
+  File c:\Subget\build\exe.win32-2.7\subgetlib\subscene.pyc
+  File c:\Subget\build\exe.win32-2.7\subgetlib\subswiki.py
+  File c:\Subget\build\exe.win32-2.7\subgetlib\subswiki.pyc
+  File c:\Subget\build\exe.win32-2.7\subgetlib\thesubdb.py
+  File c:\Subget\build\exe.win32-2.7\subgetlib\thesubdb.pyc
+  File c:\Subget\build\exe.win32-2.7\subgetlib\trayicon.py
+  File c:\Subget\build\exe.win32-2.7\subgetlib\trayicon.pyc
+  File c:\Subget\build\exe.win32-2.7\subgetlib\videoplayers.py
+  File c:\Subget\build\exe.win32-2.7\subgetlib\videoplayers.pyc
+  File c:\Subget\build\exe.win32-2.7\subgetlib\__init__.py
+  File c:\Subget\build\exe.win32-2.7\subgetlib\__init__.pyc
   CreateDirectory c:\Subget\build\exe.win32-2.7\usr
   SetOutPath $INSTDIR\usr
   CreateDirectory c:\Subget\build\exe.win32-2.7\usr\share
@@ -138,41 +185,14 @@ OptionsOK:
   File c:\Subget\build\exe.win32-2.7\usr\share\subget\fm-integration\kde4.desktop
   CreateDirectory c:\Subget\build\exe.win32-2.7\usr\share\subget\icons
   SetOutPath $INSTDIR\usr\share\subget\icons
-  File c:\Subget\build\exe.win32-2.7\usr\share\subget\icons\bg.gif
-  File c:\Subget\build\exe.win32-2.7\usr\share\subget\icons\bg.xpm
-  File c:\Subget\build\exe.win32-2.7\usr\share\subget\icons\cz.xpm
-  File c:\Subget\build\exe.win32-2.7\usr\share\subget\icons\da.gif
-  File c:\Subget\build\exe.win32-2.7\usr\share\subget\icons\da.xpm
-  File c:\Subget\build\exe.win32-2.7\usr\share\subget\icons\el.gif
-  File c:\Subget\build\exe.win32-2.7\usr\share\subget\icons\el.xpm
-  File c:\Subget\build\exe.win32-2.7\usr\share\subget\icons\en.xpm
   File c:\Subget\build\exe.win32-2.7\usr\share\subget\icons\error.png
-  File c:\Subget\build\exe.win32-2.7\usr\share\subget\icons\es.xpm
   File c:\Subget\build\exe.win32-2.7\usr\share\subget\icons\extension.png
-  File c:\Subget\build\exe.win32-2.7\usr\share\subget\icons\fi.gif
-  File c:\Subget\build\exe.win32-2.7\usr\share\subget\icons\fi.xpm
-  File c:\Subget\build\exe.win32-2.7\usr\share\subget\icons\fr.gif
-  File c:\Subget\build\exe.win32-2.7\usr\share\subget\icons\fr.xpm
-  File c:\Subget\build\exe.win32-2.7\usr\share\subget\icons\he.gif
   File c:\Subget\build\exe.win32-2.7\usr\share\subget\icons\he.xpm
-  File c:\Subget\build\exe.win32-2.7\usr\share\subget\icons\hu.gif
-  File c:\Subget\build\exe.win32-2.7\usr\share\subget\icons\hu.xpm
-  File c:\Subget\build\exe.win32-2.7\usr\share\subget\icons\nl.gif
-  File c:\Subget\build\exe.win32-2.7\usr\share\subget\icons\nl.xpm
-  File c:\Subget\build\exe.win32-2.7\usr\share\subget\icons\pl.xpm
   File c:\Subget\build\exe.win32-2.7\usr\share\subget\icons\plugin-disabled.png
   File c:\Subget\build\exe.win32-2.7\usr\share\subget\icons\plugin.png
-  File c:\Subget\build\exe.win32-2.7\usr\share\subget\icons\pt.gif
-  File c:\Subget\build\exe.win32-2.7\usr\share\subget\icons\pt.xpm
-  File c:\Subget\build\exe.win32-2.7\usr\share\subget\icons\ro.gif
-  File c:\Subget\build\exe.win32-2.7\usr\share\subget\icons\ro.xpm
-  File c:\Subget\build\exe.win32-2.7\usr\share\subget\icons\sr.gif
-  File c:\Subget\build\exe.win32-2.7\usr\share\subget\icons\sr.xpm
   File c:\Subget\build\exe.win32-2.7\usr\share\subget\icons\Subget-logo.png
   File c:\Subget\build\exe.win32-2.7\usr\share\subget\icons\Subget-logo.xpm
   File c:\Subget\build\exe.win32-2.7\usr\share\subget\icons\terminal.png
-  File c:\Subget\build\exe.win32-2.7\usr\share\subget\icons\tr.gif
-  File c:\Subget\build\exe.win32-2.7\usr\share\subget\icons\tr.xpm
   File c:\Subget\build\exe.win32-2.7\usr\share\subget\icons\unknown.xpm
   CreateDirectory c:\Subget\build\exe.win32-2.7\usr\share\subget\icons\flags
   SetOutPath $INSTDIR\usr\share\subget\icons\flags
@@ -203,6 +223,13 @@ OptionsOK:
   File c:\Subget\build\exe.win32-2.7\usr\share\subget\icons\flags\unknown.xpm
   CreateDirectory c:\Subget\build\exe.win32-2.7\usr\share\subget\locale
   SetOutPath $INSTDIR\usr\share\subget\locale
+  CreateDirectory c:\Subget\build\exe.win32-2.7\usr\share\subget\locale\da
+  SetOutPath $INSTDIR\usr\share\subget\locale\da
+  CreateDirectory c:\Subget\build\exe.win32-2.7\usr\share\subget\locale\da\LC_MESSAGES
+  SetOutPath $INSTDIR\usr\share\subget\locale\da\LC_MESSAGES
+  File c:\Subget\build\exe.win32-2.7\usr\share\subget\locale\da\LC_MESSAGES\subget-src.mo
+  File c:\Subget\build\exe.win32-2.7\usr\share\subget\locale\da\LC_MESSAGES\subget-src.po
+  File c:\Subget\build\exe.win32-2.7\usr\share\subget\locale\da\LC_MESSAGES\subget.mo
   CreateDirectory c:\Subget\build\exe.win32-2.7\usr\share\subget\locale\pl
   SetOutPath $INSTDIR\usr\share\subget\locale\pl
   CreateDirectory c:\Subget\build\exe.win32-2.7\usr\share\subget\locale\pl\LC_MESSAGES
@@ -218,7 +245,6 @@ OptionsOK:
   File c:\Subget\build\exe.win32-2.7\windows\installer.nsi
   File c:\Subget\build\exe.win32-2.7\windows\make.py
   File c:\Subget\build\exe.win32-2.7\windows\nsi-paths-build.py
-  File c:\Subget\build\exe.win32-2.7\windows\subget-make-windows.bat
   CreateDirectory c:\Subget\build\exe.win32-2.7\windows\runtime
   SetOutPath $INSTDIR\windows\runtime
   CreateDirectory c:\Subget\build\exe.win32-2.7\windows\runtime\lib

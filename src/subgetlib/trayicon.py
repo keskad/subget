@@ -73,6 +73,7 @@ class PluginMain(subgetcore.SubgetPlugin):
 
         if not visible:
             self.Subget.window.set_visible(True)
+            self.Subget.window.present() # Possible fix for Windows where window not appeared after iconifing to tray and minimalizing
 
             #### Restore last window position
             remember_window_position = self.Subget.configGetKey('trayicon', 'remember_window_position')

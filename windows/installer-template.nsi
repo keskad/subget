@@ -4,7 +4,16 @@
 !define MUI_VERSION "1.0"
  
 !include "MUI.nsh"
+
+; Style
+; example: http://nsis.sourceforge.net/%22Orange%22_Modern_UI_Theme
+!define MUI_ICON c:\subget\windows\icon-setup.ico
+!define MUI_WELCOMEFINISHPAGE_BITMAP "c:\subget\windows\welcome-bitmap.bmp"
  
+
+; Languages
+!insertmacro MUI_RESERVEFILE_LANGDLL
+
 ;--------------------------------
 ;Configuration
  
@@ -13,6 +22,7 @@
   OutFile "c:\Subget\Setup.exe"
  
   AllowRootDirInstall true
+  XPStyle on
  
 ;--------------------------------
 ;Modern UI Configuration
@@ -39,16 +49,54 @@
   !insertmacro MUI_PAGE_WELCOME
   !insertmacro MUI_PAGE_COMPONENTS
   !insertmacro MUI_PAGE_DIRECTORY
-  !insertmacro MUI_PAGE_DIRECTORY
   !insertmacro MUI_PAGE_INSTFILES
   !insertmacro MUI_PAGE_FINISH
  
 ;--------------------------------
 ;Languages
  
-  !insertmacro MUI_LANGUAGE "English"
- 
+;Languages
+
+  !insertmacro MUI_LANGUAGE "English" ;first language is the default language
+  !insertmacro MUI_LANGUAGE "French"
+  !insertmacro MUI_LANGUAGE "German"
+  !insertmacro MUI_LANGUAGE "Spanish"
+  !insertmacro MUI_LANGUAGE "SpanishInternational"
+  !insertmacro MUI_LANGUAGE "SimpChinese"
+  !insertmacro MUI_LANGUAGE "TradChinese"
+  !insertmacro MUI_LANGUAGE "Japanese"
+  !insertmacro MUI_LANGUAGE "Korean"
+  !insertmacro MUI_LANGUAGE "Italian"
+  !insertmacro MUI_LANGUAGE "Dutch"
+  !insertmacro MUI_LANGUAGE "Danish"
+  !insertmacro MUI_LANGUAGE "Swedish"
+  !insertmacro MUI_LANGUAGE "Norwegian"
+  !insertmacro MUI_LANGUAGE "NorwegianNynorsk"
+  !insertmacro MUI_LANGUAGE "Finnish"
+  !insertmacro MUI_LANGUAGE "Greek"
+  !insertmacro MUI_LANGUAGE "Russian"
+  !insertmacro MUI_LANGUAGE "Portuguese"
+  !insertmacro MUI_LANGUAGE "PortugueseBR"
+  !insertmacro MUI_LANGUAGE "Polish"
+  !insertmacro MUI_LANGUAGE "Ukrainian"
+  !insertmacro MUI_LANGUAGE "Czech"
+  !insertmacro MUI_LANGUAGE "Slovak"
+  !insertmacro MUI_LANGUAGE "Croatian"
+  !insertmacro MUI_LANGUAGE "Bulgarian"
+  !insertmacro MUI_LANGUAGE "Hungarian" 
 ;--------------------------------
+
+
+Function .onInit
+  ;!insertmacro MUI_UNGETLANGUAGE
+  !insertmacro MUI_LANGDLL_DISPLAY
+
+; Must set $INSTDIR here to avoid adding ${MUI_PRODUCT} to the end of the
+; path when user selects a new directory using the 'Browse' button.
+  StrCpy $INSTDIR "$PROGRAMFILES\${MUI_PRODUCT}"
+FunctionEnd
+
+
 ;Reserve Files
  
 ;Things that need to be extracted on first (keep these lines before any File command!)
@@ -100,12 +148,6 @@ SubSectionEnd
  
 ;--------------------------------
 ;Installer Functions
- 
-Function .onInit
-; Must set $INSTDIR here to avoid adding ${MUI_PRODUCT} to the end of the
-; path when user selects a new directory using the 'Browse' button.
-  StrCpy $INSTDIR "$PROGRAMFILES\${MUI_PRODUCT}"
-FunctionEnd
  
  
 Function ComponentPost
