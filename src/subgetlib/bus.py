@@ -203,6 +203,10 @@ class PluginMain(subgetcore.SubgetPlugin):
         # 2 => action
         # """
 
+        if Data[0] == True:
+            self.Subget.Logging.output(self.Subget._("Disabling bus in shell mode"))
+            return False
+
         busType = self.Subget.configGetKey("plugin:bus", "bustype")
 
         if str(busType) == "False" or busType == "detect":

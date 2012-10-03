@@ -244,6 +244,9 @@ class SubgetPlugin:
             Handler.write(data)
             Handler.close()
 
+            print TMPName
+            sys.exit(0)
+
             z = zipfile.ZipFile(TMPName)
             ListOfNames = z.namelist()
 
@@ -334,6 +337,8 @@ class SubgetPlugin:
 
         self.Subget.Logging.output(str(Server)+str(Request), "debug", False)
 
+        response = None
+
         try:
             if Headers:
                 conn = httplib.HTTPConnection(Server, 80, Headers, timeout=float(self.HTTPTimeout))
@@ -346,7 +351,7 @@ class SubgetPlugin:
 
         except Exception as e:
             self.Subget.Logging.output("HTTP Connection error, "+str(e), "warning", False)
-            self.Subget.errorMessage(self.Subget._("HTTP Connection error to server") + " "+Server+", "+self.Subget._("propably server is busy, please try again later. Error code: ")+str(response.status))
+            self.Subget.errorMessage(self.Subget._("HTTP Connection error to server") + " "+Server+", "+self.Subget._("propably server is busy, please try again later. Error code: ")+str(response))
             return False, False
 
         return response, data

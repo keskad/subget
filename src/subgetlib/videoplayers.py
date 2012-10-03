@@ -223,7 +223,12 @@ class PluginMain(subgetcore.SubgetPlugin):
         return [self.generatedList[i] for i in self.indexList]
 
     def _onSubtitlesDownload(self, data):
-        if self.VPButton.get_active():
+        try:
+            active = self.VPButton.get_active()
+        except AttributeError: # no GTK loaded, running in Watch With Subtitles mode
+            active = True
+
+        if active:
             self.getShellCommand(data[2], data[1], str(self.Subget.configGetKey('afterdownload', 'defaultplayer')), True)
 
     # MOVED

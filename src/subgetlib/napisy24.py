@@ -106,12 +106,18 @@ class PluginMain(subgetcore.SubgetPlugin):
         return True
 
     def search_by_keywords(self, Keywords):
+        self.Subget.Logging.output("napisy24.pl is temporary disabled because of required authentication changes", "debug", False)
+        return {'errInfo': "NOT_FOUND"}
+
         resultsClass = subgetcore.SubtitlesList()
         self.check_exists(Keywords, resultsClass)
 
         return resultsClass
 
     def check_exists(self, File, resultsClass):
+        self.Subget.Logging.output("napisy24.pl is temporary disabled because of required authentication changes", "debug", False)
+        return {'errInfo': "NOT_FOUND"}
+
         if File is not None:
             movieName = subgetcore.getSearchKeywords(os.path.basename(File))
 

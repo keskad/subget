@@ -11,8 +11,6 @@ import xml.dom.minidom
 import traceback
 import shutil
 from threading import Thread
-import subgetcore # libraries
-from pango import FontDescription
 
 winSubget = ""
 
@@ -28,12 +26,21 @@ if os.name == "nt":
     os.environ['GTK_PATH'] = winSubget+"/windows/runtime/lib/gtk-2.0"
     os.environ['GTK2_RC_FILES'] = winSubget+"/windows/runtime/share/themes/MS-Windows/gtk-2.0/gtkrc"
 
-import gtk, gobject
+try:
+    import subgetcore # libraries
+    from pango import FontDescription
+    import gtk, gobject
 
+    if os.name != "nt":
+        gtk.gdk.threads_init()
+except Exception as e:
+    pass # load in shell mode only
+
+# this will be used for Unix specific code
 if os.name != "nt":
-    gtk.gdk.threads_init()
     from distutils.sysconfig import get_python_lib
 
+# detect Python version, maybe in future we will support Python 3
 if sys.version_info[0] >= 3:
     import configparser
     import io as StringIO
@@ -44,12 +51,6 @@ else:
 consoleMode=False
 action="list"
 
-
-def usage():
-    'Shows program usage and version, lists all options'
-
-    print(self._("subget for GNU/Linux. Simple Subtitle Downloader for shell and GUI.\nUsage: subget [long GNU option] [option] first-file, second-file, ...\n\n\n --help                : this message\n --console, -c         : show results in console, not in graphical user interface\n --language, -l        : specify preffered language\n --quick, -q           : grab first result and download"))
-    print("")
 
 class SubGet:
     dialog=None
@@ -67,6 +68,8 @@ class SubGet:
     Hooking = None
     finishedJobs = list()
     gtkSettings = None
+    action = "list"
+    prefLang = "en"
 
     def __init__(self):
         # initialize hooking and logging
@@ -244,6 +247,12 @@ class SubGet:
         ##### End of GNU Gettext translations #####
         ###########################################
 
+    def usage(self):
+        'Shows program usage and version, lists all options'
+
+        print(self._("subget for GNU/Linux. Simple Subtitle Downloader for shell and GUI.\nUsage: subget [long GNU option] [option] first-file, second-file, ...\n\n\n --help                : this message\n --console, -c         : show results in console, not in graphical user interface\n --language, -l        : specify preffered language\n --quick, -q           : grab first result and download\n --watch-with-subtitles, -w : don't run main window, just run player directly after successful subtitles download"))
+        print("")
+
     def main(self):
         """ Main function, getopt etc. """
 
@@ -261,22 +270,28 @@ class SubGet:
             self.subgetOSPath = ""
 
         try:
-            opts, args = getopt.getopt(sys.argv[1:], "hcqw", ["help", "console", "quick", "language=", "watch-with-subtitles"])
+            opts, args = getopt.getopt(sys.argv[1:], "hcqwl:", ["help", "console", "quick", "language=", "watch-with-subtitles"])
         except getopt.GetoptError as err:
             print(self._('Error')+": "+str(err)+", "+self._("Try --help for usage")+"\n\n")
-            usage()
+            self.usage()
             sys.exit(2)
         # replace with argparse/optparse
         for o, a in opts:
             if o in ('-h', '--help'):
-                 usage()
+                 self.usage()
                  exit(2)
             if o in ('-c', '--console'):
                 consoleMode=True
             if o in ('-q', '--quick'):
-                action="first-result"
+                self.action="first-result"
             if o in ('-w', '--watch-with-subtitles'):
-                action="watch"
+                self.action="watch"
+                consoleMode=True
+            if o in ('-l', '--language'):
+                if os.path.isfile(self.subgetOSPath+"/usr/share/subget/icons/flags/"+a+".xpm"):
+                    self.prefLang = a
+                else:
+                    print("Undefined language type \""+a+"\", using default \"en\"")
 
         self.loadConfig()
 
@@ -305,14 +320,24 @@ class SubGet:
 
         self.Hooking.executeHooks(self.Hooking.getAllHooks("onInstanceCheck"), [consoleMode, args, action])
 
+        try:
+            gtk
+        except NameError:
+            self.Logging.output("Cannot access GTK+, subget will run in shell mode only", "debug", False)
+            consoleMode = True
+
+        # Watch with subtitles
+        if self.action == "watch":
+            self.watchWithSubtitles(args)
+            return True
+
+        # shell interface
         if consoleMode:
             self.shellMode(args)
-        else:
-            # Fast download option
-            if action == "watch":
-                self.watchWithSubtitles(args)
-            else:
-                self.graphicalMode(args)
+            return True
+
+        # full featured GTK interface
+        self.graphicalMode(args)            
 
 
 
@@ -407,7 +432,7 @@ class SubGet:
 
     def textmodeDLSub(self, Job):
         self.Logging.output("[textmodeWait] " + self._("Downloading to") + " "+Job['data']['file']+".txt")
-        Result = self.plugins[Job['extension']].download_by_data(Job['data'], Job['data']['file']+".txt")
+        Result = self.plugins[Job['extension']].instance.download_by_data(Job['data'], Job['data']['file']+".txt")
         return Result
 
 
@@ -2054,22 +2079,19 @@ class SubGet:
 
     def shellMode(self, files):
         """ Works in shell mode, searching, downloading etc..."""
-        global plugins, action
+
+        preferredData = None
+        Found = False
 
         # just find all matching subtitles and print it to console
-        if action == "list":
+        if self.action == "list":
             for Plugin in self.pluginsList:
                 State = self.plugins[Plugin]
 
                 if not self.isPlugin(Plugin):
                     continue
 
-                Results = self.plugins[Plugin].language = language
-
-                if self.plugins[Plugin].PluginInfo['API'] == 1:
-                    Results = self.plugins[Plugin].download_list(files)
-                elif self.plugins[Plugin].PluginInfo['API'] == 2:
-                    Results = self.plugins[Plugin].instance.download_list(files).output()
+                Results = self.plugins[Plugin].instance.download_list(files).output()
 
                 if Results is None:
                     continue
@@ -2083,56 +2105,53 @@ class SubGet:
                             continue
 
 
-        elif action == "first-result":
-                Found = False
-                preferredData = False
+        elif self.action == "first-result":
+            Found = None
+            preferredData = False
+            foundPlugin = False
 
-        for File in files:
-            for Plugin in self.plugins:
-                State = self.plugins[Plugin]
+            for File in files:
+                for Plugin in self.plugins:
+                    State = self.plugins[Plugin]
 
-                if not self.isPlugin(Plugin):
-                    continue
+                    if not self.isPlugin(Plugin):
+                        continue
 
-                fileToList = list()
-                fileToList.append(File)
+                    fileToList = list()
+                    fileToList.append(File)
 
-                Results = self.plugins[Plugin].language = language
-
-                if self.plugins[Plugin].PluginInfo['API'] == 1:
-                    Results = self.plugins[Plugin].download_list(fileToList)
-                elif self.plugins[Plugin].PluginInfo['API'] == 2:
                     Results = self.plugins[Plugin].instance.download_list(fileToList).output()
 
-                if Results is not None:
-                    if isinstance(Results[0], dict):
+                    if len(Results[0]) == 0:
                         continue
-                    else:
-                        if Results[0][0]["lang"] == language:
-                            FileTXT = File+".txt"
 
-                            if self.plugins[Plugin].PluginInfo['API'] == 1:
-                                DLResults = self.plugins[Plugin].download_by_data(Results[0][0]['data'], FileTXT)
-                            elif self.plugins[Plugin].PluginInfo['API'] == 2:
-                                DLResults = self.plugins[Plugin].instance.download_by_data(Results[0][0]['data'], FileTXT)
-
-                            print(self._("Subtitles saved to")+" "+str(DLResults))
-                            Found = True
-                            break
-                        elif preferredData is not None:
+                    if Results is not None:
+                        if isinstance(Results[0], dict):
+                            #print("Warning: "+str(Results[0])+" is not a dict")
                             continue
                         else:
-                            preferredData = Results[0][0]
+                            if Results[0][0]["lang"] == self.prefLang:
+                                FileTXT = File+".txt"
 
-        if not Found and preferredData:
-            FileTXT = File+".("+str(preferredData['lang'])+").txt"
+                                DLResults = self.plugins[Plugin].instance.download_by_data(Results[0][0]['data'], FileTXT)
 
-            if self.plugins[Plugin].PluginInfo['API'] == 1:
-                DLResults = self.plugins[Plugin].download_by_data(preferredData['data'], FileTXT)
-            elif self.plugins[Plugin].PluginInfo['API'] == 2:
-                DLResults = self.plugins[Plugin].instance.download_by_data(preferredData['data'], FileTXT)
+                                print(self._("Subtitles saved to")+" "+str(DLResults))
+                                Found = True
+                                break
+                            else:
+                                preferredData = Results[0][0]
+                                foundPlugin = Plugin
 
-            print(self._("Subtitles saved to")+" "+str(DLResults)+", "+self._("but not in your preferred language"))
+
+            if Found == None and not preferredData == False:
+                if self.plugins[foundPlugin] == "Disabled":
+                    print(self._("Warning: trying to use disabled plugin")+" "+str(Plugin))
+                    sys.exit(0)
+
+                FileTXT = File+".("+str(preferredData['lang'])+").txt"
+                DLResults = self.plugins[foundPlugin].instance.download_by_data(preferredData['data'], FileTXT)
+
+                print(self._("Subtitles saved to")+" "+str(DLResults)+", "+self._("but not in your preferred language"))
 
     def errorMessage(self, message, errType='info'):
          """ Create's error popups, created for notify plugin """
