@@ -1331,11 +1331,8 @@ class SubGet:
                         if not self.isPlugin(Plugin):
                             continue
 
-                        if self.plugins[Plugin].PluginInfo['API'] == 1:
-                            Results = self.plugins[Plugin].search_by_keywords(query) # query the plugin for results
-                        elif self.plugins[Plugin].PluginInfo['API'] == 2:
-                            Results = self.plugins[Plugin].instance.search_by_keywords(query).output() # query the plugin for results
-                            Results = Results[0]
+                        Results = self.plugins[Plugin].instance.search_by_keywords(query).output() # query the plugin for results
+                        Results = Results[0]
 
                         if not Results:
                             return
@@ -1351,11 +1348,7 @@ class SubGet:
             else:
                 try:
                     Plugin = self.sm.plugins[plugin]
-
-                    if self.plugins[Plugin].PluginInfo['API'] == 1:
-                        Results = self.plugins[Plugin].search_by_keywords(query) # query the plugin for results
-                    elif self.plugins[Plugin].PluginInfo['API'] == 2:
-                        Results = self.plugins[Plugin].instance.search_by_keywords(query) # query the plugin for results
+                    Results = self.plugins[Plugin].instance.search_by_keywords(query) # query the plugin for results
 
                         if Results is not False:
                             Results = Results[0]
