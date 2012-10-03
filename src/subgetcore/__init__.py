@@ -244,9 +244,6 @@ class SubgetPlugin:
             Handler.write(data)
             Handler.close()
 
-            print TMPName
-            sys.exit(0)
-
             z = zipfile.ZipFile(TMPName)
             ListOfNames = z.namelist()
 
