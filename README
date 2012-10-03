@@ -24,6 +24,15 @@ Requirements: GTK+, Python 2.6/2.7/3.0/3.1/3.2, X11, PyGTK, python-dbus, python-
 Solution is to copy or link subget's usr directory if it was installed in /usr/local: ln -s /usr/local/share/subget/ /usr/share/subget
 
 * Changelog:
+03.10.2012 (v.1.7.4) <webnull.www@gmail.com>:
+    + Added --list-languages shell option
+
+03.10.2012 (v.1.7.3) <webnull.www@gmail.com>:
+    * Shell mode is now working back after few bugs
+    * Fixed UnboundLocalError in subgetcore
+    * Disabled napisy24.pl (they added additional authentication - required login and password, this will be implemented soon)
+    * Fixed Watch With Subtitles function, now just works
+
 22.09.2012 (v.1.7.2) <webnull.www@gmail.com>:
     * Possible fix for Windows where window not appeared after iconifing to tray and minimalizing
     * Modified Windows build files

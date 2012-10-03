@@ -253,6 +253,21 @@ class SubGet:
         print(self._("subget for GNU/Linux. Simple Subtitle Downloader for shell and GUI.\nUsage: subget [long GNU option] [option] first-file, second-file, ...\n\n\n --help                : this message\n --console, -c         : show results in console, not in graphical user interface\n --language, -l        : specify preffered language\n --quick, -q           : grab first result and download\n --watch-with-subtitles, -w : don't run main window, just run player directly after successful subtitles download"))
         print("")
 
+    def listLanguages(self):
+        """ List all supported languages """
+
+        images = os.listdir(self.subgetOSPath+"/usr/share/subget/icons/flags")
+        imagesStr = ""
+
+        for image in images:
+            if not ".xpm" in image or image == "unknown.xpm":
+                continue
+
+            imagesStr += image.replace(".xpm", "")+", "
+
+        print("Avaliable languages:")
+        print(" "+imagesStr[:-2])
+
     def main(self):
         """ Main function, getopt etc. """
 
@@ -270,7 +285,7 @@ class SubGet:
             self.subgetOSPath = ""
 
         try:
-            opts, args = getopt.getopt(sys.argv[1:], "hcqwl:", ["help", "console", "quick", "language=", "watch-with-subtitles"])
+            opts, args = getopt.getopt(sys.argv[1:], "hcqwl:", ["help", "console", "quick", "language=", "watch-with-subtitles", "list-languages"])
         except getopt.GetoptError as err:
             print(self._('Error')+": "+str(err)+", "+self._("Try --help for usage")+"\n\n")
             self.usage()
@@ -287,6 +302,9 @@ class SubGet:
             if o in ('-w', '--watch-with-subtitles'):
                 self.action="watch"
                 consoleMode=True
+            if o in '--list-languages':
+                self.listLanguages()
+                sys.exit(0)
             if o in ('-l', '--language'):
                 if os.path.isfile(self.subgetOSPath+"/usr/share/subget/icons/flags/"+a+".xpm"):
                     self.prefLang = a
