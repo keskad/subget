@@ -1350,8 +1350,8 @@ class SubGet:
                     Plugin = self.sm.plugins[plugin]
                     Results = self.plugins[Plugin].instance.search_by_keywords(query) # query the plugin for results
 
-                        if Results is not False:
-                            Results = Results[0]
+                    if Results is not False:
+                        Results = Results[0]
 
                     if Results is None or Results is False:
                         return
