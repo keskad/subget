@@ -704,6 +704,7 @@ class SubGet:
              if type(State).__name__ == "module":
 
                  w = gtk.Window(gtk.WINDOW_TOPLEVEL)
+                 w.set_position(gtk.WIN_POS_CENTER)
                  w.set_resizable(False)
                  w.set_title(self._("Download subtitles"))
                  w.set_border_width(0)
@@ -969,6 +970,7 @@ class SubGet:
                 return False
 
             window = gtk.Window(gtk.WINDOW_TOPLEVEL)
+            window.set_position(gtk.WIN_POS_CENTER)
             window.set_title(self._("Plugins"))
             window.set_resizable(True)
             window.set_size_request(700, 290)
@@ -1098,6 +1100,7 @@ class SubGet:
                 return False
 
             about = gtk.Window(gtk.WINDOW_TOPLEVEL)
+            about.set_position(gtk.WIN_POS_CENTER)
             about.set_title(self._("About Subget"))
             about.set_resizable(False)
             about.set_size_request(600,550)
@@ -1236,6 +1239,7 @@ class SubGet:
                 return False
 
             self.sm = gtk.Window(gtk.WINDOW_TOPLEVEL)
+            self.sm.set_position(gtk.WIN_POS_MOUSE)
             self.sm.set_title(self._("Search"))
             self.sm.set_size_request(450, 180)
             self.sm.set_resizable(False)
@@ -1400,6 +1404,7 @@ class SubGet:
         self.Windows['preferences'] = True
 
         self.winPreferences = gtk.Window(gtk.WINDOW_TOPLEVEL)
+        self.winPreferences.set_position(gtk.WIN_POS_CENTER)
         self.winPreferences.set_title(self._("Settings"))
         self.winPreferences.set_resizable(False)
         self.winPreferences.set_size_request(600, 400)
@@ -1808,6 +1813,7 @@ class SubGet:
         
         # Create a new window
         self.window = gtk.Window(gtk.WINDOW_TOPLEVEL)
+        self.window.set_position(gtk.WIN_POS_CENTER)
         self.screen = self.window.get_screen()
         self.window.set_title(self._("Download subtitles"))
         self.window.set_resizable(True)
