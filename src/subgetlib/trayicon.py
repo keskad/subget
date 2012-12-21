@@ -46,7 +46,7 @@ class PluginMain(subgetcore.SubgetPlugin):
 
         select = gtk.ImageMenuItem(gtk.STOCK_ADD)
         select.set_label(self.Subget._("Select file"))
-        select.connect("activate", self.Subget.GTKDownloadSubtitles)
+        select.connect("activate", self.Subget.gtkSelectVideo)
         self.menu.append(select)
 
         preferences = gtk.ImageMenuItem(gtk.STOCK_PREFERENCES)
