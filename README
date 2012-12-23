@@ -24,6 +24,9 @@ Requirements: GTK+, Python 2.6/2.7/3.0/3.1/3.2, X11, PyGTK, python-dbus, python-
 Solution is to copy or link subget's usr directory if it was installed in /usr/local: ln -s /usr/local/share/subget/ /usr/share/subget
 
 * Changelog:
+23.12.2012 (v.1.7.6) <webnull.www@gmail.com>:
+    + Searching subtitles only in preferred language
+
 22.12.2012 (v.1.7.5) <webnull.www@gmail.com>:
     * Fixed annoying random windows placement
     * Fixed trayicon option "Add file"

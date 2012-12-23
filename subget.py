@@ -532,11 +532,16 @@ class SubGet:
             
             self.subtitlesList.append({'language': language, 'name': release_name, 'server': server, 'data': download_data, 'extension': extension, 'file': File})
 
+            if str(self.configGetKey('interface', 'preferred_language')) != "False" and str(self.configGetKey('interface', 'only_prefered')) != "False":
+                if language != self.configGetKey('interface', 'preferred_language'):
+                    self.Logging.output("Skipping "+language+" language subtitles \""+release_name+"\"", "debug", False)
+                    return False
+
             pixbuf_path = self.getPath('/usr/share/subget/icons/flags/'+language+'.xpm')
 
             if not os.path.isfile(pixbuf_path):
                 pixbuf_path = self.getPath('/usr/share/subget/icons/flags/unknown.xpm')
-                self.Logging.output("[addSubtitlesRow] "+language+".xpm "+self._("icon does not exists, using unknown.xpm"), "warning", False)
+                self.Logging.output(language+".xpm "+self._("icon does not exists, using unknown.xpm"), "warning", False)
 
             try:
                 pixbuf = gtk.gdk.pixbuf_new_from_file(pixbuf_path)
@@ -973,7 +978,7 @@ class SubGet:
             window.set_position(gtk.WIN_POS_CENTER)
             window.set_title(self._("Plugins"))
             window.set_resizable(True)
-            window.set_size_request(700, 290)
+            window.set_size_request(700, 350)
             window.set_icon_from_file(self.subgetOSPath+"/usr/share/subget/icons/plugin.png")
             window.connect("delete_event", self.closeWindow, window, 'gtkPluginMenu')
 
@@ -1585,9 +1590,10 @@ class SubGet:
 
         self.Config[Section][Option] = str(Value)
 
-    def WWSDefaultLanguage(self, x, liststore, checkbox):
+    def WWSDefaultLanguage(self, x, liststore, checkbox, feature='watch_with_subtitles'):
         """ Sets preferred language for Watch with subtitles feature """
-        self.configSetKey('watch_with_subtitles', 'preferred_language', str(liststore[checkbox.get_active()][1]))
+
+        self.configSetKey(feature, 'preferred_language', str(liststore[checkbox.get_active()][1]))
         
     def gtkPreferencesInterface(self):
         """ Makes settings tab for subget's interface """
@@ -1598,9 +1604,59 @@ class SubGet:
         if self.configGetKey("interface", "toolbar"):
             Toolbar.set_active(1)
 
+
+        oprBtn = gtk.CheckButton(self._("Show results only in prefered language in main window"))
+        oprBtn.connect("pressed", self.configSetButton, 'interface', 'only_prefered', oprBtn, True)
+
+        if self.configGetKey("interface", "only_prefered"):
+            oprBtn.set_active(1)
+
+
+        # ==== Selection of preferred language
+        Label = gtk.Label(self._("Preferred language in main window:"))
+        Label.set_alignment (0, 0)
+
+        liststore = gtk.ListStore(gtk.gdk.Pixbuf, str)
+        languages = os.listdir(self.getPath("/usr/share/subget/icons/flags"))
+
+        preferred_language = gtk.ComboBox(liststore)
+        preferred_language.set_wrap_width(4)
+
+        preferred_language_conf = self.configGetKey('interface', 'preferred_language')
+
+        i=0
+        fi=0
+
+        for Lang in languages:
+            basename, extension = os.path.splitext(Lang)
+
+            if extension == ".xpm":
+                i+=1
+
+                pixbuf = gtk.gdk.pixbuf_new_from_file(self.getPath("/usr/share/subget/icons/flags/"+basename+".xpm"))
+                liststore.append([pixbuf, str(basename)])
+                if basename == preferred_language_conf:
+                    fi=i
+
+        preferred_language.set_active((fi-1))
+
+        preferred_language.connect("changed", self.WWSDefaultLanguage, liststore, preferred_language, "interface")
+
+        # cell rendering
+        cellpb = gtk.CellRendererPixbuf()
+        preferred_language.pack_start(cellpb, True)
+        preferred_language.add_attribute(cellpb, 'pixbuf', 0)
+        cell = gtk.CellRendererText()
+        preferred_language.pack_start(cell, True)
+        preferred_language.add_attribute(cell, 'text', 1)
+
+
         Vbox = gtk.VBox(False, 0)
         Hbox = gtk.HBox(False, 0)
         Vbox.pack_start(Toolbar, False, False, 2)
+        Vbox.pack_start(oprBtn, False, False, 2)
+        Vbox.pack_start(Label, False, False, 2)
+        Vbox.pack_start(preferred_language, False, False, 8)
         Hbox.pack_start(Vbox, False, False, 8)
 
         self.createTab(self.winPreferences.notebook, self._("Interface"), Hbox)
@@ -1659,7 +1715,7 @@ class SubGet:
 
         preferred_language.set_active((fi-1))
 
-        preferred_language.connect("changed", self.WWSDefaultLanguage, liststore, preferred_language)
+        preferred_language.connect("changed", self.WWSDefaultLanguage, liststore, preferred_language, "watch_with_subtitles")
 
 
 

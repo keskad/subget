@@ -344,3 +344,9 @@ msgstr "Serwer socketów (IP) jest uruchomiony na"
 
 msgid "Dbus interface is up..."
 msgstr "Interfejs dbus został uruchomiony..."
+
+msgid "Show results only in prefered language in main window"
+msgstr "Pokazuj wyniki tylko w preferowanym języku w głównym oknie"
+
+msgid "Preferred language in main window:"
+msgstr "Preferowany język w głównym oknie programu:"
