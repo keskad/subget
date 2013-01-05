@@ -2164,7 +2164,12 @@ class SubGet:
                 if not self.isPlugin(Plugin):
                     continue
 
-                Results = self.plugins[Plugin].instance.download_list(files).output()
+
+                try:
+                    Results = self.plugins[Plugin].instance.download_list(files).output()
+                except Exception as e:
+                    self.Logging.output("Cannot download subtitles, plugin error: "+str(e), "warning", True)
+                    continue
 
                 if Results is None:
                     continue
