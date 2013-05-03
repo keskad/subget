@@ -103,6 +103,7 @@ class PluginMain(subgetcore.SubgetPlugin):
                     # libnotify
                     try:
                         import pynotify
+                        pynotify.init("subget")
                         self.notifyType = "libnotify"
                         self.libnotify = pynotify
                     except Exception as e:
