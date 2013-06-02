@@ -23,6 +23,12 @@ Requirements: GTK+, Python 2.6/2.7/3.0/3.1/3.2, X11, PyGTK, python-dbus, python-
 1. Application stops at "Subget is loading in "en_US" language."
 Solution is to copy or link subget's usr directory if it was installed in /usr/local: ln -s /usr/local/share/subget/ /usr/share/subget
 
+* Installation:
+1. ./setup.py build
+2. ./setup.py install
+3. ./setup.py install_data
+4. DONE! Run /usr/bin/subget or choose it from menu in your desktop environment
+
 * Changelog:
 03.05.2013 (v.1.7.6.1) <webnull.www@gmail.com>:
     * Fixed libnotify bug (issue #21)
